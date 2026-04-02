@@ -195,7 +195,7 @@
   </main>
 
   <script>
-    const activities = ['Me laver','Vider la litière','Mettre le soin à Louna','Jeter le rouleau de papier toilette','Faire l\'aspirateur','Jeter bouteille d\'eau','Me faire à manger','Me nettoyer le visage le soir','Faire ce que j\'ai dit qu\'il fallait que je fasse'];
+    const activities = ['Me laver','Vider la litière','Mettre le soin à Louna','Jeter le rouleau de papier toilette','Faire l'aspirateur','Jeter bouteille d'eau','Me faire à manger','Me nettoyer le visage le soir','Faire ce que j'ai dit qu'il fallait que je fasse'];
     const fatigueLevels = [
       { label:'+5', value:5, cls:'f5' },{ label:'+4', value:4, cls:'f4' },{ label:'+3', value:3, cls:'f3' },{ label:'+2', value:2, cls:'f2' },{ label:'+1', value:1, cls:'f1' },
       { label:'0', value:0, cls:'f0' },
@@ -362,11 +362,51 @@
       updateCharts();
     }
 
+    function buildAppState() {
+      return {
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        config: {
+          activities,
+          negativeEmotions,
+          positiveEmotions,
+          bodyFeelings
+        },
+        history: historyRecords
+      };
+    }
+
+    function applyAppState(appState) {
+      if (appState.config) {
+        if (Array.isArray(appState.config.activities)) {
+          activities.length = 0;
+          appState.config.activities.forEach(a => activities.push(a));
+        }
+        if (Array.isArray(appState.config.negativeEmotions)) {
+          negativeEmotions.length = 0;
+          appState.config.negativeEmotions.forEach(e => negativeEmotions.push(e));
+        }
+        if (Array.isArray(appState.config.positiveEmotions)) {
+          positiveEmotions.length = 0;
+          appState.config.positiveEmotions.forEach(e => positiveEmotions.push(e));
+        }
+        if (Array.isArray(appState.config.bodyFeelings)) {
+          bodyFeelings.length = 0;
+          appState.config.bodyFeelings.forEach(b => bodyFeelings.push(b));
+        }
+      }
+      if (Array.isArray(appState.history)) {
+        historyRecords = appState.history;
+      }
+      renderAll();
+      renderHistory();
+    }
+
     function downloadJsonFile() {
-      const data = { version:1, exportedAt:new Date().toISOString(), records:historyRecords };
+      const data = buildAppState();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
       const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`bilan-quotidien-${formatFileDate()}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
-      document.getElementById('captureStatus').textContent='Fichier de sauvegarde téléchargé (historique complet).';
+      document.getElementById('captureStatus').textContent='Fichier de sauvegarde téléchargé (données complètes).';
     }
 
     function buildTodayRecord() {
@@ -389,10 +429,17 @@
       reader.onload = () => {
         try {
           const parsed = JSON.parse(reader.result);
-          const incoming = Array.isArray(parsed) ? parsed : (parsed.records || []);
-          historyRecords = mergeRecords(historyRecords, incoming);
-          renderHistory();
-          document.getElementById('captureStatus').textContent='Fichier de sauvegarde importé et fusionné avec l’historique existant.';
+          // Nouveau format complet { version, config, history }
+          if (parsed && parsed.history && parsed.config) {
+            applyAppState(parsed);
+            document.getElementById('captureStatus').textContent='Fichier de sauvegarde importé (historique et personnalisations).';
+          } else {
+            // Ancien format: tableau direct ou { records: [...] }
+            const incoming = Array.isArray(parsed) ? parsed : (parsed.records || []);
+            historyRecords = mergeRecords(historyRecords, incoming);
+            renderHistory();
+            document.getElementById('captureStatus').textContent='Ancien fichier importé et fusionné avec l’historique existant.';
+          }
         } catch {
           document.getElementById('captureStatus').textContent='Le fichier est invalide ou corrompu.';
         }
@@ -431,7 +478,7 @@
       renderHistory();
       downloadJsonFile();
       document.getElementById('captureStatus').textContent =
-        'Fichier de sauvegarde exporté. Tu peux le garder sur ton ordinateur pour retrouver plus tard ton historique.';
+        'Fichier de sauvegarde exporté. Tu peux le garder sur ton ordinateur pour retrouver plus tard ton historique et tes réglages.';
     });
 
     document.getElementById('importDataBtn').addEventListener('click', () => {
