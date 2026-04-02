@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bilan-quotidien</title>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root, [data-theme="light"] {
+      --text-xs: clamp(0.75rem, 0.72rem + 0.18vw, 0.875rem);
+      --text-sm: clamp(0.9rem, 0.84rem + 0.2vw, 1rem);
+      --text-base: clamp(1rem, 0.96rem + 0.24vw, 1.1rem);
+      --text-lg: clamp(1.15rem, 1.02rem + 0.6vw, 1.45rem);
+      --text-xl: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+      --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem;
+      --radius-sm: 0.5rem; --radius-md: 0.8rem; --radius-lg: 1rem; --radius-xl: 1.25rem; --radius-full: 999px;
+      --color-bg: #f7f6f2; --color-surface: #fbfbf9; --color-surface-2: #f0eee8; --color-border: #d5d1ca;
+      --color-text: #28251d; --color-text-muted: #6e6b63; --color-primary: #01696f; --color-primary-hover: #0c4e54;
+      --color-positive: #437a22; --color-positive-soft: #dfead6; --color-negative: #a13544; --color-negative-soft: #f1d8dc;
+      --color-neutral: #7a7974; --shadow: 0 8px 24px rgba(40,37,29,.08); --font-body: 'Satoshi', system-ui, sans-serif;
+    }
+    [data-theme="dark"] {
+      --color-bg: #171614; --color-surface: #1c1b19; --color-surface-2: #262421; --color-border: #3a3733;
+      --color-text: #efede8; --color-text-muted: #b4aea4; --color-primary: #4f98a3; --color-primary-hover: #77bcc6;
+      --color-positive: #6daa45; --color-positive-soft: rgba(109,170,69,.18); --color-negative: #dd6974; --color-negative-soft: rgba(221,105,116,.16);
+      --color-neutral: #a8a29a; --shadow: 0 8px 24px rgba(0,0,0,.28);
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: var(--font-body); font-size: var(--text-base); color: var(--color-text); background: var(--color-bg); }
+    button, select, input { font: inherit; }
+    .wrap { max-width: 1160px; margin: 0 auto; padding: var(--space-4); }
+    .topbar { display:flex; justify-content:space-between; align-items:flex-start; gap: var(--space-4); margin-bottom: var(--space-6); }
+    .title { font-size: var(--text-xl); font-weight: 700; margin:0; }
+    .muted { color: var(--color-text-muted); }
+    .panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); box-shadow: var(--shadow); padding: var(--space-5); }
+    .stack { display:grid; gap: var(--space-5); }
+    .section-title { margin:0 0 .8rem 0; font-size: var(--text-lg); }
+    .toolbar { display:flex; gap: var(--space-3); flex-wrap: wrap; }
+    .theme-btn, .reset-btn, .capture-btn, .save-day-btn, .download-data-btn, .load-data-btn, .select-box {
+      min-height: 44px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding: .75rem 1rem;
+    }
+    .capture-btn, .save-day-btn, .download-data-btn, .load-data-btn { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+    .capture-btn:hover, .save-day-btn:hover, .download-data-btn:hover, .load-data-btn:hover { background: var(--color-primary-hover); }
+    .grid-2 { display:grid; grid-template-columns: 1.2fr .8fr; gap: var(--space-5); }
+    .chips { display:flex; flex-wrap:wrap; gap: .65rem; }
+    .chip { min-height: 48px; border: 1px solid var(--color-border); border-radius: var(--radius-full); background: var(--color-surface-2); color: var(--color-text); padding: .8rem 1rem; cursor:pointer; display:inline-flex; align-items:center; gap:.55rem; }
+    .chip.active { background: var(--color-primary); border-color: var(--color-primary); color: white; }
+    .chip.positive { border-color: color-mix(in srgb, var(--color-positive) 30%, var(--color-border)); }
+    .chip.negative { border-color: color-mix(in srgb, var(--color-negative) 30%, var(--color-border)); }
+    /* Icônes émotions seulement via classes spécifiques */
+    .chip.soft-positive.active { background: var(--color-positive-soft); color: var(--color-text); border-color: var(--color-positive); }
+    .chip.soft-negative.active { background: var(--color-negative-soft); color: var(--color-text); border-color: var(--color-negative); }
+    .chip-emotion-positive::before { content: '☀️ '; }
+    .chip-emotion-negative::before { content: '⛈️ '; }
+    .chip-body-positive::before { content: '+ '; color: var(--color-positive); font-weight:700; }
+    .chip-body-negative::before { content: '- '; color: var(--color-negative); font-weight:700; }
+    .fatigue-grid { display:flex; flex-wrap:wrap; justify-content:center; gap: .55rem; }
+    .fatigue-btn { min-height: 48px; border-radius: var(--radius-lg); border: 1px solid var(--color-border); cursor:pointer; font-weight:700; padding: .6rem .75rem; min-width: 3rem; text-align:center; }
+    .fatigue-btn.active { outline: 3px solid color-mix(in srgb, var(--color-primary) 40%, transparent); outline-offset: 2px; }
+    .f5{background:#2d6d2b;color:#fff}.f4{background:#3f8a32;color:#fff}.f3{background:#56a138;color:#fff}.f2{background:#74b442;color:#17310e}.f1{background:#9ac955;color:#1f2612}.f0{background:#ddd7c9;color:#28251d}.n1{background:#f2c3c7;color:#4b1d21}.n2{background:#eca2aa;color:#5a2026}.n3{background:#df7b84;color:#fff}.n4{background:#c95763;color:#fff}.n5{background:#a82f3f;color:#fff}
+    .select-row { display:flex; gap: var(--space-3); flex-wrap: wrap; align-items:center; }
+    .ghost-note { font-size: var(--text-sm); color: var(--color-text-muted); }
+    .summary-grid { display:grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: var(--space-4); }
+    .kpi { background: var(--color-surface-2); border:1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-4); }
+    .kpi-label { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .04em; }
+    .kpi-value { margin-top:.35rem; font-size: 1.85rem; font-weight:700; }
+    .score-positive { color: var(--color-positive); }
+    .score-negative { color: var(--color-negative); }
+    .score-neutral { color: var(--color-neutral); }
+    .selected-list { display:flex; flex-wrap:wrap; gap: .5rem; margin-top: .85rem; }
+    .pill { padding: .45rem .8rem; border-radius: var(--radius-full); font-size: var(--text-sm); border: 1px solid var(--color-border); background: var(--color-surface-2); }
+    .pill.positive { background: var(--color-positive-soft); border-color: var(--color-positive); }
+    .pill.negative { background: var(--color-negative-soft); border-color: var(--color-negative); }
+    .footer-note { margin-top: var(--space-4); color: var(--color-text-muted); }
+    .capture-zone { display:grid; gap: var(--space-5); }
+    .date-badge { display:inline-flex; width:fit-content; padding:.45rem .8rem; border-radius: var(--radius-full); background: var(--color-surface-2); border:1px solid var(--color-border); color: var(--color-text-muted); font-size: var(--text-sm); }
+    .status { margin-top:.8rem; font-size: var(--text-sm); color: var(--color-text-muted); }
+    .charts-column { display:flex; flex-direction:column; gap: var(--space-4); }
+    .chart-card { background: var(--color-surface-2); border-radius: var(--radius-xl); border:1px solid var(--color-border); padding: var(--space-4); box-sizing:border-box; }
+    .chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.75rem; }
+    .chart-title { font-size: var(--text-sm); font-weight:600; }
+    .chart-wrap { position: relative; height: 220px; }
+    .history-list { display:grid; gap:.75rem; margin-top:1rem; }
+    .history-item { display:flex; justify-content:space-between; gap:1rem; border:1px solid var(--color-border); background: var(--color-surface-2); border-radius: var(--radius-lg); padding: .9rem 1rem; }
+    .history-meta { color: var(--color-text-muted); font-size: var(--text-sm); }
+    .hidden { display:none; }
+    @media (max-width: 960px) {
+      .grid-2, .summary-grid { grid-template-columns: 1fr; }
+      .fatigue-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+      .topbar, .history-item { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap stack">
+    <header class="topbar">
+      <div>
+        <h1 class="title">Bilan quotidien</h1>
+              </div>
+      <div class="toolbar">
+        <button class="theme-btn" type="button" id="themeBtn">🌙 / ☀️</button>
+        <button class="reset-btn" type="button" id="resetBtn">Recommencer</button>
+        <input class="hidden" type="file" id="dataFileInput" accept="application/json,.json">
+      </div>
+    </header>
+
+    <section class="capture-zone" id="captureZone">
+      <div class="date-badge" id="dateBadge">Date</div>
+
+      <section class="panel">
+        <h2 class="section-title">Activités</h2>
+        <div class="chips" id="activities"></div>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Fatigue</h2>
+        <div class="fatigue-grid" id="fatigueButtons"></div>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Émotions</h2>
+        <div class="select-row">
+          <label for="positiveSelect" class="ghost-note">☀️ Émotions positives</label>
+          <select id="positiveSelect" class="select-box"><option value="">Ajouter…</option></select>
+          <label for="negativeSelect" class="ghost-note">⛈️ Émotions négatives</label>
+          <select id="negativeSelect" class="select-box"><option value="">Ajouter…</option></select>
+        </div>
+        <div class="selected-list" id="emotionList"></div>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Ressenti corporel</h2>
+        <div class="chips" id="bodyFeelings"></div>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Bilan</h2>
+        <div class="summary-grid">
+          <div class="kpi"><div class="kpi-label">Activités</div><div class="kpi-value score-neutral" id="activityScore">0</div></div>
+          <div class="kpi"><div class="kpi-label">Fatigue</div><div class="kpi-value score-neutral" id="fatigueScore">0</div></div>
+          <div class="kpi"><div class="kpi-label">Émotions</div><div class="kpi-value score-neutral" id="emotionScore">0</div></div>
+          <div class="kpi"><div class="kpi-label">Ressenti</div><div class="kpi-value score-neutral" id="bodyScore">0</div></div>
+          <div class="kpi"><div class="kpi-label">Total</div><div class="kpi-value score-neutral" id="totalScore">0</div></div>
+        </div>
+        <p class="footer-note" id="summaryText">Commence par cocher ce qui correspond à aujourd’hui.</p>
+      </section>
+    </section>
+
+    <section class="panel">
+      <div class="section-title" style="margin-bottom:.8rem;">Graphiques</div>
+      <div class="charts-column">
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">Activités</div></div><div class="chart-wrap"><canvas id="chartActivites"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">Fatigue</div></div><div class="chart-wrap"><canvas id="chartFatigue"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">Émotions</div></div><div class="chart-wrap"><canvas id="chartEmotions"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">Ressenti</div></div><div class="chart-wrap"><canvas id="chartRessenti"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">Total</div></div><div class="chart-wrap"><canvas id="chartTotal"></canvas></div></div>
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </section>
+
+    <section class="panel">
+      <div class="toolbar" style="justify-content:flex-end;">
+        <button class="save-day-btn" type="button" id="saveDayBtn">Enregistrer</button>
+        <button class="download-data-btn" type="button" id="downloadDataBtn">Historique</button>
+        <button class="load-data-btn" type="button" id="loadDataBtn">Importer</button>
+        <button class="capture-btn" type="button" id="captureBtn">Capture</button>
+      </div>
+    </section>
+
+    <div class="status" id="captureStatus">Importe un JSON si tu veux récupérer un historique, ou enregistre directement pour commencer un nouveau.</div>
+  </main>
+
+  <script>
+    const activities = ['Me laver','Vider la litière','Mettre le soin à Louna','Jeter le rouleau de papier toilette','Faire l\'aspirateur','Jeter bouteille d\'eau','Me faire à manger','Me nettoyer le visage le soir','Faire ce que j\'ai dit qu\'il fallait que je fasse'];
+    const fatigueLevels = [
+      { label:'+5', value:5, cls:'f5' },{ label:'+4', value:4, cls:'f4' },{ label:'+3', value:3, cls:'f3' },{ label:'+2', value:2, cls:'f2' },{ label:'+1', value:1, cls:'f1' },
+      { label:'0', value:0, cls:'f0' },
+      { label:'-1', value:-1, cls:'n1' },{ label:'-2', value:-2, cls:'n2' },{ label:'-3', value:-3, cls:'n3' },{ label:'-4', value:-4, cls:'n4' },{ label:'-5', value:-5, cls:'n5' }
+    ];
+    const negativeEmotions = ['Affolée','Agacée','Angoissée','Anxieuse','Apeurée','Contrariée','Exaspérée','Fâchée','Frustrée','Furieuse','Haineuse','Inquiète','Irritée','Mécontente','Méfiantes','Paniquée','Pessimiste','Préoccupée','Révoltée','Soucieuse','Sur les nerfs','Tendue','Vexée'];
+    const positiveEmotions = ['Amusée','Apaisée','Calme','Confiante','Contente','Détendue','Encouragée','Excitée','Fière','Heureuse','Joyeuse','Légère','Motivée','Optimiste','Rassurée','Satisfaite','Sereine'];
+    const bodyFeelings = [
+      { label:'Boule dans la gorge', value:-1, cls:'soft-negative' },{ label:'Muscles tendus', value:-1, cls:'soft-negative' },{ label:'Palpitations', value:-1, cls:'soft-negative' },{ label:'Flush', value:-1, cls:'soft-negative' },{ label:'Douleurs au ventre', value:-1, cls:'soft-negative' },
+      { label:'Gorge qui vibre', value:1, cls:'soft-positive' },{ label:'Muscles détendus', value:1, cls:'soft-positive' },{ label:'Frisson', value:1, cls:'soft-positive' },{ label:'Bougeotte', value:1, cls:'soft-positive' }
+    ];
+
+    const state = { activities:new Set(), fatigue:0, negativeEmotions:[], positiveEmotions:[], body:new Set() };
+    let historyRecords = [];
+    const charts = {};
+
+    const activitiesEl = document.getElementById('activities');
+    const fatigueEl = document.getElementById('fatigueButtons');
+    const emotionListEl = document.getElementById('emotionList');
+    const bodyEl = document.getElementById('bodyFeelings');
+    const historyListEl = document.getElementById('historyList');
+
+    function formatDisplayDate(d = new Date()) { return d.toLocaleString('fr-FR', { dateStyle:'full', timeStyle:'short' }); }
+    function formatShortDate(iso) { return new Date(iso).toLocaleString('fr-FR', { dateStyle:'short', timeStyle:'short' }); }
+    function formatFileDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`; }
+    function dayKeyFromISO(iso) { const d = new Date(iso); const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+    function signed(v) { return v>0 ? `+${v}` : String(v); }
+    function setScoreColor(el, v) { el.classList.remove('score-positive','score-negative','score-neutral'); if (v>0) el.classList.add('score-positive'); else if (v<0) el.classList.add('score-negative'); else el.classList.add('score-neutral'); }
+
+    function computeScores() {
+      const activityScore = state.activities.size;
+      const fatigueScore = state.fatigue;
+      const emotionScore = state.positiveEmotions.length - state.negativeEmotions.length;
+      const bodyScore = [...state.body].reduce((sum, idx) => sum + bodyFeelings[idx].value, 0);
+      const total = activityScore + fatigueScore + emotionScore + bodyScore;
+      return { activityScore, fatigueScore, emotionScore, bodyScore, total };
+    }
+
+    function renderActivities() {
+      activitiesEl.innerHTML = '';
+      activities.forEach((label, i) => {
+        const active = state.activities.has(i);
+        const btn = document.createElement('button');
+        btn.type='button'; btn.className='chip'+(active?' active':''); btn.textContent=`${label} · +1`;
+        btn.addEventListener('click', ()=>{ active ? state.activities.delete(i) : state.activities.add(i); renderAll(); });
+        activitiesEl.appendChild(btn);
+      });
+    }
+
+    function renderFatigue() {
+      fatigueEl.innerHTML='';
+      fatigueLevels.forEach(level => {
+        const btn = document.createElement('button');
+        btn.type='button'; btn.className=`fatigue-btn ${level.cls}` + (state.fatigue===level.value?' active':''); btn.textContent=level.label;
+        btn.addEventListener('click', ()=>{ state.fatigue=level.value; renderAll(); });
+        fatigueEl.appendChild(btn);
+      });
+    }
+
+    function renderBody() {
+      bodyEl.innerHTML='';
+      bodyFeelings.forEach((item, i) => {
+        const active = state.body.has(i);
+        const btn = document.createElement('button');
+        const bodyClass = item.value > 0 ? 'chip-body-positive' : 'chip-body-negative';
+        btn.type='button'; btn.className=`chip ${bodyClass} ${item.cls}` + (active?' active':''); btn.textContent=`${item.label} · ${signed(item.value)}`;
+        btn.addEventListener('click', ()=>{ active ? state.body.delete(i) : state.body.add(i); renderAll(); });
+        bodyEl.appendChild(btn);
+      });
+    }
+
+    function renderEmotions() {
+      emotionListEl.innerHTML='';
+      state.negativeEmotions.forEach((emotion, idx) => {
+        const pill=document.createElement('button'); pill.type='button'; pill.className='pill negative'; pill.textContent=`${emotion} · -1 ×`;
+        pill.addEventListener('click', ()=>{ state.negativeEmotions.splice(idx,1); renderAll(); }); emotionListEl.appendChild(pill);
+      });
+      state.positiveEmotions.forEach((emotion, idx) => {
+        const pill=document.createElement('button'); pill.type='button'; pill.className='pill positive'; pill.textContent=`${emotion} · +1 ×`;
+        pill.addEventListener('click', ()=>{ state.positiveEmotions.splice(idx,1); renderAll(); }); emotionListEl.appendChild(pill);
+      });
+      if (!state.negativeEmotions.length && !state.positiveEmotions.length) {
+        const span=document.createElement('span'); span.className='ghost-note'; span.textContent='Aucune émotion ajoutée pour le moment.'; emotionListEl.appendChild(span);
+      }
+    }
+
+    function updateSummary() {
+      const { activityScore, fatigueScore, emotionScore, bodyScore, total } = computeScores();
+      [['activityScore',activityScore],['fatigueScore',fatigueScore],['emotionScore',emotionScore],['bodyScore',bodyScore],['totalScore',total]].forEach(([id,val])=>{ const el=document.getElementById(id); el.textContent=signed(val); setScoreColor(el,val); });
+      let text='Tu commences à remplir la grille.';
+      if (total >= 10) text='Le tableau penche clairement vers des ressources disponibles aujourd’hui.';
+      else if (total >= 4) text='Il y a des ressources, mais pas sans limite.';
+      else if (total >= -2) text='Le bilan paraît mitigé.';
+      else if (total >= -7) text='Le tableau penche plutôt vers de la fatigue, de la tension ou une charge émotionnelle.';
+      else text='Le tableau indique un jour très coûteux.';
+      document.getElementById('summaryText').textContent=text;
+      document.getElementById('dateBadge').textContent=`Bilan du ${formatDisplayDate()}`;
+    }
+
+    function populateSelect(selectId, options, bucket) {
+      const select=document.getElementById(selectId);
+      options.forEach(item=>{ const opt=document.createElement('option'); opt.value=item; opt.textContent=item; select.appendChild(opt); });
+      select.addEventListener('change', ()=>{ const value=select.value; if(!value) return; state[bucket].push(value); select.value=''; renderAll(); });
+    }
+
+    function mergeRecords(existing, incoming) {
+      const byDay = new Map();
+      const all = [...existing, ...incoming];
+      all.forEach(rec => {
+        if (!rec.date) return;
+        const key = dayKeyFromISO(rec.date);
+        const current = byDay.get(key);
+        if (!current || new Date(rec.date) > new Date(current.date)) {
+          byDay.set(key, rec);
+        }
+      });
+      return Array.from(byDay.values()).sort((a,b)=>new Date(a.date)-new Date(b.date));
+    }
+
+    function updateCharts() {
+      const axisColor = getComputedStyle(document.documentElement).getPropertyValue('--color-text-muted').trim();
+      const primary = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
+      const labels = historyRecords.map(r => new Date(r.date).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' }));
+
+      const series = {
+        activites: historyRecords.map(r => r.activityScore ?? r.activities?.length ?? 0),
+        fatigue: historyRecords.map(r => r.fatigue ?? 0),
+        emotions: historyRecords.map(r => r.emotionScore ?? ((r.positiveEmotions?.length||0)-(r.negativeEmotions?.length||0))),
+        ressenti: historyRecords.map(r => r.bodyScore ?? 0),
+        total: historyRecords.map(r => r.total ?? 0)
+      };
+
+      function makeChart(id, data) {
+        const ctx = document.getElementById(id).getContext('2d');
+        if (charts[id]) charts[id].destroy();
+        charts[id] = new Chart(ctx, {
+          type:'line',
+          data:{ labels, datasets:[{ data, borderColor:primary, backgroundColor:primary+'33', fill:true, tension:.25, pointRadius:3 }]},
+          options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ ticks:{ color:axisColor }, grid:{ color:axisColor+'22' } }, y:{ ticks:{ color:axisColor }, grid:{ color:axisColor+'22' } } } }
+        });
+      }
+
+      makeChart('chartActivites', series.activites);
+      makeChart('chartFatigue', series.fatigue);
+      makeChart('chartEmotions', series.emotions);
+      makeChart('chartRessenti', series.ressenti);
+      makeChart('chartTotal', series.total);
+    }
+
+    function renderHistory() {
+      historyListEl.innerHTML='';
+      if (!historyRecords.length) {
+        const empty=document.createElement('div'); empty.className='ghost-note'; empty.textContent='Aucune journée connue pour le moment.'; historyListEl.appendChild(empty);
+      } else {
+        historyRecords.slice().reverse().slice(0, 10).forEach(rec => {
+          const item=document.createElement('div'); item.className='history-item';
+          const emoScore = rec.emotionScore ?? ((rec.positiveEmotions||[]).length - (rec.negativeEmotions||[]).length);
+          const totalScore = rec.total ?? 0;
+          const bodyScore = rec.bodyScore ?? 0;
+          item.innerHTML=`<div><strong>${formatShortDate(rec.date)}</strong><div class="history-meta">Activités: ${(rec.activities||[]).length} · Fatigue: ${signed(rec.fatigue||0)} · Émotions: ${signed(emoScore)} · Ressenti: ${signed(bodyScore)}</div></div><div><strong class="${totalScore>0?'score-positive':totalScore<0?'score-negative':'score-neutral'}">${signed(totalScore)}</strong></div>`;
+          historyListEl.appendChild(item);
+        });
+      }
+      updateCharts();
+    }
+
+    function downloadJsonFile() {
+      const data = { version:1, exportedAt:new Date().toISOString(), records:historyRecords };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`bilan-quotidien-${formatFileDate()}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+      document.getElementById('captureStatus').textContent='Fichier JSON téléchargé (historique complet).';
+    }
+
+    function buildTodayRecord() {
+      const scores = computeScores();
+      const now = new Date();
+      return {
+        id: now.toISOString(),
+        date: now.toISOString(),
+        activities:[...state.activities].map(i=>activities[i]),
+        fatigue:state.fatigue,
+        negativeEmotions:[...state.negativeEmotions],
+        positiveEmotions:[...state.positiveEmotions],
+        body:[...state.body].map(i=>bodyFeelings[i].label),
+        ...scores
+      };
+    }
+
+    function saveTodayRecord() {
+      const todayRecord = buildTodayRecord();
+      historyRecords = mergeRecords(historyRecords, [todayRecord]);
+      renderHistory();
+      downloadJsonFile();
+      document.getElementById('captureStatus').textContent='Journée ajoutée/mise à jour. Tu peux remplacer ton fichier JSON existant avec celui-ci.';
+    }
+
+    function loadJsonFile(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          const incoming = Array.isArray(parsed) ? parsed : (parsed.records || []);
+          historyRecords = mergeRecords(historyRecords, incoming);
+          renderHistory();
+          document.getElementById('captureStatus').textContent='JSON importé et fusionné avec l’historique existant.';
+        } catch {
+          document.getElementById('captureStatus').textContent='Le fichier JSON est invalide.';
+        }
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+
+    async function captureAsImage() {
+      const status=document.getElementById('captureStatus'); status.textContent='Création de la capture…';
+      const zone=document.getElementById('captureZone');
+      try {
+        const canvas=await html2canvas(zone, { backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--color-bg').trim(), scale:2, useCORS:true });
+        canvas.toBlob(blob => {
+          if (!blob) { status.textContent='Impossible de générer l’image.'; return; }
+          const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`bilan-quotidien-${formatFileDate()}.png`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); status.textContent='Capture téléchargée.';
+        }, 'image/png');
+      } catch { status.textContent='La capture a échoué dans ce navigateur.'; }
+    }
+
+    function renderAll() { renderActivities(); renderFatigue(); renderBody(); renderEmotions(); updateSummary(); }
+
+    document.getElementById('resetBtn').addEventListener('click', ()=>{ state.activities.clear(); state.fatigue=0; state.negativeEmotions=[]; state.positiveEmotions=[]; state.body.clear(); renderAll(); });
+    document.getElementById('themeBtn').addEventListener('click', ()=>{ const root=document.documentElement; root.setAttribute('data-theme', root.getAttribute('data-theme')==='dark'?'light':'dark'); setTimeout(renderHistory, 40); });
+    document.getElementById('captureBtn').addEventListener('click', captureAsImage);
+    document.getElementById('saveDayBtn').addEventListener('click', saveTodayRecord);
+    document.getElementById('downloadDataBtn').addEventListener('click', downloadJsonFile);
+    document.getElementById('loadDataBtn').addEventListener('click', ()=>document.getElementById('dataFileInput').click());
+    document.getElementById('dataFileInput').addEventListener('change', e => { const file=e.target.files[0]; if (file) loadJsonFile(file); });
+
+    populateSelect('negativeSelect', negativeEmotions, 'negativeEmotions');
+    populateSelect('positiveSelect', positiveEmotions, 'positiveEmotions');
+    renderAll();
+    renderHistory();
+  </script>
+</body>
+</html>
