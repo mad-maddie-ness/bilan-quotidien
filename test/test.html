@@ -4,1607 +4,1123 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>bilan-quotidien</title>
-
-  <!-- Police (à remettre comme dans ta version si besoin) -->
-  <link href="//api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
-
-  <!-- Chart.js -->
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- html2pdf.js pour le PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
-          integrity="sha512-YcsIPWZ4tW1V7lidh+NEnNh4tW7x1YgnSUQoqBYwygJyI072QtdgQXl3k5iADG7n2AFD+a83H8XIv2qxFAm4Pw=="
-          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
-    :root {
-      --bg: #0b0c10;
-      --bg-elevated: #10131a;
-      --bg-soft: #151923;
-      --border-subtle: #202636;
-      --primary: #5f8af3;
-      --primary-soft: rgba(95, 138, 243, 0.15);
-      --accent: #ff9f43;
-      --accent-soft: rgba(255, 159, 67, 0.15);
-      --text-main: #f5f6fa;
-      --text-muted: #9da5bc;
-      --danger: #ff6b6b;
-      --success: #4cd964;
-      --warning: #ffd93d;
-      --neutral: #ced4e3;
-      --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.55);
-      --radius-lg: 18px;
-      --radius-md: 12px;
-      --radius-pill: 999px;
-      --card-padding: 1.2rem 1.4rem;
+    :root, [data-theme="light"] {
+      --text-xs: clamp(0.75rem, 0.72rem + 0.18vw, 0.875rem);
+      --text-sm: clamp(0.9rem, 0.84rem + 0.2vw, 1rem);
+      --text-base: clamp(1rem, 0.96rem + 0.24vw, 1.1rem);
+      --text-lg: clamp(1.15rem, 1.02rem + 0.6vw, 1.45rem);
+      --text-xl: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+      --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem;
+      --radius-sm: 0.5rem; --radius-md: 0.8rem; --radius-lg: 1rem; --radius-xl: 1.25rem; --radius-full: 999px;
+      --color-bg: #f7f6f2; --color-surface: #fbfbf9; --color-surface-2: #f0eee8; --color-border: #d5d1ca;
+      --color-text: #28251d; --color-text-muted: #6e6b63; --color-primary: #01696f; --color-primary-hover: #0c4e54;
+      --color-positive: #437a22; --color-positive-soft: #dfead6; --color-negative: #a13544; --color-negative-soft: #f1d8dc;
+      --color-neutral: #7a7974; --shadow: 0 8px 24px rgba(40,37,29,.08); --font-body: 'Satoshi', system-ui, sans-serif;
     }
-
-    [data-theme="light"] {
-      --bg: #f4f5fb;
-      --bg-elevated: #ffffff;
-      --bg-soft: #f0f2fa;
-      --border-subtle: #dde1ee;
-      --text-main: #1e2433;
-      --text-muted: #727b91;
-      --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.12);
+    [data-theme="dark"] {
+      --color-bg: #171614; --color-surface: #1c1b19; --color-surface-2: #262421; --color-border: #3a3733;
+      --color-text: #efede8; --color-text-muted: #b4aea4; --color-primary: #4f98a3; --color-primary-hover: #77bcc6;
+      --color-positive: #6daa45; --color-positive-soft: rgba(109,170,69,.18); --color-negative: #dd6974; --color-negative-soft: rgba(221,105,116,.16);
+      --color-neutral: #a8a29a; --shadow: 0 8px 24px rgba(0,0,0,.28);
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: var(--font-body); font-size: var(--text-base); color: var(--color-text); background: var(--color-bg); overflow-x: auto; }
+    button, select, input { font: inherit; }
+    button { cursor: pointer; transition: all 0.2s ease; }
+    button:active { transform: scale(0.98); }
+    select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23606060' d='M6 9L1 4h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 2.2rem; }
+    input[type="file"] { cursor: pointer; }
+    .wrap { width: 100%; margin: 0 auto; padding: clamp(0.5rem, 2vw, var(--space-4)); box-sizing: border-box; }
+    .topbar { display:flex; justify-content:space-between; align-items:flex-start; gap: var(--space-2); margin-bottom: var(--space-4); }
+    .title { font-size: 1.4rem; font-weight: 700; margin:0; }
+    body { font-size: 0.88rem; overflow-x: auto; }
+    .muted { color: var(--color-text-muted); }
+    .panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); box-shadow: var(--shadow); padding: clamp(var(--space-3), 3vw, var(--space-5)); width: 100%; box-sizing: border-box; min-width: 0; }
+    .stack { display:grid; gap: var(--space-5); }
+    .section-title { margin:0 0 .8rem 0; font-size: var(--text-lg); }
+    .topbar { display:flex; justify-content: space-between; align-items:flex-start; flex-wrap:wrap; }
+    .toolbar { margin-left:auto; display:flex; gap: 0.4rem; align-items:center; flex-wrap:wrap; }
+    .body-containers { display: grid; grid-template-columns: 1fr; gap: var(--space-3); width: 100%; box-sizing: border-box; min-width: 0; }
+    .grid-2, .summary-grid, .fatigue-grid, .topbar, .history-item, .name-fields input, .chart-card { min-width: 0; }
+    .theme-btn {
+      min-height: 26px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding: 0.2rem 0.4rem; font-size: 0.75rem;
     }
+    .reset-btn, .select-box {
+      min-height: 26px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding: 0.2rem 0.4rem;
+    }
+    .save-day-btn {
+      min-height: 46px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-primary); color: white; border-color: var(--color-primary); padding: 0.8rem 1.2rem;
+    }
+    .download-data-btn, .load-data-btn, .capture-btn {
+      min-height: 36px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-primary); color: white; border-color: var(--color-primary); padding: 0.45rem 0.7rem; font-size: 0.86rem;
+    }
+    .capture-btn:hover, .save-day-btn:hover, .download-data-btn:hover, .load-data-btn:hover { background: var(--color-primary-hover); }
 
-    body {
-      min-height: 100vh;
-      background: radial-gradient(circle at top, #1f2937 0, #020617 45%);
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Satoshi", sans-serif;
-      color: var(--text-main);
+    .grid-2 { display:grid; grid-template-columns: 1fr; gap: var(--space-5); }
+    @media (min-width: 900px) {
+      .grid-2 { grid-template-columns: 1.2fr .8fr; }
+      .body-containers { grid-template-columns: repeat(2, 1fr); }
+    }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center; }
+    .modal-overlay.active { display: flex; }
+    .modal-content { background: var(--color-surface); border-radius: var(--radius-xl); padding: var(--space-5); max-width: 500px; width: 90%; box-shadow: var(--shadow); }
+    .modal-title { font-size: var(--text-lg); font-weight: 700; margin: 0 0 var(--space-4) 0; }
+    .modal-input { width: 100%; padding: var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-lg); font-size: 0.85rem; margin-bottom: var(--space-3); font-family: var(--font-body); }
+    .modal-input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(1, 105, 111, 0.1); }
+    .name-fields input { width: 120px; margin-right: 0.4rem; padding: 0.3rem 0.5rem !important; height: 26px; line-height: 1.2; }
+    .modal-buttons { display: flex; gap: var(--space-3); justify-content: flex-end; }
+    .modal-btn { padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); border: 1px solid var(--color-border); cursor: pointer; font-size: var(--text-sm); transition: all 0.2s ease; }
+    .modal-btn-cancel { background: var(--color-surface); color: var(--color-text); }
+    .modal-btn-cancel:hover { background: var(--color-surface-2); }
+    .modal-btn-confirm { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+    .modal-btn-confirm:hover { background: var(--color-primary-hover); }
+    .custom-item { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: var(--color-primary-soft, rgba(1,105,111,0.1)); border-radius: var(--radius-lg); font-size: var(--text-sm); border: 1px solid var(--color-primary); }
+    .custom-item .delete-icon { cursor: pointer; opacity: 0.7; font-weight: bold; }
+    .custom-item .delete-icon:hover { opacity: 1; }
+    .chips { display:flex; flex-wrap:wrap; gap: clamp(0.4rem, 1.5vw, .65rem); }
+    .chip { min-height: 34px; border: 1px solid var(--color-border); border-radius: var(--radius-full); background: var(--color-surface-2); color: var(--color-text); padding: .45rem .75rem; cursor:pointer; display:inline-flex; align-items:center; gap:.45rem; font-size: .78rem; transition: all 0.15s ease; }
+    .chip:active { transform: scale(0.95); }
+    .chip:hover { border-color: var(--color-primary); }
+    .chip-add-btn { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+    .chip-add-btn:hover { background: var(--color-primary-hover); }
+    .chip-delete { margin-left: auto; cursor: pointer; opacity: 0.7; font-size: 0.9em; padding: 0 .25rem; }
+    .chip-delete:hover { opacity: 1; }
+    .toggle-btns { display:flex; gap: 0.5rem; margin-bottom: var(--space-3); }
+    .toggle-btn { border:1px solid var(--color-border); border-radius: var(--radius-lg); padding:.45rem .75rem; cursor:pointer; background: var(--color-surface); color: var(--color-text); }
+    .toggle-btn.selected { border-color: var(--color-primary); background: var(--color-primary-soft); }
+    .toggle-btn--positive { color: var(--color-positive); border-color: var(--color-positive); }
+    .toggle-btn--negative { color: var(--color-negative); border-color: var(--color-negative); }
+    .toggle-btn--positive.selected { background: var(--color-positive-soft); }
+    .toggle-btn--negative.selected { background: var(--color-negative-soft); }
+    .chip.active { background: var(--color-primary); border-color: var(--color-primary); color: white; }
+    .chip.positive { border-color: color-mix(in srgb, var(--color-positive) 30%, var(--color-border)); }
+    .chip.negative { border-color: color-mix(in srgb, var(--color-negative) 30%, var(--color-border)); }
+    /* Icônes émotions seulement via classes spécifiques */
+    .chip.soft-positive.active { background: var(--color-positive-soft); color: var(--color-text); border-color: var(--color-positive); }
+    .chip.soft-negative.active { background: var(--color-negative-soft); color: var(--color-text); border-color: var(--color-negative); }
+    .chip-emotion-positive::before { content: '☀️ '; }
+    .chip-emotion-negative::before { content: '⛈️ '; }
+    .chip-body-positive::before { content: '+ '; color: var(--color-positive); font-weight:700; }
+    .chip-body-negative::before { content: '- '; color: var(--color-negative); font-weight:700; }
+    .fatigue-grid {
       display: flex;
+      flex-wrap: nowrap;
       justify-content: center;
-      align-items: stretch;
-      padding: 1.5rem;
+      gap: clamp(0.25rem, 1.2vw, 0.45rem);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+      min-width: 0;
     }
-
-    .app-shell {
-      max-width: 1280px;
-      width: 100%;
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.9));
-      border-radius: 24px;
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      box-shadow: 0 28px 80px rgba(15, 23, 42, 0.9);
-      display: flex;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .app-shell::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(circle at 0 0, rgba(56, 189, 248, 0.25) 0, transparent 50%),
-        radial-gradient(circle at 100% 0, rgba(129, 140, 248, 0.26) 0, transparent 55%),
-        radial-gradient(circle at 0 100%, rgba(251, 191, 36, 0.22) 0, transparent 55%);
-      opacity: 0.55;
-      mix-blend-mode: screen;
-      pointer-events: none;
-    }
-
-    .app-inner {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      width: 100%;
-    }
-
-    .sidebar {
-      width: 270px;
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.7) 0, rgba(15, 23, 42, 0.98) 40%);
-      border-right: 1px solid rgba(148, 163, 184, 0.3);
-      padding: 1.8rem 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-
-    .main {
-      flex: 1;
-      padding: 1.8rem 1.8rem 1.8rem 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .brand-logo {
-      width: 40px;
-      height: 40px;
-      border-radius: 14px;
-      background: radial-gradient(circle at 30% 20%, #22d3ee 0, #0ea5e9 35%, #4f46e5 80%);
-      box-shadow:
-        0 0 0 1px rgba(15, 23, 42, 0.8),
-        0 12px 22px rgba(15, 23, 42, 0.85),
-        0 0 25px rgba(56, 189, 248, 0.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #0b1120;
-      font-weight: 800;
-      font-size: 1.1rem;
-      letter-spacing: 0.03em;
-    }
-
-    .brand-text {
-      display: flex;
-      flex-direction: column;
-      gap: 0.1rem;
-    }
-
-    .brand-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: #e5e7eb;
-    }
-
-    .brand-subtitle {
-      font-size: 0.8rem;
-      color: rgba(148, 163, 184, 0.9);
-    }
-
-    .panel {
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.95) 0, rgba(15, 23, 42, 0.98) 40%);
-      border-radius: 20px;
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      box-shadow: 0 16px 45px rgba(15, 23, 42, 0.8);
-      padding: 1.4rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .panel::before {
-      content: "";
-      position: absolute;
-      inset: -40%;
-      background:
-        radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.12) 0, transparent 45%),
-        radial-gradient(circle at 100% 0%, rgba(129, 140, 248, 0.14) 0, transparent 40%);
-      opacity: 0.9;
-      pointer-events: none;
-      mix-blend-mode: soft-light;
-    }
-
-    .panel-inner {
-      position: relative;
-      z-index: 1;
-    }
-
-    .section-title {
-      font-size: 0.9rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: rgba(156, 163, 175, 0.9);
-      margin-bottom: 0.4rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .section-title::before {
-      content: "";
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #22d3ee, #4f46e5);
-      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.9);
-    }
-
-    .section-subtitle {
-      font-size: 0.82rem;
-      color: rgba(148, 163, 184, 0.9);
-      margin-bottom: 1rem;
-    }
-
-    .list-section {
-      display: flex;
-      flex-direction: column;
-      gap: 1.2rem;
-    }
-
-    .list-group {
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9) 0, rgba(15, 23, 42, 0.98) 48%);
-      border-radius: 16px;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      padding: 0.95rem 0.95rem 0.9rem;
-    }
-
-    .list-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 0.55rem;
-    }
-
-    .list-title {
-      font-size: 0.82rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: rgba(156, 163, 175, 0.95);
-    }
-
-    .list-subtitle {
-      font-size: 0.72rem;
-      color: rgba(148, 163, 184, 0.9);
-    }
-
-    .list-items {
-      display: flex;
-      flex-direction: column;
-      gap: 0.3rem;
-    }
-
-    .tag-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      margin-top: 0.2rem;
-    }
-
-    .tag {
-      font-size: 0.75rem;
-      padding: 0.25rem 0.65rem;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      color: rgba(209, 213, 219, 0.9);
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.95));
-      display: flex;
-      align-items: center;
-      gap: 0.2rem;
+    .fatigue-btn {
+      min-height: clamp(30px, 6vw, 40px);
+      height: auto;
+      line-height: 1;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
       cursor: pointer;
-      transition: all 0.16s ease;
+      font-weight: 700;
+      padding: clamp(0.18rem, 0.9vw, 0.42rem) clamp(0.30rem, 0.9vw, 0.55rem);
+      min-width: clamp(1.8rem, 5vw, 2.8rem);
+      max-width: clamp(2.8rem, 8vw, 3.6rem);
+      text-align: center;
+      font-size: clamp(0.62rem, 1.5vw, 0.88rem);
+      white-space: nowrap;
+    }
+    .fatigue-btn.active { outline: 3px solid color-mix(in srgb, var(--color-primary) 40%, transparent); outline-offset: 2px; }
+    .f5{background:#2d6d2b;color:#fff}.f4{background:#3f8a32;color:#fff}.f3{background:#56a138;color:#fff}.f2{background:#74b442;color:#17310e}.f1{background:#9ac955;color:#1f2612}.f0{background:#ddd7c9;color:#28251d}.n1{background:#f2c3c7;color:#4b1d21}.n2{background:#eca2aa;color:#5a2026}.n3{background:#df7b84;color:#fff}.n4{background:#c95763;color:#fff}.n5{background:#a82f3f;color:#fff}
+    .select-row { display:flex; gap: clamp(0.4rem, 1.4vw, 0.8rem); flex-wrap: wrap; align-items:center; }
+    .select-group { display:flex; gap: 0.4rem; align-items:center; min-width: 180px; }
+    .select-box { min-height: clamp(28px, 3.5vw, 34px); padding: clamp(0.15rem, 0.85vw, 0.28rem) clamp(0.3rem, 0.9vw, 0.55rem); font-size: clamp(0.76rem, 1.75vw, 0.92rem); }
+    @media (max-width: 700px) {
+      .select-row { flex-direction: column; align-items: stretch; }
+      .select-group { width:100%; }
     }
 
-    .tag-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 30%, #22c55e 0, #22c55e 45%, #14532d 100%);
-      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.9);
+    .ghost-note { font-size: var(--text-sm); color: var(--color-text-muted); }
+    .summary-grid { display:flex; flex-wrap: wrap; align-items:center; justify-content:center; gap: clamp(0.25rem, 0.9vw, 0.5rem); }
+    .kpi { background: var(--color-surface-2); border:1px solid var(--color-border); border-radius: var(--radius-lg); padding: clamp(0.15rem, 0.7vw, 0.28rem) clamp(0.25rem, 0.9vw, 0.4rem); min-width: 70px; max-width: 100px; width: auto; box-sizing: border-box; text-align: center; }
+    .kpi-label { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 0.08rem; }
+    .kpi-value { margin-top: 0.08rem; font-size: clamp(0.95rem, 2.5vw, 1.2rem); font-weight:700; }
+    .kpi:not(:last-child) { margin-bottom: 0; }
+    .score-positive { color: var(--color-positive); }
+    .score-negative { color: var(--color-negative); }
+    .score-neutral { color: var(--color-neutral); }
+    .selected-list { display:flex; flex-wrap:wrap; gap: .5rem; margin-top: .85rem; }
+    .pill { padding: .45rem .8rem; border-radius: var(--radius-full); font-size: var(--text-sm); border: 1px solid var(--color-border); background: var(--color-surface-2); }
+    .pill.positive { background: var(--color-positive-soft); border-color: var(--color-positive); }
+    .pill.negative { background: var(--color-negative-soft); border-color: var(--color-negative); }
+    .footer-note { margin-top: var(--space-4); color: var(--color-text-muted); }
+    .capture-zone { display:grid; gap: var(--space-5); }
+    .date-badge { display:inline-flex; width:fit-content; padding:.45rem .8rem; border-radius: var(--radius-full); background: var(--color-surface-2); border:1px solid var(--color-border); color: var(--color-text-muted); font-size: var(--text-sm); }
+    .status { margin-top:.8rem; font-size: var(--text-sm); color: var(--color-text-muted); }
+    .charts-column { display:flex; flex-direction:column; gap: var(--space-4); }
+    .chart-card { background: var(--color-surface-2); border-radius: var(--radius-xl); border:1px solid var(--color-border); padding: var(--space-4); box-sizing:border-box; }
+    .chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.75rem; }
+    .chart-title { font-size: var(--text-sm); font-weight:600; }
+    .chart-wrap { position: relative; height: 220px; }
+    .history-list { display:grid; gap:.75rem; margin-top:1rem; }
+    .history-item { display:flex; justify-content:space-between; gap:1rem; border:1px solid var(--color-border); background: var(--color-surface-2); border-radius: var(--radius-lg); padding: .9rem 1rem; }
+    .history-meta { color: var(--color-text-muted); font-size: var(--text-sm); }
+    .chart-controls { display:flex; justify-content: space-between; align-items:center; margin-bottom: var(--space-3); }
+    .chart-controls button { min-height: 38px; padding: 0.35rem 0.8rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); cursor: pointer; }
+    .chart-controls button:hover { background: var(--color-surface-2); }
+    .chart-controls .current-month { font-weight: 600; }
+    .hidden { display:none; }
+    
+    /* Tablette et petits écrans */
+    @media (max-width: 960px) {
+      .grid-2, .summary-grid { grid-template-columns: 1fr; }
+      .fatigue-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+      .topbar, .history-item { flex-direction: column; }
     }
-
-    .tag-label {
-      font-size: 0.74rem;
-    }
-
-    .tag:hover {
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(17, 24, 39, 1));
-      transform: translateY(-0.5px);
-      border-color: rgba(129, 140, 248, 0.7);
-      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.8);
-    }
-
-    .tag.selected {
-      background: linear-gradient(135deg, rgba(55, 65, 194, 0.16), rgba(55, 65, 194, 0.5));
-      border-color: rgba(129, 140, 248, 0.9);
-      color: #e5e7eb;
-      box-shadow:
-        0 0 0 1px rgba(15, 23, 42, 0.9),
-        0 10px 25px rgba(31, 41, 255, 0.55);
-    }
-
-    .tag.selected .tag-dot {
-      background: radial-gradient(circle at 30% 30%, #22d3ee 0, #6366f1 40%, #4c1d95 100%);
-      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.85);
-    }
-
-    .tag.disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-      filter: grayscale(0.4);
-      box-shadow: none;
-    }
-
-    .score-section {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .score-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem;
-    }
-
-    .score-label {
-      font-size: 0.8rem;
-      color: rgba(148, 163, 184, 0.9);
-      margin-bottom: 0.25rem;
-    }
-
-    .score-pill {
-      font-size: 0.76rem;
-      padding: 0.25rem 0.6rem;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      color: rgba(209, 213, 219, 0.9);
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.8) 0, rgba(15, 23, 42, 0.98) 55%);
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 32px;
-      transition: all 0.16s ease;
-    }
-
-    .score-pill.selected {
-      border-color: rgba(56, 189, 248, 0.95);
-      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.15) 0, rgba(15, 23, 42, 0.98) 60%);
-      color: #e5e7eb;
-      box-shadow:
-        0 0 0 1px rgba(15, 23, 42, 1),
-        0 10px 25px rgba(34, 211, 238, 0.55);
-      transform: translateY(-0.5px);
-    }
-
-    .score-pill.negative {
-      border-color: rgba(248, 113, 113, 0.75);
-    }
-
-    .score-pill.zero {
-      border-style: dashed;
-      border-color: rgba(148, 163, 184, 0.6);
-    }
-
-    .score-pill:hover:not(.selected) {
-      border-color: rgba(129, 140, 248, 0.8);
-      transform: translateY(-0.5px);
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.7);
-    }
-
-    .divider-soft {
-      height: 1px;
-      border-radius: 999px;
-      background: linear-gradient(
-        90deg,
-        transparent 0,
-        rgba(51, 65, 85, 0.9) 15%,
-        rgba(30, 64, 175, 0.7) 50%,
-        rgba(51, 65, 85, 0.9) 85%,
-        transparent 100%
-      );
-      margin: 0.75rem 0 0.9rem;
-      opacity: 0.9;
-    }
-
-    .summary-card {
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9) 0, rgba(15, 23, 42, 0.98) 55%);
-      border-radius: 16px;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      padding: 0.95rem 0.95rem 0.9rem;
-      margin-top: 0.5rem;
-    }
-
-    .summary-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 0.4rem;
-    }
-
-    .summary-title {
-      font-size: 0.82rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: rgba(156, 163, 175, 0.95);
-    }
-
-    .summary-date {
-      font-size: 0.78rem;
-      color: rgba(148, 163, 184, 0.9);
-    }
-
-    .summary-body {
-      font-size: 0.82rem;
-      color: rgba(209, 213, 219, 0.95);
-      line-height: 1.5;
-      margin-bottom: 0.6rem;
-    }
-
-    .kpi-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    .kpi {
-      flex: 1 1 90px;
-      min-width: 90px;
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 1));
-      border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.55);
-      padding: 0.45rem 0.6rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.1rem;
-    }
-
-    .kpi-label {
-      font-size: 0.7rem;
-      color: rgba(148, 163, 184, 0.9);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .kpi-value {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #e5e7eb;
-    }
-
-    .score-positive {
-      color: #4ade80;
-    }
-
-    .score-negative {
-      color: #f97373;
-    }
-
-    .score-neutral {
-      color: #e5e7eb;
-    }
-
-    .footer-note {
-      font-size: 0.78rem;
-      color: rgba(148, 163, 184, 0.9);
-      margin-top: 0.6rem;
-    }
-
-    .top-row {
-      display: flex;
-      gap: 1.2rem;
-      align-items: flex-start;
-    }
-
-    .top-left {
-      flex: 1.1;
-    }
-
-    .top-right {
-      width: 300px;
-      max-width: 100%;
-    }
-
-    .date-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.8rem;
-      margin-bottom: 0.9rem;
-    }
-
-    .date-display {
-      font-size: 0.9rem;
-      color: #e5e7eb;
-    }
-
-    .date-input {
-      font-size: 0.82rem;
-      padding: 0.35rem 0.55rem;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.85) 0, rgba(15, 23, 42, 1) 55%);
-      color: #e5e7eb;
-      outline: none;
-      min-width: 120px;
-    }
-
-    .date-input::-webkit-calendar-picker-indicator {
-      filter: invert(0.8);
-    }
-
-    .controls-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 0.8rem;
-    }
-
-    .btn {
-      font-size: 0.8rem;
-      border-radius: 999px;
-      padding: 0.38rem 0.9rem;
-      border: 1px solid rgba(148, 163, 184, 0.65);
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9) 0, rgba(15, 23, 42, 0.98) 55%);
-      color: #e5e7eb;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      cursor: pointer;
-      transition: all 0.16s ease;
-    }
-
-    .btn:hover {
-      border-color: rgba(129, 140, 248, 0.9);
-      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.9);
-      transform: translateY(-0.5px);
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #3b82f6, #6366f1);
-      border-color: rgba(129, 140, 248, 0.9);
-      box-shadow:
-        0 0 0 1px rgba(15, 23, 42, 1),
-        0 15px 35px rgba(37, 99, 235, 0.8);
-    }
-
-    .btn-primary:hover {
-      filter: brightness(1.05);
-    }
-
-    .btn-icon {
-      font-size: 0.9rem;
-    }
-
-    .history-card {
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9) 0, rgba(15, 23, 42, 0.98) 55%);
-      border-radius: 16px;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      padding: 0.9rem;
-      max-height: 270px;
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-    }
-
-    .history-list {
-      flex: 1;
-      overflow-y: auto;
-      padding-right: 0.25rem;
-      margin-right: -0.25rem;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(148, 163, 184, 0.8) transparent;
-    }
-
-    .history-list::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .history-list::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .history-list::-webkit-scrollbar-thumb {
-      background-color: rgba(148, 163, 184, 0.8);
-      border-radius: 999px;
-    }
-
-    .history-item {
-      padding: 0.45rem 0.6rem;
-      border-radius: 12px;
-      border: 1px solid transparent;
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9) 0, rgba(15, 23, 42, 0.98) 55%);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.5rem;
-      margin-bottom: 0.35rem;
-      cursor: pointer;
-      transition: all 0.14s ease;
-      font-size: 0.78rem;
-      color: rgba(209, 213, 219, 0.95);
-    }
-
-    .history-item:hover {
-      border-color: rgba(129, 140, 248, 0.85);
-      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.9);
-      transform: translateY(-0.5px);
-    }
-
-    .history-item.active {
-      border-color: rgba(96, 165, 250, 1);
-      background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.2) 0, rgba(15, 23, 42, 0.98) 55%);
-      box-shadow:
-        0 0 0 1px rgba(15, 23, 42, 1),
-        0 10px 25px rgba(37, 99, 235, 0.9);
-    }
-
-    .history-date {
-      font-weight: 500;
-      color: #e5e7eb;
-    }
-
-    .history-score {
-      font-size: 0.78rem;
-      color: rgba(148, 163, 184, 0.95);
-    }
-
-    .charts-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 1rem;
-    }
-
-    .chart-card {
-      background:
-        radial-gradient(circle at top left, rgba(15, 23, 42, 0.9) 0, rgba(15, 23, 42, 0.98) 55%);
-      border-radius: 16px;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      padding: 0.8rem 0.8rem 0.7rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-      min-height: 160px;
-    }
-
-    .chart-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .chart-title {
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: rgba(156, 163, 175, 0.95);
-    }
-
-    .chart-wrap {
-      position: relative;
-      width: 100%;
-      height: 150px;
-    }
-
-    .chart-wrap canvas {
-      width: 100% !important;
-      height: 100% !important;
-    }
-
-    .charts-column {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .charts-column .chart-card {
-      height: 160px;
-    }
-
-    @media (max-width: 1024px) {
-      .app-shell {
-        max-width: 100%;
+    
+    /* Appareils mobiles */
+    @media (max-width: 768px) {
+      :root, [data-theme="light"] {
+        --text-xs: clamp(0.7rem, 0.68rem + 0.15vw, 0.8rem);
+        --text-sm: clamp(0.85rem, 0.82rem + 0.18vw, 0.95rem);
+        --text-base: clamp(0.95rem, 0.92rem + 0.2vw, 1.05rem);
+        --text-lg: clamp(1.1rem, 1.0rem + 0.5vw, 1.3rem);
+        --text-xl: clamp(1.3rem, 1.15rem + 0.8vw, 1.7rem);
       }
-
-      .sidebar {
-        display: none;
-      }
-
-      .main {
-        padding: 1.2rem;
-      }
-
-      .top-row {
-        flex-direction: column;
-      }
-
-      .charts-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .charts-column .chart-card {
-        height: 180px;
-      }
+      
+      .name-fields input { width: clamp(70px, 30vw, 90px); padding: 0.25rem 0.4rem !important; height: 24px; }
     }
-
-    @media (max-width: 640px) {
-      body {
-        padding: 0.75rem;
+    
+    /* Petits mobiles */
+    @media (max-width: 480px) {
+      :root, [data-theme="light"] {
+        --text-xs: clamp(0.65rem, 0.63rem + 0.1vw, 0.75rem);
+        --text-sm: clamp(0.8rem, 0.78rem + 0.1vw, 0.9rem);
+        --text-base: clamp(0.9rem, 0.88rem + 0.15vw, 1rem);
+        --text-lg: clamp(1rem, 0.95rem + 0.3vw, 1.2rem);
+        --text-xl: clamp(1.15rem, 1.05rem + 0.5vw, 1.5rem);
+        --space-1: 0.2rem; --space-2: 0.4rem; --space-3: 0.6rem; --space-4: 0.85rem; --space-5: 1rem; --space-6: 1.25rem; --space-8: 1.5rem;
       }
-
-      .app-shell {
-        border-radius: 18px;
+      
+      .wrap { padding: var(--space-3); width: 100%; box-sizing: border-box; }
+      .topbar { flex-direction: column; gap: var(--space-2); align-items: stretch; }
+      .title { font-size: var(--text-lg); margin-bottom: var(--space-2); }
+      .toolbar { gap: var(--space-1); }
+      .name-fields input { width: clamp(60px, 25vw, 70px); padding: 0.2rem 0.3rem !important; height: 22px; font-size: 0.7rem; }
+      
+      .panel { padding: var(--space-3); border-radius: var(--radius-lg); }
+      .stack { gap: var(--space-4); }
+      
+      .theme-btn, .reset-btn, .capture-btn, .save-day-btn, .download-data-btn, .load-data-btn, .select-box {
+        min-height: 40px;
+        padding: 0.6rem 0.8rem;
+        font-size: var(--text-xs);
+        border-radius: var(--radius-lg);
+        flex: 1;
+        min-width: auto;
       }
-
-      .panel {
-        padding: 1rem;
-      }
-
-      .charts-column .chart-card {
-        height: 190px;
-      }
-    }
-
-    /* =========================
-       MISE EN PAGE PDF / PRINT
-       ========================= */
-
-    /* Conteneur spécial pour le PDF (masqué sur écran) */
-    #print-container {
-      display: none;
-    }
-
-    /* Affichage spécial impression */
-    @media print {
-      body {
-        margin: 0;
-        padding: 0;
-        background: #ffffff;
-      }
-
-      .app-shell,
-      .app-inner,
-      .sidebar,
-      .main {
-        display: none !important;
-      }
-
-      #print-container {
-        display: block;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Satoshi", sans-serif;
-        color: #111827;
-        padding: 16pt;
-      }
-
-      .print-page {
-        page-break-after: always;
-        break-after: page;
-      }
-
-      .print-page:last-child {
-        page-break-after: auto;
-      }
-
-      .print-section-title {
-        font-size: 11pt;
-        font-weight: 600;
-        margin-bottom: 4pt;
-      }
-
-      .print-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6pt;
-      }
-
-      .print-card {
-        border: 1px solid #d1d5db;
-        border-radius: 8pt;
-        padding: 6pt;
-        font-size: 9pt;
-        flex: 1 1 45%;
-        box-sizing: border-box;
-      }
-
-      .print-summary {
-        border: 1px solid #d1d5db;
-        border-radius: 8pt;
-        padding: 6pt;
-        font-size: 9pt;
-        margin-top: 6pt;
-      }
-
-      .print-kpi-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4pt;
-        margin-top: 4pt;
-      }
-
-      .print-kpi {
-        border-radius: 6pt;
-        border: 1px solid #e5e7eb;
-        padding: 3pt 4pt;
-        font-size: 8pt;
-        flex: 1 1 22%;
-      }
-
-      .print-graphs {
-        display: flex;
-        flex-direction: column;
-        gap: 6pt;
-      }
-
-      .print-graph-card {
-        border: 1px solid #d1d5db;
-        border-radius: 8pt;
-        padding: 6pt;
-      }
-
-      .print-graph-title {
-        font-size: 9pt;
-        font-weight: 600;
-        margin-bottom: 4pt;
-      }
-
-      /* Eviter les coupures au milieu des blocs */
-      .print-card,
-      .print-summary,
-      .print-graph-card {
-        page-break-inside: avoid;
-        break-inside: avoid;
-      }
+      
+      .summary-grid { grid-template-columns: repeat(3,minmax(80px,1fr)); gap: var(--space-2); }
+      .select-row { gap: var(--space-1); flex-direction: column; align-items: stretch; }
+      .select-row label { font-size: var(--text-xs); }
+      .select-box { width: 100%; }
+      .section-title { margin-bottom: 0.5rem; font-size: var(--text-lg); }
+      .selected-list { gap: 0.35rem; margin-top: 0.5rem; }
+      .chart-wrap { height: 150px; }
+      .chart-card { padding: var(--space-2); }
+      .history-item { padding: 0.65rem 0.75rem; flex-direction: column; gap: 0.35rem; }
+      .history-meta { font-size: 0.65rem; }
+      .date-badge { padding: 0.35rem 0.6rem; font-size: 0.65rem; }
+      .status { font-size: 0.65rem; }
+      .footer-note { font-size: 0.65rem; margin-top: var(--space-2); }
+      .ghost-note { font-size: 0.65rem; }
+      .summary-grid { grid-template-columns: repeat(2, minmax(70px, 1fr)); gap: var(--space-2); }
+      .grid-2 { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <div class="app-shell">
-    <div class="app-inner">
-      <aside class="sidebar">
-        <div class="brand">
-          <div class="brand-logo">BQ</div>
-          <div class="brand-text">
-            <div class="brand-title">Bilan quotidien</div>
-            <div class="brand-subtitle">Suivi fin de journée</div>
+  <main class="wrap stack">
+    <header class="topbar">
+      <div>
+        <h1 class="title">Bilan quotidien</h1>
+        <div class="name-fields">
+          <input type="text" id="userFirstName" class="modal-input" placeholder="Prénom" style="margin-bottom:0.5rem;">
+          <input type="text" id="userLastName" class="modal-input" placeholder="Nom" style="margin-bottom:0.5rem;">
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="theme-btn" type="button" id="themeBtn">🌙 / ☀️</button>
+        <button class="reset-btn" type="button" id="resetBtn">Recommencer</button>
+      </div>
+    </header>
+
+    <section class="capture-zone" id="captureZone">
+      <div class="date-badge" id="dateBadge">Date</div>
+
+      <section class="panel">
+        <h2 class="section-title">Activités</h2>
+        <div class="chips" id="activities"></div>
+        <button class="chip chip-add-btn" id="addActivityBtn" style="margin-top: var(--space-3);">+ Ajouter une activité</button>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Fatigue</h2>
+        <div class="fatigue-grid" id="fatigueButtons"></div>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Émotions</h2>
+        <div class="select-row">
+          <div class="select-group">
+            <label for="positiveSelect" class="ghost-note">☀️ Émotions positives</label>
+            <select id="positiveSelect" class="select-box"><option value=""></option></select>
+          </div>
+          <div class="select-group">
+            <label for="negativeSelect" class="ghost-note">⛈️ Émotions négatives</label>
+            <select id="negativeSelect" class="select-box"><option value=""></option></select>
           </div>
         </div>
-        <div class="panel">
-          <div class="panel-inner">
-            <div class="section-title">Historique</div>
-            <div class="section-subtitle">Sélectionne un jour pour revisualiser le bilan et les scores.</div>
-            <div class="history-card">
-              <div class="history-list" id="historyList">
-                <!-- éléments d'historique -->
-              </div>
-            </div>
+        <div class="selected-list" id="emotionList"></div>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Ressenti corporel</h2>
+        <div class="body-containers">
+          <div id="bodyPositiveContainer" style="background: var(--color-positive-soft); border-radius:var(--radius-lg); padding:var(--space-3);">
+            <strong>Positifs</strong>
+            <div class="chips" id="bodyPositiveFeelings" style="margin-top: var(--space-2);"></div>
+          </div>
+          <div id="bodyNegativeContainer" style="background: var(--color-negative-soft); border-radius:var(--radius-lg); padding:var(--space-3);">
+            <strong>Négatifs</strong>
+            <div class="chips" id="bodyNegativeFeelings" style="margin-top: var(--space-2);"></div>
           </div>
         </div>
-      </aside>
+        <button class="chip chip-add-btn" id="addBodyBtn" style="margin-top: var(--space-3);">+ Ajouter un ressenti</button>
+      </section>
 
-      <main class="main">
-        <section class="panel">
-          <div class="panel-inner">
-            <div class="top-row">
-              <div class="top-left">
-                <div class="section-title">Bilan du jour</div>
-                <div class="section-subtitle">Coche ce qui correspond à ta journée, puis choisis ton niveau de fatigue, émotions et ressenti.</div>
+      <section class="panel">
+        <h2 class="section-title">Bilan</h2>
+        <div class="summary-grid">
+          <div class="kpi"><div class="kpi-label">Activités</div><div class="kpi-value score-neutral" id="activityScore">0</div></div>
+          <div class="kpi"><div class="kpi-label">Fatigue</div><div class="kpi-value score-neutral" id="fatigueScore">0</div></div>
+          <div class="kpi"><div class="kpi-label">Émotions</div><div class="kpi-value score-neutral" id="emotionScore">0</div></div>
+          <div class="kpi"><div class="kpi-label">Ressenti</div><div class="kpi-value score-neutral" id="bodyScore">0</div></div>
+        </div>
+        <p class="footer-note" id="summaryText">Commence par cocher ce qui correspond à aujourd’hui.</p>
+      </section>
+    </section>
 
-                <div class="date-row">
-                  <div class="date-display" id="currentDateLabel"></div>
-                  <input type="date" id="dateInput" class="date-input">
-                </div>
+    <section class="panel">
+      <div class="section-title" style="margin-bottom:.8rem;">Graphiques</div>
+      <div class="chart-controls">
+        <button type="button" id="prevMonthBtn">⟵ Mois précédent</button>
+        <div class="current-month" id="currentMonthLabel">Mois</div>
+        <button type="button" id="nextMonthBtn">Mois suivant ⟶</button>
+      </div>
+      <div class="charts-column" id="chartsColumn">
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">Activités</div><div class="chart-month" id="chartMonthActivites"></div></div><div class="chart-wrap"><canvas id="chartActivites"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">Fatigue</div><div class="chart-month" id="chartMonthFatigue"></div></div><div class="chart-wrap"><canvas id="chartFatigue"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">Émotions</div><div class="chart-month" id="chartMonthEmotions"></div></div><div class="chart-wrap"><canvas id="chartEmotions"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">Ressenti</div><div class="chart-month" id="chartMonthRessenti"></div></div><div class="chart-wrap"><canvas id="chartRessenti"></canvas></div></div>
+      </div>
+      <div class="history-list" id="historyList" style="display:none;"></div>
+    </section>
 
-                <div class="controls-row">
-                  <button class="btn btn-primary" id="saveBtn">
-                    <span class="btn-icon">💾</span>
-                    <span>Enregistrer en PDF</span>
-                  </button>
-                  <button class="btn" id="resetBtn">
-                    <span class="btn-icon">🧹</span>
-                    <span>Réinitialiser le jour</span>
-                  </button>
-                  <button class="btn" id="exportBtn">
-                    <span class="btn-icon">⬇️</span>
-                    <span>Exporter données</span>
-                  </button>
-                  <button class="btn" id="importBtn">
-                    <span class="btn-icon">⬆️</span>
-                    <span>Importer données</span>
-                  </button>
-                  <input type="file" id="importFile" style="display:none" accept="application/json">
-                </div>
+    <section class="panel">
+      <div class="toolbar" style="justify-content:space-between; align-items:flex-end;">
+        <button class="save-day-btn" type="button" id="saveDayBtn" style="margin-right:auto;">Enregistrer la journée</button>
+        <div style="display:flex; gap:0.35rem;">
+          <button class="save-day-btn" type="button" id="savePdfBtn" style="background:#f0f0f0;color:#666;font-size:0.78rem;padding:0.35rem 0.6rem;min-height:30px;">Enregistrer en PDF</button>
+          <button class="download-data-btn" type="button" id="exportDataBtn" style="background:#f0f0f0;color:#666;font-size:0.78rem;padding:0.35rem 0.6rem;min-height:30px;">Exporter les données</button>
+          <button class="load-data-btn" type="button" id="importDataBtn" style="background:#f0f0f0;color:#666;font-size:0.78rem;padding:0.35rem 0.6rem;min-height:30px;">Importer les données</button>
+        </div>
+        <input class="hidden" type="file" id="dataFileInput" accept="application/json,.json">
+      </div>
+    </section>
 
-                <div class="list-section">
-                  <div class="list-group">
-                    <div class="list-header">
-                      <div class="list-title">Activités</div>
-                      <div class="list-subtitle">Important pour la journée</div>
-                    </div>
-                    <div class="list-items" id="activitiesList"></div>
-                  </div>
+    <div class="status" id="captureStatus">Importe les données ou enregistre directement pour commencer un nouveau.</div>
+    <div class="last-save" id="lastSaveStatus" style="margin-top:0.5rem;color:var(--color-text-muted);"></div>
 
-                  <div class="list-group">
-                    <div class="list-header">
-                      <div class="list-title">Fatigue</div>
-                      <div class="list-subtitle">Niveau global de fatigue</div>
-                    </div>
-                    <div class="score-section">
-                      <div>
-                        <div class="score-label">Échelle de -5 (très difficile) à +5 (très bon)</div>
-                        <div class="score-row" id="fatigueScoreRow"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="list-group">
-                    <div class="list-header">
-                      <div class="list-title">Émotions</div>
-                      <div class="list-subtitle">Ressenti émotionnel global</div>
-                    </div>
-                    <div class="score-section">
-                      <div class="score-row" id="emotionScoreRow"></div>
-                    </div>
-                  </div>
-
-                  <div class="list-group">
-                    <div class="list-header">
-                      <div class="list-title">Ressenti corporel</div>
-                      <div class="list-subtitle">Douleur / confort physique</div>
-                    </div>
-                    <div class="score-section">
-                      <div class="score-row" id="bodyScoreRow"></div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="divider-soft"></div>
-
-                <div class="summary-card">
-                  <div class="summary-header">
-                    <div class="summary-title">Bilan synthétique</div>
-                    <div class="summary-date" id="summaryDateLabel"></div>
-                  </div>
-                  <div class="summary-body" id="summaryText">
-                    Commence par cocher ce qui correspond à aujourd'hui.
-                  </div>
-                  <div class="kpi-row">
-                    <div class="kpi">
-                      <div class="kpi-label">Activités</div>
-                      <div class="kpi-value" id="activityCount">0</div>
-                    </div>
-                    <div class="kpi">
-                      <div class="kpi-label">Fatigue</div>
-                      <div class="kpi-value score-neutral" id="fatigueScore">0</div>
-                    </div>
-                    <div class="kpi">
-                      <div class="kpi-label">Émotions</div>
-                      <div class="kpi-value score-neutral" id="emotionScore">0</div>
-                    </div>
-                    <div class="kpi">
-                      <div class="kpi-label">Ressenti</div>
-                      <div class="kpi-value score-neutral" id="bodyScore">0</div>
-                    </div>
-                    <div class="kpi">
-                      <div class="kpi-label">Total</div>
-                      <div class="kpi-value score-neutral" id="totalScore">0</div>
-                    </div>
-                  </div>
-                  <p class="footer-note" id="scoreHint">
-                    La note totale est la somme des trois échelles (min -15, max +15).
-                  </p>
-                </div>
-              </div>
-
-              <div class="top-right">
-                <div class="section-title">Graphiques</div>
-                <div class="section-subtitle">Évolution des derniers jours.</div>
-
-                <div class="charts-column" id="chartsContainer">
-                  <div class="chart-card">
-                    <div class="chart-header">
-                      <div class="chart-title">Activités</div>
-                    </div>
-                    <div class="chart-wrap">
-                      <canvas id="chartActivites"></canvas>
-                    </div>
-                  </div>
-                  <div class="chart-card">
-                    <div class="chart-header">
-                      <div class="chart-title">Fatigue</div>
-                    </div>
-                    <div class="chart-wrap">
-                      <canvas id="chartFatigue"></canvas>
-                    </div>
-                  </div>
-                  <div class="chart-card">
-                    <div class="chart-header">
-                      <div class="chart-title">Émotions</div>
-                    </div>
-                    <div class="chart-wrap">
-                      <canvas id="chartEmotions"></canvas>
-                    </div>
-                  </div>
-                  <div class="chart-card">
-                    <div class="chart-header">
-                      <div class="chart-title">Ressenti</div>
-                    </div>
-                    <div class="chart-wrap">
-                      <canvas id="chartRessenti"></canvas>
-                    </div>
-                  </div>
-                  <div class="chart-card">
-                    <div class="chart-header">
-                      <div class="chart-title">Score total</div>
-                    </div>
-                    <div class="chart-wrap">
-                      <canvas id="chartTotal"></canvas>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
+  <!-- Modales -->
+  <div class="modal-overlay" id="addActivityModal">
+    <div class="modal-content">
+      <h3 class="modal-title">Ajouter une activité</h3>
+      <input type="text" class="modal-input" id="activityInput" placeholder="Nom de l'activité">
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" type="button" id="cancelActivityBtn">Annuler</button>
+        <button class="modal-btn modal-btn-confirm" type="button" id="confirmActivityBtn">Ajouter</button>
+      </div>
     </div>
   </div>
 
-  <!-- CONTENEUR SPÉCIAL POUR L'IMPRESSION / PDF -->
-  <div id="print-container">
-    <!-- Page 1 : Bilan -->
-    <div class="print-page" id="print-page-1">
-      <div class="print-section-title" id="printTitleDate"></div>
-
-      <div class="print-grid">
-        <div class="print-card" id="printActivities"></div>
-        <div class="print-card" id="printFatigue"></div>
-        <div class="print-card" id="printEmotions"></div>
-        <div class="print-card" id="printBody"></div>
+  <div class="modal-overlay" id="addBodyModal">
+    <div class="modal-content">
+      <h3 class="modal-title">Ajouter un ressenti corporel</h3>
+      <input type="text" class="modal-input" id="bodyInput" placeholder="Description du ressenti">
+      <p style="margin:0.6rem 0 0.4rem 0;">Est-ce que ce ressenti est positif ou négatif ?</p>
+      <div class="toggle-btns">
+        <button type="button" class="toggle-btn toggle-btn--positive selected" id="bodyPositiveBtn">Positif</button>
+        <button type="button" class="toggle-btn toggle-btn--negative" id="bodyNegativeBtn">Négatif</button>
       </div>
-
-      <div class="print-summary" id="printSummary"></div>
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" type="button" id="cancelBodyBtn">Annuler</button>
+        <button class="modal-btn modal-btn-confirm" type="button" id="confirmBodyBtn">Ajouter</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Page 2 : Graphiques -->
-    <div class="print-page" id="print-page-2">
-      <div class="print-section-title">Graphiques</div>
-      <div class="print-graphs">
-        <div class="print-graph-card">
-          <div class="print-graph-title">Activités</div>
-          <canvas id="printChartActivites"></canvas>
-        </div>
-        <div class="print-graph-card">
-          <div class="print-graph-title">Fatigue</div>
-          <canvas id="printChartFatigue"></canvas>
-        </div>
-        <div class="print-graph-card">
-          <div class="print-graph-title">Émotions</div>
-          <canvas id="printChartEmotions"></canvas>
-        </div>
-        <div class="print-graph-card">
-          <div class="print-graph-title">Ressenti</div>
-          <canvas id="printChartRessenti"></canvas>
-        </div>
-        <div class="print-graph-card">
-          <div class="print-graph-title">Score total</div>
-          <canvas id="printChartTotal"></canvas>
-        </div>
+  <div class="modal-overlay" id="addEmotionModal">
+    <div class="modal-content">
+      <h3 class="modal-title" id="emotionModalTitle">Ajouter une émotion</h3>
+      <input type="text" class="modal-input" id="emotionInput" placeholder="Nom de l'émotion">
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" type="button" id="cancelEmotionBtn">Annuler</button>
+        <button class="modal-btn modal-btn-confirm" type="button" id="confirmEmotionBtn">Ajouter</button>
       </div>
     </div>
   </div>
 
   <script>
-    const activitiesData = [
-      "Courses / commissions",
-      "Gestion administrative / mails",
-      "Appels / rendez-vous",
-      "Tâches ménagères",
-      "Cuisine / préparation repas",
-      "Soins / rendez-vous médicaux",
-      "Déplacements / trajets",
-      "Temps avec Louna / Titi",
-      "Loisirs / séries / jeux",
-      "Autres activités importantes"
+    // Configuration et données par défaut
+    const defaultActivities = ['Me laver','Vider la litière','Mettre le soin à Louna','Jeter le rouleau de papier toilette','Faire l\'aspirateur','Jeter bouteille d\'eau','Me faire à manger','Me nettoyer le visage le soir','Faire ce que j\'ai dit qu\'il fallait que je fasse'];
+    const defaultBodyFeelings = [
+      { label:'Boule dans la gorge', value:-1 },{ label:'Muscles tendus', value:-1 },{ label:'Palpitations', value:-1 },{ label:'Flush', value:-1 },{ label:'Douleurs au ventre', value:-1 },
+      { label:'Gorge qui vibre', value:1 },{ label:'Muscles détendus', value:1 },{ label:'Frisson', value:1 },{ label:'Bougeotte', value:1 }
+    ];
+    const defaultNegativeEmotions = ['Affolée','Agacée','Angoissée','Anxieuse','Apeurée','Contrariée','Exaspérée','Fâchée','Frustrée','Furieuse','Haineuse','Inquiète','Irritée','Mécontente','Méfiantes','Paniquée','Pessimiste','Préoccupée','Révoltée','Soucieuse','Sur les nerfs','Tendue','Vexée'];
+    const defaultPositiveEmotions = ['Amusée','Apaisée','Calme','Confiante','Contente','Détendue','Encouragée','Excitée','Fière','Heureuse','Joyeuse','Légère','Motivée','Optimiste','Rassurée','Satisfaite','Sereine'];
+    const fatigueLevels = [
+      { label:'+5', value:5, cls:'f5' },{ label:'+4', value:4, cls:'f4' },{ label:'+3', value:3, cls:'f3' },{ label:'+2', value:2, cls:'f2' },{ label:'+1', value:1, cls:'f1' },
+      { label:'0', value:0, cls:'f0' },
+      { label:'-1', value:-1, cls:'n1' },{ label:'-2', value:-2, cls:'n2' },{ label:'-3', value:-3, cls:'n3' },{ label:'-4', value:-4, cls:'n4' },{ label:'-5', value:-5, cls:'n5' }
     ];
 
-    const fatigueScale = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
+    // Données mutables (peuvent être modifiées par l'utilisateur)
+    let activities = [...defaultActivities];
+    let bodyFeelings = [...defaultBodyFeelings];
+    let negativeEmotions = [...defaultNegativeEmotions];
+    let positiveEmotions = [...defaultPositiveEmotions];
 
-    let currentDate = new Date();
-    let currentData = {};
-    let history = {};
-    let charts = {};
-    let printCharts = {};
+    let userFirstName = '';
+    let userLastName = '';
 
-    const historyKey = "bilanQuotidienHistory_v1";
+    const state = { activities:new Set(), fatigue:0, negativeEmotions:[], positiveEmotions:[], body:new Set() };
+    let historyRecords = [];
+    const charts = {};
+    let currentEmotionType = null;
+    let monthKeys = [];
+    let selectedMonthIndex = 0;
 
-    function formatDate(d) {
-      return d.toISOString().slice(0, 10);
-    }
+    // Chargement des données depuis localStorage
+    function loadFromLocalStorage() {
+      const saved = localStorage.getItem('bilanQuotidienConfig');
+      if (saved) {
+        try {
+          const config = JSON.parse(saved);
+          if (config.activities) activities = config.activities;
+          if (config.bodyFeelings) bodyFeelings = config.bodyFeelings;
+          if (config.negativeEmotions) negativeEmotions = config.negativeEmotions;
+          if (config.positiveEmotions) positiveEmotions = config.positiveEmotions;
+          if (config.userFirstName) userFirstName = config.userFirstName;
+          if (config.userLastName) userLastName = config.userLastName;
+        } catch (e) { console.error('Erreur dans le chargement localStorage:', e); }
+      }
 
-    function formatDateLabel(d) {
-      return d.toLocaleDateString("fr-FR", {
-        weekday: "long",
-        day: "2-digit",
-        month: "long",
-        year: "numeric"
-      });
-    }
-
-    function loadHistory() {
-      const raw = localStorage.getItem(historyKey);
-      if (!raw) return {};
-      try {
-        return JSON.parse(raw) || {};
-      } catch {
-        return {};
+      const savedHistory = localStorage.getItem('bilanQuotidienHistory');
+      if (savedHistory) {
+        try {
+          historyRecords = JSON.parse(savedHistory);
+        } catch (e) { console.error('Erreur dans le chargement de l\'historique:', e); }
       }
     }
 
-    function saveHistory() {
-      localStorage.setItem(historyKey, JSON.stringify(history));
+    // Sauvegarde dans localStorage
+    function saveToLocalStorage() {
+      const config = { activities, bodyFeelings, negativeEmotions, positiveEmotions, userFirstName, userLastName };
+      localStorage.setItem('bilanQuotidienConfig', JSON.stringify(config));
+      localStorage.setItem('bilanQuotidienHistory', JSON.stringify(historyRecords));
     }
 
-    function initActivities() {
-      const container = document.getElementById("activitiesList");
-      container.innerHTML = "";
-      activitiesData.forEach((label, index) => {
-        const row = document.createElement("div");
-        row.className = "tag-row";
+    // Gestion des modales
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.add('active');
+    }
 
-        const tag = document.createElement("div");
-        tag.className = "tag";
-        tag.dataset.activity = label;
-        tag.innerHTML = '<div class="tag-dot"></div><div class="tag-label">' + label + "</div>";
-        tag.addEventListener("click", () => toggleActivity(label));
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    }
 
-        row.appendChild(tag);
-        container.appendChild(row);
+    const activitiesEl = document.getElementById('activities');
+    const fatigueEl = document.getElementById('fatigueButtons');
+    const emotionListEl = document.getElementById('emotionList');
+    const bodyPositiveEl = document.getElementById('bodyPositiveFeelings');
+    const bodyNegativeEl = document.getElementById('bodyNegativeFeelings');
+    const historyListEl = document.getElementById('historyList');
+
+    function formatDisplayDate(d = new Date()) { return d.toLocaleString('fr-FR', { dateStyle:'full', timeStyle:'short' }); }
+    function formatShortDate(iso) { return new Date(iso).toLocaleString('fr-FR', { dateStyle:'short', timeStyle:'short' }); }
+    function formatFileDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`; }
+    function dayKeyFromISO(iso) { const d = new Date(iso); const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+    function signed(v) { return v>0 ? `+${v}` : String(v); }
+    function setScoreColor(el, v) { el.classList.remove('score-positive','score-negative','score-neutral'); if (v>0) el.classList.add('score-positive'); else if (v<0) el.classList.add('score-negative'); else el.classList.add('score-neutral'); }
+
+    function computeScores() {
+      const activityScore = state.activities.size;
+      const fatigueScore = state.fatigue;
+      const emotionScore = state.positiveEmotions.length - state.negativeEmotions.length;
+      const bodyScore = [...state.body].reduce((sum, idx) => sum + bodyFeelings[idx].value, 0);
+      const total = activityScore + fatigueScore + emotionScore + bodyScore;
+      return { activityScore, fatigueScore, emotionScore, bodyScore, total };
+    }
+
+    function renderActivities() {
+      activitiesEl.innerHTML = '';
+      activities.forEach((label, i) => {
+        const active = state.activities.has(i);
+        const btn = document.createElement('button');
+        btn.type='button';
+        btn.className='chip'+(active?' active':'');
+        
+        const labelSpan = document.createElement('span');
+        labelSpan.textContent = `${label} · +1`;
+        btn.appendChild(labelSpan);
+        
+        // Bouton de suppression pour toutes les activités
+        const deleteBtn = document.createElement('span');
+        deleteBtn.className = 'chip-delete';
+        deleteBtn.textContent = '✕';
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          activities.splice(i, 1);
+          state.activities.delete(i);
+          // ajuster l'état des indices ; on reconstruit les valeurs sélectionnées
+          const newActivities = new Set();
+          state.activities.forEach(idx => { if (idx < i) newActivities.add(idx); else if (idx > i) newActivities.add(idx-1); });
+          state.activities = newActivities;
+          saveToLocalStorage();
+          renderAll();
+        });
+        btn.appendChild(deleteBtn);
+        
+        btn.addEventListener('click', () => {
+          active ? state.activities.delete(i) : state.activities.add(i);
+          renderAll();
+        });
+        activitiesEl.appendChild(btn);
       });
     }
 
-    function initScoreRow(id, type) {
-      const container = document.getElementById(id);
-      container.innerHTML = "";
-      fatigueScale.forEach((val) => {
-        const pill = document.createElement("div");
-        pill.className = "score-pill" + (val < 0 ? " negative" : val === 0 ? " zero" : "");
-        pill.dataset.scoreType = type;
-        pill.dataset.value = val;
-        pill.textContent = val;
-        pill.addEventListener("click", () => selectScore(type, val));
-        container.appendChild(pill);
+    function renderFatigue() {
+      fatigueEl.innerHTML='';
+      fatigueLevels.forEach(level => {
+        const btn = document.createElement('button');
+        btn.type='button'; btn.className=`fatigue-btn ${level.cls}` + (state.fatigue===level.value?' active':''); btn.textContent=level.label;
+        btn.addEventListener('click', ()=>{ state.fatigue=level.value; renderAll(); });
+        fatigueEl.appendChild(btn);
       });
     }
 
-    function toggleActivity(label) {
-      if (!currentData.activities) currentData.activities = [];
-      const idx = currentData.activities.indexOf(label);
-      if (idx >= 0) {
-        currentData.activities.splice(idx, 1);
-      } else {
-        currentData.activities.push(label);
-      }
-      renderActivitiesSelection();
-      updateSummary();
-      updateHistory();
-      updateCharts();
-    }
+    function renderBody() {
+      bodyPositiveEl.innerHTML='';
+      bodyNegativeEl.innerHTML='';
+      bodyFeelings.forEach((item, i) => {
+        const active = state.body.has(i);
+        const btn = document.createElement('button');
+        const bodyClass = item.value > 0 ? 'chip-body-positive' : 'chip-body-negative';
+        btn.type='button';
+        btn.className=`chip ${bodyClass}` + (active?' active':'');
 
-    function selectScore(type, value) {
-      currentData[type] = value;
-      renderScoresSelection();
-      updateSummary();
-      updateHistory();
-      updateCharts();
-    }
+        const labelSpan = document.createElement('span');
+        labelSpan.textContent = `${item.label} · ${signed(item.value)}`;
+        btn.appendChild(labelSpan);
 
-    function renderActivitiesSelection() {
-      const container = document.getElementById("activitiesList");
-      const tags = container.querySelectorAll(".tag");
-      tags.forEach((tag) => {
-        const label = tag.dataset.activity;
-        if (currentData.activities && currentData.activities.includes(label)) {
-          tag.classList.add("selected");
-        } else {
-          tag.classList.remove("selected");
-        }
-      });
+        const deleteBtn = document.createElement('span');
+        deleteBtn.className = 'chip-delete';
+        deleteBtn.textContent = '✕';
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          bodyFeelings.splice(i, 1);
+          state.body.delete(i);
+          const newBody = new Set();
+          state.body.forEach(idx => { if (idx < i) newBody.add(idx); else if (idx > i) newBody.add(idx-1); });
+          state.body = newBody;
+          saveToLocalStorage();
+          renderAll();
+        });
+        btn.appendChild(deleteBtn);
 
-      const count = currentData.activities ? currentData.activities.length : 0;
-      document.getElementById("activityCount").textContent = count;
-    }
-
-    function renderScoresSelection() {
-      ["fatigue", "emotion", "body"].forEach((type) => {
-        const pills = document.querySelectorAll('.score-pill[data-score-type="' + type + '"]');
-        pills.forEach((pill) => {
-          const val = parseInt(pill.dataset.value, 10);
-          if (currentData[type] === val) {
-            pill.classList.add("selected");
-          } else {
-            pill.classList.remove("selected");
-          }
+        btn.addEventListener('click', () => {
+          active ? state.body.delete(i) : state.body.add(i);
+          renderAll();
         });
 
-        const score = currentData[type] || 0;
-        const displayId =
-          type === "fatigue" ? "fatigueScore" : type === "emotion" ? "emotionScore" : "bodyScore";
-        const el = document.getElementById(displayId);
-        el.textContent = score;
-        el.classList.remove("score-positive", "score-negative", "score-neutral");
-        if (score > 0) el.classList.add("score-positive");
-        else if (score < 0) el.classList.add("score-negative");
-        else el.classList.add("score-neutral");
+        if (item.value > 0) bodyPositiveEl.appendChild(btn);
+        else bodyNegativeEl.appendChild(btn);
       });
+    }
 
-      const total =
-        (currentData.fatigue || 0) +
-        (currentData.emotion || 0) +
-        (currentData.body || 0);
-      const totalEl = document.getElementById("totalScore");
-      totalEl.textContent = total;
-      totalEl.classList.remove("score-positive", "score-negative", "score-neutral");
-      if (total > 0) totalEl.classList.add("score-positive");
-      else if (total < 0) totalEl.classList.add("score-negative");
-      else totalEl.classList.add("score-neutral");
+    function renderEmotions() {
+      emotionListEl.innerHTML='';
+      state.negativeEmotions.forEach((emotion, idx) => {
+        const pill=document.createElement('button'); pill.type='button'; pill.className='pill negative'; pill.textContent=`${emotion} · -1 ×`;
+        pill.addEventListener('click', ()=>{ state.negativeEmotions.splice(idx,1); renderAll(); }); emotionListEl.appendChild(pill);
+      });
+      state.positiveEmotions.forEach((emotion, idx) => {
+        const pill=document.createElement('button'); pill.type='button'; pill.className='pill positive'; pill.textContent=`${emotion} · +1 ×`;
+        pill.addEventListener('click', ()=>{ state.positiveEmotions.splice(idx,1); renderAll(); }); emotionListEl.appendChild(pill);
+      });
+      if (!state.negativeEmotions.length && !state.positiveEmotions.length) {
+        const span=document.createElement('span'); span.className='ghost-note'; span.textContent='Aucune émotion ajoutée pour le moment.'; emotionListEl.appendChild(span);
+      }
     }
 
     function updateSummary() {
-      const dateLabel = formatDateLabel(currentDate);
-      document.getElementById("summaryDateLabel").textContent = dateLabel;
-
-      const activities = currentData.activities || [];
-      const fatigue = currentData.fatigue;
-      const emotion = currentData.emotion;
-      const body = currentData.body;
-
-      let parts = [];
-
-      if (activities.length) {
-        parts.push("Aujourd'hui, tu as fait : " + activities.join(", ") + ".");
-      } else {
-        parts.push("Aucune activité particulière n'a été sélectionnée.");
-      }
-
-      function describeScore(label, value) {
-        if (value === undefined) return label + " non renseigné(e)";
-        if (value <= -4) return label + " très difficile (" + value + ").";
-        if (value <= -2) return label + " plutôt difficile (" + value + ").";
-        if (value === -1) return label + " légèrement difficile (-1).";
-        if (value === 0) return label + " neutre (0).";
-        if (value <= 2) return label + " plutôt positif(ve) (" + value + ").";
-        if (value <= 4) return label + " très positif(ve) (" + value + ").";
-        return label + " excellent(e) (" + value + ").";
-      }
-
-      parts.push(describeScore("La fatigue a été", fatigue));
-      parts.push(describeScore("Les émotions ont été", emotion));
-      parts.push(describeScore("Le ressenti corporel a été", body));
-
-      const total =
-        (fatigue || 0) + (emotion || 0) + (body || 0);
-      parts.push("La note globale de la journée est de " + total + " (min -15, max +15).");
-
-      document.getElementById("summaryText").textContent = parts.join(" ");
+      const { activityScore, fatigueScore, emotionScore, bodyScore, total } = computeScores();
+      [['activityScore',activityScore],['fatigueScore',fatigueScore],['emotionScore',emotionScore],['bodyScore',bodyScore]].forEach(([id,val])=>{ const el=document.getElementById(id); if (el) { el.textContent=signed(val); setScoreColor(el,val); }});
+      // message bilan supprimé pour affichage minimal
+      document.getElementById('summaryText').textContent='';
+      document.getElementById('dateBadge').textContent=`Bilan du ${formatDisplayDate()}`;
     }
 
-    function loadDay(dateStr) {
-      currentDate = new Date(dateStr);
-      const key = formatDate(currentDate);
-      currentData = history[key] || { activities: [], fatigue: 0, emotion: 0, body: 0 };
+    function populateSelect(selectId, options, bucket) {
+      const select=document.getElementById(selectId);
+      select.innerHTML = '<option value=""></option>';
+      options.forEach((item, idx) => {
+        const opt=document.createElement('option');
+        opt.value=idx;
+        opt.textContent=item;
+        select.appendChild(opt);
+      });
+      const addOpt = document.createElement('option');
+      addOpt.value='__add__';
+      addOpt.textContent='+ Ajouter personnalisé';
+      select.appendChild(addOpt);
 
-      document.getElementById("dateInput").value = key;
-      document.getElementById("currentDateLabel").textContent = formatDateLabel(currentDate);
+      select.addEventListener('change', ()=>{
+        const value=select.value;
+        if(!value) { select.value=''; return; }
+        if (value === '__add__') {
+          currentEmotionType = bucket;
+          openModal('addEmotionModal');
+          select.value='';
+        } else {
+          const emotionName = options[parseInt(value)];
+          state[bucket].push(emotionName);
+          select.value='';
+          renderAll();
+        }
+      });
+    }
 
-      renderActivitiesSelection();
-      renderScoresSelection();
-      updateSummary();
-      renderHistoryList();
+    function mergeRecords(existing, incoming) {
+      const byDay = new Map();
+      const all = [...existing, ...incoming];
+      all.forEach(rec => {
+        if (!rec.date) return;
+        const key = dayKeyFromISO(rec.date);
+        const current = byDay.get(key);
+        if (!current || new Date(rec.date) > new Date(current.date)) {
+          byDay.set(key, rec);
+        }
+      });
+      return Array.from(byDay.values()).sort((a,b)=>new Date(a.date)-new Date(b.date));
+    }
+
+    function getMonthKeys(records) {
+      const keys = new Set();
+      records.forEach(r => {
+        if (!r.date) return;
+        const d = new Date(r.date);
+        keys.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+      });
+      return Array.from(keys).sort();
+    }
+
+    function setSelectedMonth(index) {
+      if (!monthKeys.length) return;
+      selectedMonthIndex = Math.max(0, Math.min(index, monthKeys.length - 1));
+      document.getElementById('currentMonthLabel').textContent = monthKeys[selectedMonthIndex] ? `${monthKeys[selectedMonthIndex].slice(5,7)}/${monthKeys[selectedMonthIndex].slice(0,4)}` : 'Mois';
+      const prevBtn = document.getElementById('prevMonthBtn');
+      const nextBtn = document.getElementById('nextMonthBtn');
+      prevBtn.disabled = selectedMonthIndex === 0;
+      nextBtn.disabled = selectedMonthIndex === monthKeys.length - 1;
       updateCharts();
     }
 
-    function updateHistory() {
-      const key = formatDate(currentDate);
-
-      if (
-        (!currentData.activities || currentData.activities.length === 0) &&
-        currentData.fatigue === undefined &&
-        currentData.emotion === undefined &&
-        currentData.body === undefined
-      ) {
-        delete history[key];
-      } else {
-        history[key] = {
-          activities: currentData.activities || [],
-          fatigue: currentData.fatigue || 0,
-          emotion: currentData.emotion || 0,
-          body: currentData.body || 0
-        };
-      }
-
-      saveHistory();
-      renderHistoryList();
-    }
-
-    function renderHistoryList() {
-      const container = document.getElementById("historyList");
-      container.innerHTML = "";
-
-      const dates = Object.keys(history).sort().reverse();
-
-      dates.forEach((dateStr) => {
-        const item = document.createElement("div");
-        item.className = "history-item";
-        if (formatDate(currentDate) === dateStr) {
-          item.classList.add("active");
-        }
-
-        const date = new Date(dateStr + "T00:00:00");
-        const data = history[dateStr];
-
-        const left = document.createElement("div");
-        left.className = "history-date";
-        left.textContent = date.toLocaleDateString("fr-FR", {
-          weekday: "short",
-          day: "2-digit",
-          month: "2-digit"
-        });
-
-        const right = document.createElement("div");
-        right.className = "history-score";
-        const total = (data.fatigue || 0) + (data.emotion || 0) + (data.body || 0);
-        right.textContent = "Total: " + total;
-
-        item.appendChild(left);
-        item.appendChild(right);
-        item.addEventListener("click", () => loadDay(dateStr));
-
-        container.appendChild(item);
+    function filterBySelectedMonth(records) {
+      if (!monthKeys.length) return records;
+      const selected = monthKeys[selectedMonthIndex];
+      if (!selected) return records;
+      return records.filter(r => {
+        if (!r.date) return false;
+        const d = new Date(r.date);
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        return key === selected;
       });
     }
 
     function updateCharts() {
-      const labels = Object.keys(history).sort();
-      const activitesSeries = labels.map((d) => (history[d].activities || []).length);
-      const fatigueSeries = labels.map((d) => history[d].fatigue || 0);
-      const emotionSeries = labels.map((d) => history[d].emotion || 0);
-      const bodySeries = labels.map((d) => history[d].body || 0);
-      const totalSeries = labels.map(
-        (d) =>
-          (history[d].fatigue || 0) +
-          (history[d].emotion || 0) +
-          (history[d].body || 0)
-      );
+      const axisColor = getComputedStyle(document.documentElement).getPropertyValue('--color-text-muted').trim();
+      const primary = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
+      const filtered = filterBySelectedMonth(historyRecords);
+      const labels = filtered.map(r => new Date(r.date).toLocaleDateString('fr-FR', { day:'2-digit' }));
 
-      const primary = "#60a5fa";
-      const axisColor = "#9ca3af";
+      const selectedMonth = monthKeys[selectedMonthIndex] || '';
+      const monthName = selectedMonth ? `${selectedMonth.slice(5,7)}/${selectedMonth.slice(0,4)}` : '';
+      ['chartMonthActivites', 'chartMonthFatigue', 'chartMonthEmotions', 'chartMonthRessenti'].forEach(id => {
+        const el=document.getElementById(id);
+        if (el) el.textContent = monthName;
+      });
+
+      const series = {
+        activites: filtered.map(r => r.activityScore ?? r.activities?.length ?? 0),
+        fatigue: filtered.map(r => r.fatigue ?? 0),
+        emotions: filtered.map(r => r.emotionScore ?? ((r.positiveEmotions?.length||0)-(r.negativeEmotions?.length||0))),
+        ressenti: filtered.map(r => r.bodyScore ?? 0),
+        total: filtered.map(r => r.total ?? 0)
+      };
 
       function makeChart(id, data) {
-        const ctx = document.getElementById(id).getContext("2d");
+        const ctx = document.getElementById(id).getContext('2d');
         if (charts[id]) charts[id].destroy();
         charts[id] = new Chart(ctx, {
-          type: "line",
-          data: {
-            labels,
-            datasets: [
-              {
-                data,
-                borderColor: primary,
-                backgroundColor: primary + "33",
-                fill: true,
-                tension: 0.25,
-                pointRadius: 3
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false }
-            },
-            scales: {
-              x: {
-                ticks: { color: axisColor },
-                grid: { color: axisColor + "22" }
-              },
-              y: {
-                ticks: { color: axisColor },
-                grid: { color: axisColor + "22" }
-              }
-            }
-          }
+          type:'line',
+          data:{ labels, datasets:[{ data, borderColor:primary, backgroundColor:primary+'33', fill:true, tension:.25, pointRadius:3 }]},
+          options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ ticks:{ color:axisColor }, grid:{ color:axisColor+'22' } }, y:{ min:-5, max:10, ticks:{ color:axisColor }, grid:{ color:axisColor+'22' } } } }
         });
       }
 
-      makeChart("chartActivites", activitesSeries);
-      makeChart("chartFatigue", fatigueSeries);
-      makeChart("chartEmotions", emotionSeries);
-      makeChart("chartRessenti", bodySeries);
-      makeChart("chartTotal", totalSeries);
+      makeChart('chartActivites', series.activites);
+      makeChart('chartFatigue', series.fatigue);
+      makeChart('chartEmotions', series.emotions);
+      makeChart('chartRessenti', series.ressenti);
     }
 
-    function updatePrintView() {
-      const dateLabel = formatDateLabel(currentDate);
-      document.getElementById("printTitleDate").textContent =
-        "Bilan du " + dateLabel;
-
-      const activities = currentData.activities || [];
-      const fatigue = currentData.fatigue;
-      const emotion = currentData.emotion;
-      const body = currentData.body;
-      const total =
-        (fatigue || 0) + (emotion || 0) + (body || 0);
-
-      const printActivities = document.getElementById("printActivities");
-      const printFatigue = document.getElementById("printFatigue");
-      const printEmotions = document.getElementById("printEmotions");
-      const printBody = document.getElementById("printBody");
-      const printSummary = document.getElementById("printSummary");
-
-      printActivities.innerHTML = "<strong>Activités</strong><br>" +
-        (activities.length
-          ? activities.map((a) => "• " + a).join("<br>")
-          : "Aucune activité sélectionnée.");
-
-      printFatigue.innerHTML =
-        "<strong>Fatigue</strong><br>" +
-        (fatigue !== undefined ? "Score : " + fatigue : "Non renseigné(e).");
-
-      printEmotions.innerHTML =
-        "<strong>Émotions</strong><br>" +
-        (emotion !== undefined ? "Score : " + emotion : "Non renseigné(e).");
-
-      printBody.innerHTML =
-        "<strong>Ressenti corporel</strong><br>" +
-        (body !== undefined ? "Score : " + body : "Non renseigné(e).");
-
-      let summaryText = document.getElementById("summaryText").textContent;
-      printSummary.innerHTML =
-        "<strong>Bilan synthétique</strong><br>" +
-        summaryText +
-        "<br><br><strong>Total</strong> : " +
-        total +
-        " (min -15, max +15).";
-    }
-
-    function updatePrintCharts() {
-      const labels = Object.keys(history).sort();
-      const activitesSeries = labels.map((d) => (history[d].activities || []).length);
-      const fatigueSeries = labels.map((d) => history[d].fatigue || 0);
-      const emotionSeries = labels.map((d) => history[d].emotion || 0);
-      const bodySeries = labels.map((d) => history[d].body || 0);
-      const totalSeries = labels.map(
-        (d) =>
-          (history[d].fatigue || 0) +
-          (history[d].emotion || 0) +
-          (history[d].body || 0)
-      );
-
-      const axisColor = "#4b5563";
-      const primary = "#3b82f6";
-
-      function makePrintChart(id, data) {
-        const ctx = document.getElementById(id).getContext("2d");
-        if (printCharts[id]) printCharts[id].destroy();
-        printCharts[id] = new Chart(ctx, {
-          type: "line",
-          data: {
-            labels,
-            datasets: [
-              {
-                data,
-                borderColor: primary,
-                backgroundColor: primary + "33",
-                fill: true,
-                tension: 0.25,
-                pointRadius: 2
-              }
-            ]
-          },
-          options: {
-            responsive: false,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false }
-            },
-            scales: {
-              x: {
-                ticks: { color: axisColor, font: { size: 8 } },
-                grid: { color: axisColor + "22" }
-              },
-              y: {
-                ticks: { color: axisColor, font: { size: 8 } },
-                grid: { color: axisColor + "22" }
-              }
-            }
-          }
+    function renderHistory() {
+      historyListEl.innerHTML='';
+      if (!historyRecords.length) {
+        const empty=document.createElement('div'); empty.className='ghost-note'; empty.textContent='Aucune journée connue pour le moment.'; historyListEl.appendChild(empty);
+      } else {
+        historyRecords.slice().reverse().slice(0, 10).forEach(rec => {
+          const item=document.createElement('div'); item.className='history-item';
+          const totalScore = rec.total ?? 0;
+          item.innerHTML=`<div><strong>${formatShortDate(rec.date)}</strong><span class="history-meta">Score ${signed(totalScore)}</span></div>`;
+          historyListEl.appendChild(item);
         });
       }
-
-      makePrintChart("printChartActivites", activitesSeries);
-      makePrintChart("printChartFatigue", fatigueSeries);
-      makePrintChart("printChartEmotions", emotionSeries);
-      makePrintChart("printChartRessenti", bodySeries);
-      makePrintChart("printChartTotal", totalSeries);
-    }
-
-    function downloadPDF() {
-      updatePrintView();
-      updatePrintCharts();
-
-      const element = document.getElementById("print-container");
-      const opt = {
-        margin: 10,
-        filename: "bilan-quotidien-" + formatDate(currentDate) + ".pdf",
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: "pt", format: "a4", orientation: "portrait" }
-      };
-
-      html2pdf().set(opt).from(element).save();
-    }
-
-    function exportData() {
-      const dataStr = JSON.stringify(history, null, 2);
-      const blob = new Blob([dataStr], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "bilan-quotidien-donnees.json";
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function importData(file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const imported = JSON.parse(e.target.result);
-          if (typeof imported === "object") {
-            history = imported;
-            saveHistory();
-            const dates = Object.keys(history).sort();
-            if (dates.length) {
-              loadDay(dates[dates.length - 1]);
-            } else {
-              loadDay(formatDate(new Date()));
-            }
-          }
-        } catch (err) {
-          alert("Fichier invalide.");
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    function resetDay() {
-      currentData = { activities: [], fatigue: 0, emotion: 0, body: 0 };
-      updateHistory();
-      renderActivitiesSelection();
-      renderScoresSelection();
-      updateSummary();
+      monthKeys = getMonthKeys(historyRecords);
+      if (selectedMonthIndex >= monthKeys.length) selectedMonthIndex = Math.max(0, monthKeys.length - 1);
+      setSelectedMonth(selectedMonthIndex);
       updateCharts();
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      history = loadHistory();
-      initActivities();
-      initScoreRow("fatigueScoreRow", "fatigue");
-      initScoreRow("emotionScoreRow", "emotion");
-      initScoreRow("bodyScoreRow", "body");
+    function downloadJsonFile() {
+      const data = { version:1, exportedAt:new Date().toISOString(), records:historyRecords };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`bilan-quotidien-${formatFileDate()}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+      document.getElementById('captureStatus').textContent='Fichier JSON téléchargé (historique complet).';
+    }
 
-      const today = formatDate(new Date());
-      if (history[today]) {
-        loadDay(today);
-      } else {
-        currentDate = new Date();
-        currentData = { activities: [], fatigue: 0, emotion: 0, body: 0 };
-        document.getElementById("currentDateLabel").textContent = formatDateLabel(currentDate);
-        document.getElementById("dateInput").value = today;
-        updateSummary();
-        renderHistoryList();
-        updateCharts();
+    function buildTodayRecord() {
+      const scores = computeScores();
+      const now = new Date();
+      return {
+        id: now.toISOString(),
+        date: now.toISOString(),
+        activities:[...state.activities].map(i=>activities[i]),
+        fatigue:state.fatigue,
+        negativeEmotions:[...state.negativeEmotions],
+        positiveEmotions:[...state.positiveEmotions],
+        body:[...state.body].map(i=>bodyFeelings[i].label),
+        ...scores
+      };
+    }
+
+    function updateLastSaveText() {
+      const last = historyRecords.slice().sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
+      if (last) {
+        const d = new Date(last.date);
+        const pad = n => String(n).padStart(2,'0');
+        document.getElementById('lastSaveStatus').textContent = `Dernier enregistrement le ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      }
+    }
+
+    function saveTodayRecord() {
+      const todayRecord = buildTodayRecord();
+      historyRecords = mergeRecords(historyRecords, [todayRecord]);
+      saveToLocalStorage();
+      renderHistory();
+      updateLastSaveText();
+      document.getElementById('captureStatus').textContent='Journée enregistrée localement.';
+    }
+
+    function loadJsonFile(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          const incoming = Array.isArray(parsed) ? parsed : (parsed.records || []);
+          historyRecords = mergeRecords(historyRecords, incoming);
+          renderHistory();
+          document.getElementById('captureStatus').textContent='JSON importé et fusionné avec l’historique existant.';
+        } catch {
+          document.getElementById('captureStatus').textContent='Le fichier JSON est invalide.';
+        }
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+
+    async function captureAsImage() {
+      const status=document.getElementById('captureStatus'); status.textContent='Création de la capture…';
+      const zone=document.getElementById('captureZone');
+      try {
+        const canvas=await html2canvas(zone, { backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--color-bg').trim(), scale:2, useCORS:true });
+        canvas.toBlob(blob => {
+          if (!blob) { status.textContent='Impossible de générer l’image.'; return; }
+          const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`bilan-quotidien-${formatFileDate()}.png`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); status.textContent='Capture téléchargée.';
+        }, 'image/png');
+      } catch { status.textContent='La capture a échoué dans ce navigateur.'; }
+    }
+
+    function renderAll() { renderActivities(); renderFatigue(); renderBody(); renderEmotions(); updateSummary(); }
+
+    function exportToPDF() {
+      const status=document.getElementById('captureStatus');
+      status.textContent='Préparation de l’impression...';
+
+      const jobWindow = window.open('', '_blank');
+      if (!jobWindow) {
+        status.textContent="Impossible d'ouvrir une nouvelle fenêtre d'impression.";
+        return;
       }
 
-      document.getElementById("dateInput").addEventListener("change", (e) => {
-        loadDay(e.target.value);
-      });
+      const headStyles = [...document.querySelectorAll('head style, head link[rel="stylesheet"]')]
+        .map(el => el.outerHTML)
+        .join('');
 
-      document.getElementById("saveBtn").addEventListener("click", downloadPDF);
-      document.getElementById("resetBtn").addEventListener("click", resetDay);
-      document.getElementById("exportBtn").addEventListener("click", exportData);
-      document.getElementById("importBtn").addEventListener("click", () => {
-        document.getElementById("importFile").click();
-      });
-      document.getElementById("importFile").addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (file) importData(file);
+      const titleText = document.querySelector('.title')?.textContent || 'Bilan quotidien';
+      const nameText = [userFirstName, userLastName].filter(Boolean).join(' ').trim();
+
+      const printExtraStyle = `
+        <style>
+          body { margin: 0; font-family: var(--font-body), Arial, sans-serif; background: #fff; color: #000; }
+          .page { width: 210mm; height: 297mm; box-sizing: border-box; padding: 15mm; page-break-after: always; position: relative; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; }
+          .page:first-child .print-header { display: block; }
+          .page:not(:first-child) .print-header { display: none; }
+          .page-content { width: 100%; max-width: 180mm; height: calc(297mm - 52mm); margin-left: auto; margin-right: auto; overflow: visible; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+          .page-inner { width: 100%; transform-origin: top left; }
+          .page:last-child { page-break-after: auto; }
+          .print-header { margin-bottom: 0.8rem; padding-bottom: 0.35rem; border-bottom: 1px solid #ddd; text-align:center; }
+          .print-title { margin: 0; font-size: 1.45rem; font-weight: 700; }
+          .print-name { margin: 0.2rem 0 0; font-size: 1.05rem; color: #444; }
+          .print-footer { position: absolute; bottom: 8mm; left: 0; right: 0; font-size: 9px; color: #666; text-align: center; border: none; padding: 0; margin: 0; }
+          @page { size: A4; margin: 0; }
+          .panel, .chart-card, .history-item, .charts-column { break-inside: avoid; page-break-inside: avoid; }
+          .no-print { display: none !important; }
+          .charts-column { display: grid; grid-template-columns: repeat(2, 80mm); gap: 6mm; width: 100%; max-width: calc(2 * 80mm + 6mm); margin: 0 auto; justify-content: center; }
+          .chart-card { width: 80mm; max-width: 80mm; margin: 0; padding: 4px; box-sizing: border-box; }
+          .chart-wrap { width: 100% !important; max-width: 80mm; height: 100px !important; }
+          .chart-wrap canvas { width: 100% !important; height: 100% !important; }
+          .page-content { overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+          .page { page-break-inside: avoid; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; }
+        </style>
+      `;
+
+      const captureZone = document.getElementById('captureZone');
+      const captureClone = captureZone.cloneNode(true);
+      captureClone.style.margin = '0';
+      captureClone.style.padding = '0';
+
+      const dateBadgeHtml = captureClone.querySelector('.date-badge')?.outerHTML || '';
+      const panelEls = Array.from(captureClone.querySelectorAll('section.panel'));
+      const activitiesHtml = panelEls[0]?.outerHTML || '';
+      const fatigueHtml = panelEls[1]?.outerHTML || '';
+      const emotionsHtml = panelEls[2]?.outerHTML || '';
+      const bodyHtml = panelEls[3]?.outerHTML || '';
+      const bilanHtml = panelEls[4]?.outerHTML || '';
+
+      const graphsRoot = document.querySelector('.charts-column')?.closest('section.panel');
+      const graphsControls = graphsRoot?.querySelector('.chart-controls')?.outerHTML || '';
+      const graphCards = Array.from(graphsRoot?.querySelectorAll('.chart-card') || []);
+      const firstChartCardsHtml = graphCards.slice(0, 3).map(card => card.outerHTML).join('');
+      const remainingChartCardsHtml = graphCards.slice(3).map(card => card.outerHTML).join('');
+      const graphsPage1 = `${graphsControls}<div class="charts-column">${firstChartCardsHtml}</div>`;
+      const graphsPage2 = remainingChartCardsHtml ? `<div class="charts-column">${remainingChartCardsHtml}</div>` : '';
+
+      const html = `
+        <html>
+          <head>
+            <title>PDF Bilan</title>
+            ${headStyles}
+            ${printExtraStyle}
+          </head>
+          <body>
+            <div class="page">
+              <header class="print-header">
+                <h1 class="print-title">${titleText}</h1>
+              </header>
+              <div class="page-content"><div class="page-inner">
+                ${dateBadgeHtml}
+                ${activitiesHtml}
+                ${fatigueHtml}
+                ${emotionsHtml}
+                ${bodyHtml}
+              </div></div>
+              <footer class="print-footer">${nameText || 'Prénom Nom'}</footer>
+            </div>
+            <div class="page">
+              <header class="print-header">
+                <h1 class="print-title">${titleText}</h1>
+              </header>
+              <div class="page-content"><div class="page-inner">
+                ${bilanHtml}
+              </div></div>
+              <footer class="print-footer">${nameText || 'Prénom Nom'}</footer>
+            </div>
+            <div class="page">
+              <header class="print-header">
+                <h1 class="print-title">${titleText}</h1>
+              </header>
+              <div class="page-content"><div class="page-inner">
+                ${graphsPage1}
+              </div></div>
+              <footer class="print-footer">${nameText || 'Prénom Nom'}</footer>
+            </div>
+            ${graphsPage2 ? `
+            <div class="page">
+              <header class="print-header">
+                <h1 class="print-title">${titleText}</h1>
+              </header>
+              <div class="page-content"><div class="page-inner">
+                ${graphsPage2}
+              </div></div>
+              <footer class="print-footer">${nameText || 'Prénom Nom'}</footer>
+            </div>
+            ` : ''}
+          </body>
+        </html>
+      `;
+
+      jobWindow.document.open();
+      jobWindow.document.write(html);
+      jobWindow.document.close();
+
+      function scalePageContent(windowRef) {
+        const pages = windowRef.document.querySelectorAll('.page');
+        pages.forEach(page => {
+          const content = page.querySelector('.page-content');
+          const inner = page.querySelector('.page-inner');
+          if (!content || !inner) return;
+
+          const header = page.querySelector('.print-header');
+          const footer = page.querySelector('.print-footer');
+          const headerHeight = header ? header.getBoundingClientRect().height : 0;
+          const footerHeight = footer ? footer.getBoundingClientRect().height : 0;
+          const pageHeight = page.getBoundingClientRect().height;
+          const availableHeight = Math.max(0, pageHeight - headerHeight - footerHeight - 10);
+
+          inner.style.transform = '';
+          inner.style.width = '100%';
+
+          const naturalHeight = inner.scrollHeight;
+          if (naturalHeight > 0 && availableHeight > 0) {
+            const scale = Math.min(1, availableHeight / naturalHeight);
+            if (scale < 1) {
+              inner.style.transform = `scale(${scale})`;
+              inner.style.transformOrigin = 'top left';
+              inner.style.width = `${100 / scale}%`;
+            }
+          }
+        });
+      }
+
+      jobWindow.onload = () => {
+        jobWindow.focus();
+        try { scalePageContent(jobWindow); } catch (e) { console.warn('Scaling PDF content failed', e); }
+        const footers = jobWindow.document.querySelectorAll('.print-footer');
+        footers.forEach((footer, index) => {
+          const pageNumber = index + 1;
+          const totalPages = footers.length;
+          footer.textContent = `${nameText || 'Prénom Nom'} - page ${pageNumber}/${totalPages}`;
+          footer.style.fontSize = '9px';
+          footer.style.bottom = '4mm';
+          footer.style.position = 'absolute';
+          footer.style.left = '0';
+          footer.style.right = '0';
+        });
+        jobWindow.print();
+        status.textContent='Boîte d’impression ouverte.';
+      };
+    }
+
+    function exportJsonData() {
+      const config = { activities, bodyFeelings, negativeEmotions, positiveEmotions, userFirstName, userLastName };
+      const data = { version:1, exportedAt:new Date().toISOString(), records:historyRecords, config };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      const userId = `${userLastName || 'unknown'}-${userFirstName || 'user'}`.toLowerCase().replace(/\s+/g,'-');
+      a.download=`donnees-bilan-quotidien-de-${userId}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(a.href);
+      document.getElementById('captureStatus').textContent='Fichier exporté (historique + personnalisations).';
+    }
+
+    function importJsonData(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          const incoming = Array.isArray(parsed) ? parsed : (parsed.records || []);
+          
+          // Importer la configuration si présente
+          if (parsed.config) {
+            activities = parsed.config.activities || activities;
+            bodyFeelings = parsed.config.bodyFeelings || bodyFeelings;
+            negativeEmotions = parsed.config.negativeEmotions || negativeEmotions;
+            positiveEmotions = parsed.config.positiveEmotions || positiveEmotions;
+            saveToLocalStorage();
+          }
+          
+          historyRecords = mergeRecords(historyRecords, incoming);
+          renderAll();
+          renderHistory();
+          document.getElementById('captureStatus').textContent='JSON importé et fusionné avec l\'historique existant.';
+        } catch {
+          document.getElementById('captureStatus').textContent='Le fichier JSON est invalide.';
+        }
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+
+    // Événements principaux
+    document.getElementById('resetBtn').addEventListener('click', ()=>{ state.activities.clear(); state.fatigue=0; state.negativeEmotions=[]; state.positiveEmotions=[]; state.body.clear(); renderAll(); });
+    document.getElementById('themeBtn').addEventListener('click', ()=>{ const root=document.documentElement; root.setAttribute('data-theme', root.getAttribute('data-theme')==='dark'?'light':'dark'); setTimeout(renderHistory, 40); });
+    document.getElementById('saveDayBtn').addEventListener('click', saveTodayRecord);
+    document.getElementById('savePdfBtn').addEventListener('click', exportToPDF);
+    document.getElementById('exportDataBtn').addEventListener('click', exportJsonData);
+    document.getElementById('importDataBtn').addEventListener('click', ()=>document.getElementById('dataFileInput').click());
+    document.getElementById('dataFileInput').addEventListener('change', e => { const file=e.target.files[0]; if (file) importJsonData(file); });
+    document.getElementById('prevMonthBtn').addEventListener('click', () => setSelectedMonth(selectedMonthIndex - 1));
+    document.getElementById('nextMonthBtn').addEventListener('click', () => setSelectedMonth(selectedMonthIndex + 1));
+
+    document.getElementById('userFirstName').addEventListener('change', (e) => { userFirstName = e.target.value.trim(); saveToLocalStorage(); });
+    document.getElementById('userLastName').addEventListener('change', (e) => { userLastName = e.target.value.trim(); saveToLocalStorage(); });
+
+    // Gestion des modales pour les activités
+    document.getElementById('addActivityBtn').addEventListener('click', () => openModal('addActivityModal'));
+    document.getElementById('cancelActivityBtn').addEventListener('click', () => {
+      closeModal('addActivityModal');
+      document.getElementById('activityInput').value = '';
+    });
+    document.getElementById('confirmActivityBtn').addEventListener('click', () => {
+      const value = document.getElementById('activityInput').value.trim();
+      if (value) {
+        activities.push(value);
+        saveToLocalStorage();
+        renderAll();
+        closeModal('addActivityModal');
+        document.getElementById('activityInput').value = '';
+      }
+    });
+
+    // Gestion des modales pour le ressenti corporel
+    let bodyValue = 1;
+    const bodyPlusBtn = document.getElementById('bodyPositiveBtn');
+    const bodyMinusBtn = document.getElementById('bodyNegativeBtn');
+
+    function updateBodyToggle(selected) {
+      bodyValue = selected;
+      if (selected === 1) {
+        bodyPlusBtn.classList.add('selected');
+        bodyMinusBtn.classList.remove('selected');
+      } else {
+        bodyPlusBtn.classList.remove('selected');
+        bodyMinusBtn.classList.add('selected');
+      }
+    }
+
+    bodyPlusBtn.addEventListener('click', () => updateBodyToggle(1));
+    bodyMinusBtn.addEventListener('click', () => updateBodyToggle(-1));
+
+    document.getElementById('addBodyBtn').addEventListener('click', () => {
+      updateBodyToggle(1);
+      openModal('addBodyModal');
+    });
+    document.getElementById('cancelBodyBtn').addEventListener('click', () => {
+      closeModal('addBodyModal');
+      document.getElementById('bodyInput').value = '';
+    });
+    document.getElementById('confirmBodyBtn').addEventListener('click', () => {
+      const value = document.getElementById('bodyInput').value.trim();
+      if (value) {
+        bodyFeelings.push({ label: value, value: bodyValue });
+        saveToLocalStorage();
+        renderAll();
+        closeModal('addBodyModal');
+        document.getElementById('bodyInput').value = '';
+      }
+    });
+
+    // Gestion des modales pour les émotions
+    document.getElementById('cancelEmotionBtn').addEventListener('click', () => {
+      closeModal('addEmotionModal');
+      document.getElementById('emotionInput').value = '';
+    });
+    document.getElementById('confirmEmotionBtn').addEventListener('click', () => {
+      const value = document.getElementById('emotionInput').value.trim();
+      if (value && currentEmotionType) {
+        if (currentEmotionType === 'negativeEmotions') {
+          negativeEmotions.push(value);
+        } else {
+          positiveEmotions.push(value);
+        }
+        saveToLocalStorage();
+        const bucket = currentEmotionType;
+        populateSelect(bucket === 'negativeEmotions' ? 'negativeSelect' : 'positiveSelect', bucket === 'negativeEmotions' ? negativeEmotions : positiveEmotions, bucket);
+        state[bucket].push(value);
+        renderAll();
+        closeModal('addEmotionModal');
+        document.getElementById('emotionInput').value = '';
+        currentEmotionType = null;
+      }
+    });
+
+    // Fermer les modales en cliquant en dehors
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeModal(modal.id);
+        }
       });
     });
+
+    // Enter pour confirmer dans les inputs
+    document.getElementById('activityInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') document.getElementById('confirmActivityBtn').click();
+    });
+    document.getElementById('bodyInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') document.getElementById('confirmBodyBtn').click();
+    });
+    document.getElementById('emotionInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') document.getElementById('confirmEmotionBtn').click();
+    });
+
+    // Initialisation
+    loadFromLocalStorage();
+    document.getElementById('userFirstName').value = userFirstName;
+    document.getElementById('userLastName').value = userLastName;
+    populateSelect('negativeSelect', negativeEmotions, 'negativeEmotions');
+    populateSelect('positiveSelect', positiveEmotions, 'positiveEmotions');
+    renderAll();
+    renderHistory();
+    updateLastSaveText();
   </script>
 </body>
 </html>
