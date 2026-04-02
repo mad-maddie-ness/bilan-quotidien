@@ -7,6 +7,20 @@
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+  (function () {
+    var motDePasseCorrect = "Louna2026"; // change-le par ce que tu veux
+
+    var saisie = prompt("Mot de passe pour accéder à la page :");
+    if (saisie !== motDePasseCorrect) {
+      alert("Mot de passe incorrect.");
+      // renvoie la personne à la page précédente
+      history.back();
+      // ou, si tu préfères, vers ta page publique :
+      // window.location.href = "https://TONPSEUDO.github.io/NOM_DU_DEPOT/";
+    }
+  })();
+</script>
   <style>
     :root, [data-theme="light"] {
       --text-xs: clamp(0.75rem, 0.72rem + 0.18vw, 0.875rem);
