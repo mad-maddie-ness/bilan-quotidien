@@ -9,15 +9,12 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
   (function () {
-    var motDePasseCorrect = "Louna2026"; // change-le par ce que tu veux
-
+    var motDePasseCorrect = "Louna2026";
     var saisie = prompt("Mot de passe pour accéder à la page :");
+
     if (saisie !== motDePasseCorrect) {
       alert("Mot de passe incorrect.");
-      // renvoie la personne à la page précédente
       history.back();
-      // ou, si tu préfères, vers ta page publique :
-      // window.location.href = "https://TONPSEUDO.github.io/NOM_DU_DEPOT/";
     }
   })();
 </script>
