@@ -91,6 +91,24 @@
       .fatigue-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
       .topbar, .history-item { flex-direction: column; }
     }
+
+    /* Impression : cacher les boutons et garder un PDF propre */
+    @media print {
+      .toolbar,
+      #themeBtn,
+      #resetBtn,
+      #captureStatus {
+        display: none !important;
+      }
+
+      body {
+        background: white;
+      }
+
+      .panel {
+        box-shadow: none;
+      }
+    }
   </style>
 </head>
 <body>
@@ -98,7 +116,7 @@
     <header class="topbar">
       <div>
         <h1 class="title">Bilan quotidien</h1>
-              </div>
+      </div>
       <div class="toolbar">
         <button class="theme-btn" type="button" id="themeBtn">🌙 / ☀️</button>
         <button class="reset-btn" type="button" id="resetBtn">Recommencer</button>
@@ -162,18 +180,22 @@
 
     <section class="panel">
       <div class="toolbar" style="justify-content:flex-end;">
-        <button class="save-day-btn" type="button" id="saveDayBtn">Enregistrer</button>
-        <button class="download-data-btn" type="button" id="downloadDataBtn">Historique</button>
-        <button class="load-data-btn" type="button" id="loadDataBtn">Importer</button>
-        <button class="capture-btn" type="button" id="captureBtn">Capture</button>
+        <button class="save-day-btn" type="button" id="printPdfBtn">Enregistrer (PDF)</button>
+        <button class="download-data-btn" type="button" id="exportDataBtn">Exporter</button>
+        <button class="load-data-btn" type="button" id="importDataBtn">Importer</button>
       </div>
+      <p class="footer-note">
+        <strong>Enregistrer (PDF)</strong> crée une copie de ton bilan du jour au format PDF, sans les boutons ni les commandes de la page.<br>
+        <strong>Exporter</strong> enregistre sur ton ordinateur un fichier de sauvegarde contenant l’historique de tes bilans et tes réglages.<br>
+        <strong>Importer</strong> permet de retrouver toutes tes données à partir d’un fichier de sauvegarde que tu as déjà enregistré.
+      </p>
     </section>
 
-    <div class="status" id="captureStatus">Importe un JSON si tu veux récupérer un historique, ou enregistre directement pour commencer un nouveau.</div>
+    <div class="status" id="captureStatus">Importe un fichier de sauvegarde si tu veux récupérer un historique, ou commence directement un nouveau bilan.</div>
   </main>
 
   <script>
-    const activities = ['Me laver','Vider la litière','Mettre le soin à Louna','Jeter le rouleau de papier toilette','Faire l\'aspirateur','Jeter bouteille d\'eau','Me faire à manger','Me nettoyer le visage le soir','Faire ce que j\'ai dit qu\'il fallait que je fasse'];
+    const activities = ['Me laver','Vider la litière','Mettre le soin à Louna','Jeter le rouleau de papier toilette','Faire l'aspirateur','Jeter bouteille d'eau','Me faire à manger','Me nettoyer le visage le soir','Faire ce que j'ai dit qu'il fallait que je fasse'];
     const fatigueLevels = [
       { label:'+5', value:5, cls:'f5' },{ label:'+4', value:4, cls:'f4' },{ label:'+3', value:3, cls:'f3' },{ label:'+2', value:2, cls:'f2' },{ label:'+1', value:1, cls:'f1' },
       { label:'0', value:0, cls:'f0' },
@@ -340,11 +362,51 @@
       updateCharts();
     }
 
+    function buildAppState() {
+      return {
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        config: {
+          activities,
+          negativeEmotions,
+          positiveEmotions,
+          bodyFeelings
+        },
+        history: historyRecords
+      };
+    }
+
+    function applyAppState(appState) {
+      if (appState.config) {
+        if (Array.isArray(appState.config.activities)) {
+          activities.length = 0;
+          appState.config.activities.forEach(a => activities.push(a));
+        }
+        if (Array.isArray(appState.config.negativeEmotions)) {
+          negativeEmotions.length = 0;
+          appState.config.negativeEmotions.forEach(e => negativeEmotions.push(e));
+        }
+        if (Array.isArray(appState.config.positiveEmotions)) {
+          positiveEmotions.length = 0;
+          appState.config.positiveEmotions.forEach(e => positiveEmotions.push(e));
+        }
+        if (Array.isArray(appState.config.bodyFeelings)) {
+          bodyFeelings.length = 0;
+          appState.config.bodyFeelings.forEach(b => bodyFeelings.push(b));
+        }
+      }
+      if (Array.isArray(appState.history)) {
+        historyRecords = appState.history;
+      }
+      renderAll();
+      renderHistory();
+    }
+
     function downloadJsonFile() {
-      const data = { version:1, exportedAt:new Date().toISOString(), records:historyRecords };
+      const data = buildAppState();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
       const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`bilan-quotidien-${formatFileDate()}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
-      document.getElementById('captureStatus').textContent='Fichier JSON téléchargé (historique complet).';
+      document.getElementById('captureStatus').textContent='Fichier de sauvegarde téléchargé (données complètes).';
     }
 
     function buildTodayRecord() {
@@ -362,25 +424,24 @@
       };
     }
 
-    function saveTodayRecord() {
-      const todayRecord = buildTodayRecord();
-      historyRecords = mergeRecords(historyRecords, [todayRecord]);
-      renderHistory();
-      downloadJsonFile();
-      document.getElementById('captureStatus').textContent='Journée ajoutée/mise à jour. Tu peux remplacer ton fichier JSON existant avec celui-ci.';
-    }
-
     function loadJsonFile(file) {
       const reader = new FileReader();
       reader.onload = () => {
         try {
           const parsed = JSON.parse(reader.result);
-          const incoming = Array.isArray(parsed) ? parsed : (parsed.records || []);
-          historyRecords = mergeRecords(historyRecords, incoming);
-          renderHistory();
-          document.getElementById('captureStatus').textContent='JSON importé et fusionné avec l’historique existant.';
+          // Nouveau format complet { version, config, history }
+          if (parsed && parsed.history && parsed.config) {
+            applyAppState(parsed);
+            document.getElementById('captureStatus').textContent='Fichier de sauvegarde importé (historique et personnalisations).';
+          } else {
+            // Ancien format: tableau direct ou { records: [...] }
+            const incoming = Array.isArray(parsed) ? parsed : (parsed.records || []);
+            historyRecords = mergeRecords(historyRecords, incoming);
+            renderHistory();
+            document.getElementById('captureStatus').textContent='Ancien fichier importé et fusionné avec l’historique existant.';
+          }
         } catch {
-          document.getElementById('captureStatus').textContent='Le fichier JSON est invalide.';
+          document.getElementById('captureStatus').textContent='Le fichier est invalide ou corrompu.';
         }
       };
       reader.readAsText(file, 'utf-8');
@@ -402,11 +463,31 @@
 
     document.getElementById('resetBtn').addEventListener('click', ()=>{ state.activities.clear(); state.fatigue=0; state.negativeEmotions=[]; state.positiveEmotions=[]; state.body.clear(); renderAll(); });
     document.getElementById('themeBtn').addEventListener('click', ()=>{ const root=document.documentElement; root.setAttribute('data-theme', root.getAttribute('data-theme')==='dark'?'light':'dark'); setTimeout(renderHistory, 40); });
-    document.getElementById('captureBtn').addEventListener('click', captureAsImage);
-    document.getElementById('saveDayBtn').addEventListener('click', saveTodayRecord);
-    document.getElementById('downloadDataBtn').addEventListener('click', downloadJsonFile);
-    document.getElementById('loadDataBtn').addEventListener('click', ()=>document.getElementById('dataFileInput').click());
-    document.getElementById('dataFileInput').addEventListener('change', e => { const file=e.target.files[0]; if (file) loadJsonFile(file); });
+
+    document.getElementById('printPdfBtn').addEventListener('click', () => {
+      document.getElementById('captureStatus').textContent = 'Préparation du PDF…';
+      window.print();
+      setTimeout(() => {
+        document.getElementById('captureStatus').textContent = 'Le PDF a été généré. Tu peux enregistrer ou annuler dans la fenêtre d’impression.';
+      }, 1000);
+    });
+
+    document.getElementById('exportDataBtn').addEventListener('click', () => {
+      const todayRecord = buildTodayRecord();
+      historyRecords = mergeRecords(historyRecords, [todayRecord]);
+      renderHistory();
+      downloadJsonFile();
+      document.getElementById('captureStatus').textContent =
+        'Fichier de sauvegarde exporté. Tu peux le garder sur ton ordinateur pour retrouver plus tard ton historique et tes réglages.';
+    });
+
+    document.getElementById('importDataBtn').addEventListener('click', () => {
+      document.getElementById('dataFileInput').click();
+    });
+
+    document.getElementById('dataFileInput').addEventListener('change', e => {
+      const file=e.target.files[0]; if (file) loadJsonFile(file);
+    });
 
     populateSelect('negativeSelect', negativeEmotions, 'negativeEmotions');
     populateSelect('positiveSelect', positiveEmotions, 'positiveEmotions');
