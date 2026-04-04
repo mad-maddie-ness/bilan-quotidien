@@ -988,60 +988,6 @@
       if (graphsClone) pdfContainer.appendChild(graphsClone);
       document.body.appendChild(pdfContainer);
 
-      const isPhoneLike = window.matchMedia('(max-width: 767px)').matches;
-
-      if (isPhoneLike && typeof html2pdf !== 'undefined') {
-        status.textContent='Préparation du PDF...';
-        try {
-          const worker = html2pdf().set({
-            margin: 10,
-            filename: `${pdfFileName}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 1.6, useCORS: true, backgroundColor: '#ffffff', windowWidth: 1400 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-          }).from(pdfContainer);
-
-          const pdf = await worker.toPdf().get('pdf');
-          const pdfBlob = pdf.output('blob');
-          const fileNameWithExt = `${pdfFileName}.pdf`;
-
-          if (typeof File !== 'undefined') {
-            const pdfFile = new File([pdfBlob], fileNameWithExt, { type: 'application/pdf' });
-            const canUseShare = typeof navigator.share === 'function' && (typeof navigator.canShare !== 'function' || navigator.canShare({ files: [pdfFile] }));
-
-            if (canUseShare) {
-              try {
-                await navigator.share({ files: [pdfFile], title: pdfFileName });
-                status.textContent='PDF prêt à être enregistré.';
-                return;
-              } catch (shareError) {
-                if (shareError?.name === 'AbortError') {
-                  status.textContent='Enregistrement annulé.';
-                  return;
-                }
-              }
-            }
-          }
-
-          const pdfUrl = URL.createObjectURL(pdfBlob);
-          const downloadLink = document.createElement('a');
-          downloadLink.href = pdfUrl;
-          downloadLink.download = fileNameWithExt;
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          downloadLink.remove();
-          setTimeout(() => URL.revokeObjectURL(pdfUrl), 1000);
-          status.textContent='PDF enregistré.';
-        } catch (error) {
-          console.error('Erreur export PDF:', error);
-          status.textContent='La génération du PDF a échoué.';
-        } finally {
-          pdfContainer.remove();
-        }
-        return;
-      }
-
       status.textContent='Préparation de la boîte d’impression...';
       const headStyles = [...document.querySelectorAll('head style, head link[rel="stylesheet"]')]
         .map(el => el.outerHTML)
