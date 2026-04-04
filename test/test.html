@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr" data-theme="light">
 <head>
@@ -997,7 +998,7 @@
             margin: 10,
             filename: `${pdfFileName}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 1400 },
+            html2canvas: { scale: 1.6, useCORS: true, backgroundColor: '#ffffff', windowWidth: 1400 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
           }).from(pdfContainer).save();
