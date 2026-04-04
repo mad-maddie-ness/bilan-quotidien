@@ -1,961 +1,968 @@
 <!DOCTYPE html>
 <html lang="fr" data-theme="light">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>bilan-quotidien</title>
-  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <style>
-    :root, [data-theme="light"] {
-      --text-xs: clamp(0.75rem, 0.72rem + 0.18vw, 0.875rem);
-      --text-sm: clamp(0.9rem, 0.84rem + 0.2vw, 1rem);
-      --text-base: clamp(1rem, 0.96rem + 0.24vw, 1.1rem);
-      --text-lg: clamp(1.15rem, 1.02rem + 0.6vw, 1.45rem);
-      --text-xl: clamp(1.5rem, 1.25rem + 1vw, 2rem);
-      --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem;
-      --radius-sm: 0.5rem; --radius-md: 0.8rem; --radius-lg: 1rem; --radius-xl: 1.25rem; --radius-full: 999px;
-      --color-bg: #f7f6f2; --color-surface: #fbfbf9; --color-surface-2: #f0eee8; --color-border: #d5d1ca;
-      --color-text: #28251d; --color-text-muted: #6e6b63; --color-primary: #01696f; --color-primary-hover: #0c4e54;
-      --color-positive: #437a22; --color-positive-soft: #dfead6; --color-negative: #a13544; --color-negative-soft: #f1d8dc;
-      --color-neutral: #7a7974; --shadow: 0 8px 24px rgba(40,37,29,.08); --font-body: 'Satoshi', system-ui, sans-serif;
-    }
-    [data-theme="dark"] {
-      --color-bg: #171614; --color-surface: #1c1b19; --color-surface-2: #262421; --color-border: #3a3733;
-      --color-text: #efede8; --color-text-muted: #b4aea4; --color-primary: #4f98a3; --color-primary-hover: #77bcc6;
-      --color-positive: #6daa45; --color-positive-soft: rgba(109,170,69,.18); --color-negative: #dd6974; --color-negative-soft: rgba(221,105,116,.16);
-      --color-neutral: #a8a29a; --shadow: 0 8px 24px rgba(0,0,0,.28);
-    }
-    * { box-sizing: border-box; }
-    body { margin:0; font-family: var(--font-body); font-size: var(--text-base); color: var(--color-text); background: var(--color-bg); overflow-x: auto; }
-    button, select, input { font: inherit; }
-    button { cursor: pointer; transition: all 0.2s ease; }
-    button:active { transform: scale(0.98); }
-    select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23606060' d='M6 9L1 4h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 2.2rem; }
-    input[type="file"] { cursor: pointer; }
-    .wrap { width: 100%; max-width: 1180px; margin: 0 auto; padding: clamp(0.75rem, 2.4vw, 1.5rem); box-sizing: border-box; }
-    .topbar { display:flex; justify-content:space-between; align-items:flex-start; gap: var(--space-2); margin-bottom: var(--space-4); }
-    .title { font-size: 3.6rem; font-weight: 700; margin:0; }
-    body { font-size: 0.88rem; overflow-x: auto; }
-    .muted { color: var(--color-text-muted); }
-    .panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); box-shadow: var(--shadow); padding: clamp(var(--space-3), 3vw, var(--space-5)); width: 100%; box-sizing: border-box; min-width: 0; }
-    .stack { display:grid; gap: var(--space-5); }
-    .section-title { margin:0 0 .8rem 0; font-size: var(--text-lg); }
-    .topbar { display:flex; justify-content: space-between; align-items:flex-start; flex-wrap:wrap; }
-    .toolbar { margin-left:auto; display:flex; gap: 0.4rem; align-items:center; flex-wrap:wrap; }
-    .body-containers { display: grid; grid-template-columns: 1fr; gap: var(--space-3); width: 100%; box-sizing: border-box; min-width: 0; }
-    .grid-2, .summary-grid, .fatigue-grid, .topbar, .history-item, .name-fields input, .chart-card { min-width: 0; }
-    .theme-btn {
-      min-height: 34px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding: 0.35rem 0.7rem; font-size: 0.75rem;
-    }
-    .reset-btn, .select-box {
-      min-height: 34px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding: 0.35rem 0.7rem;
-    }
-    .save-day-btn {
-      min-height: 46px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-primary); color: white; border-color: var(--color-primary); padding: 0.8rem 1.2rem;
-    }
-    .download-data-btn, .load-data-btn, .capture-btn {
-      min-height: 36px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-primary); color: white; border-color: var(--color-primary); padding: 0.45rem 0.7rem; font-size: 0.86rem;
-    }
-    .secondary-btn {
-      min-height: 24px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface-2); color: var(--color-text); padding: 0.1rem 0.32rem; font-size: 0.56rem; line-height: 1.1;
-    }
-    .capture-btn:hover, .save-day-btn:hover, .download-data-btn:hover, .load-data-btn:hover { background: var(--color-primary-hover); }
-    .secondary-btn:hover { background: var(--color-surface); border-color: var(--color-primary); }
-    .actions-layout { display:flex; flex-direction:column; gap: 0.4rem; align-items:stretch; }
-    .actions-main { width: 100%; max-width: 290px; }
-    .actions-main .save-day-btn { width: 100%; }
-    .actions-secondary { display:flex; flex-direction:column; gap: 0.25rem; width: 100%; max-width: 170px; }
-    .action-item { position: relative; display:flex; width:100%; min-width:0; overflow: visible; }
-    .action-inline { display:flex; align-items:center; gap: 0.2rem; width:100%; min-width:0; }
-    .actions-secondary .secondary-btn { flex: 1 1 auto; width: 100%; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .help-trigger {
-      display: none;
-      flex: 0 0 auto;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      border: 1px solid var(--color-border);
-      background: var(--color-surface);
-      color: var(--color-text-muted);
-      font-size: 0.62rem;
-      font-weight: 700;
-      padding: 0;
-      align-items: center;
-      justify-content: center;
-    }
-    .help-popover {
-      display: none;
-      position: absolute;
-      top: calc(100% + 4px);
-      left: 0;
-      z-index: 20;
-      width: min(220px, calc(100vw - 2rem));
-      padding: 0.45rem 0.55rem;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--color-border);
-      background: var(--color-surface);
-      color: var(--color-text);
-      box-shadow: var(--shadow);
-      font-size: 0.68rem;
-      line-height: 1.3;
-      white-space: normal;
-      word-break: break-word;
-    }
-    .action-item.help-open .help-popover { display: block; }
-    @media (hover: hover) and (pointer: fine) {
-      .action-item:hover .help-popover,
-      .action-item:focus-within .help-popover { display: block; }
-    }
-    @media (max-width: 767px) {
-      .help-popover {
-        top: calc(100% + 4px);
-        left: 0;
-        right: auto;
-        bottom: auto;
-        width: min(210px, calc(100vw - 2rem));
-        max-width: calc(100vw - 2rem);
-      }
-    }
-    @media (hover: none), (pointer: coarse) {
-      .help-trigger { display: inline-flex; }
-    }
-    @media (min-width: 768px) {
-      .actions-layout { flex-direction:row; align-items:center; gap: 0.45rem; }
-      .actions-main { width: auto; max-width: none; flex: 0 0 auto; }
-      .actions-main .save-day-btn { width: auto; min-width: 220px; }
-      .actions-secondary { flex: 1 1 auto; min-width: 0; max-width: none; flex-direction: row; gap: 0.25rem; }
-      .actions-secondary .action-item { flex: 1 1 0; min-width: 0; }
-      .actions-secondary .secondary-btn { width: 100%; }
-      .help-popover { left: 0; right: auto; }
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>bilan-quotidien</title>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+:root, [data-theme="light"] {
+--text-xs: clamp(0.75rem, 0.72rem + 0.18vw, 0.875rem);
+--text-sm: clamp(0.9rem, 0.84rem + 0.2vw, 1rem);
+--text-base: clamp(1rem, 0.96rem + 0.24vw, 1.1rem);
+--text-lg: clamp(1.15rem, 1.02rem + 0.6vw, 1.45rem);
+--text-xl: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+--space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem;
+--radius-sm: 0.5rem; --radius-md: 0.8rem; --radius-lg: 1rem; --radius-xl: 1.25rem; --radius-full: 999px;
+--color-bg: #f7f6f2; --color-surface: #fbfbf9; --color-surface-2: #f0eee8; --color-border: #d5d1ca;
+--color-text: #28251d; --color-text-muted: #6e6b63; --color-primary: #01696f; --color-primary-hover: #0c4e54;
+--color-positive: #437a22; --color-positive-soft: #dfead6; --color-negative: #a13544; --color-negative-soft: #f1d8dc;
+--color-neutral: #7a7974; --shadow: 0 8px 24px rgba(40,37,29,.08); --font-body: 'Satoshi', system-ui, sans-serif;
+}
+[data-theme="dark"] {
+--color-bg: #171614; --color-surface: #1c1b19; --color-surface-2: #262421; --color-border: #3a3733;
+--color-text: #efede8; --color-text-muted: #b4aea4; --color-primary: #4f98a3; --color-primary-hover: #77bcc6;
+--color-positive: #6daa45; --color-positive-soft: rgba(109,170,69,.18); --color-negative: #dd6974; --color-negative-soft: rgba(221,105,116,.16);
+--color-neutral: #a8a29a; --shadow: 0 8px 24px rgba(0,0,0,.28);
+}
+* { box-sizing: border-box; }
+body { margin:0; font-family: var(--font-body); font-size: var(--text-base); color: var(--color-text); background: var(--color-bg); overflow-x: auto; }
+button, select, input { font: inherit; }
+button { cursor: pointer; transition: all 0.2s ease; }
+button:active { transform: scale(0.98); }
+select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23606060' d='M6 9L1 4h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 2.2rem; }
+input[type="file"] { cursor: pointer; }
+.wrap { width: 100%; max-width: 1180px; margin: 0 auto; padding: clamp(0.75rem, 2.4vw, 1.5rem); box-sizing: border-box; }
+.topbar { display:flex; justify-content:space-between; align-items:flex-start; gap: var(--space-2); margin-bottom: var(--space-4); }
+.title { font-size: 3.6rem; font-weight: 700; margin:0; }
+body { font-size: 0.88rem; overflow-x: auto; }
+.muted { color: var(--color-text-muted); }
+.panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); box-shadow: var(--shadow); padding: clamp(var(--space-3), 3vw, var(--space-5)); width: 100%; box-sizing: border-box; min-width: 0; }
+.stack { display:grid; gap: var(--space-5); }
+.section-title { margin:0 0 .8rem 0; font-size: var(--text-lg); }
+.topbar { display:flex; justify-content: space-between; align-items:flex-start; flex-wrap:wrap; }
+.toolbar { margin-left:auto; display:flex; gap: 0.4rem; align-items:center; flex-wrap:wrap; }
+.body-containers { display: grid; grid-template-columns: 1fr; gap: var(--space-3); width: 100%; box-sizing: border-box; min-width: 0; }
+.grid-2, .summary-grid, .fatigue-grid, .topbar, .history-item, .name-fields input, .chart-card { min-width: 0; }
+.theme-btn {
+min-height: 34px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding: 0.35rem 0.7rem; font-size: 0.75rem;
+}
+.reset-btn, .select-box {
+min-height: 34px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding: 0.35rem 0.7rem;
+}
+.save-day-btn {
+min-height: 46px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-primary); color: white; border-color: var(--color-primary); padding: 0.8rem 1.2rem;
+}
+.download-data-btn, .load-data-btn, .capture-btn {
+min-height: 36px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-primary); color: white; border-color: var(--color-primary); padding: 0.45rem 0.7rem; font-size: 0.86rem;
+}
+.secondary-btn {
+min-height: 24px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface-2); color: var(--color-text); padding: 0.1rem 0.32rem; font-size: 0.56rem; line-height: 1.1;
+}
+.capture-btn:hover, .save-day-btn:hover, .download-data-btn:hover, .load-data-btn:hover { background: var(--color-primary-hover); }
+.secondary-btn:hover { background: var(--color-surface); border-color: var(--color-primary); }
+.actions-layout { display:flex; flex-direction:column; gap: 0.4rem; align-items:stretch; }
+.actions-main { width: 100%; max-width: 290px; }
+.actions-main .save-day-btn { width: 100%; }
+.actions-secondary { display:flex; flex-direction:column; gap: 0.25rem; width: 100%; max-width: 170px; }
+.action-item { position: relative; display:flex; width:100%; min-width:0; overflow: visible; }
+.action-inline { display:flex; align-items:center; gap: 0.2rem; width:100%; min-width:0; }
+.actions-secondary .secondary-btn { flex: 1 1 auto; width: 100%; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.help-trigger {
+display: none;
+flex: 0 0 auto;
+width: 18px;
+height: 18px;
+border-radius: 50%;
+border: 1px solid var(--color-border);
+background: var(--color-surface);
+color: var(--color-text-muted);
+font-size: 0.62rem;
+font-weight: 700;
+padding: 0;
+align-items: center;
+justify-content: center;
+}
+.help-popover {
+display: none;
+position: absolute;
+top: calc(100% + 4px);
+left: 0;
+z-index: 20;
+width: min(220px, calc(100vw - 2rem));
+padding: 0.45rem 0.55rem;
+border-radius: var(--radius-md);
+border: 1px solid var(--color-border);
+background: var(--color-surface);
+color: var(--color-text);
+box-shadow: var(--shadow);
+font-size: 0.68rem;
+line-height: 1.3;
+white-space: normal;
+word-break: break-word;
+}
+.action-item.help-open .help-popover { display: block; }
+@media (hover: hover) and (pointer: fine) {
+.action-item:hover .help-popover,
+.action-item:focus-within .help-popover { display: block; }
+}
+@media (max-width: 767px) {
+.help-popover {
+top: calc(100% + 4px);
+left: 0;
+right: auto;
+bottom: auto;
+width: min(210px, calc(100vw - 2rem));
+max-width: calc(100vw - 2rem);
+}
+}
+@media (hover: none), (pointer: coarse) {
+.help-trigger { display: inline-flex; }
+}
+@media (min-width: 768px) {
+.actions-layout { flex-direction:row; align-items:center; gap: 0.45rem; }
+.actions-main { width: auto; max-width: none; flex: 0 0 auto; }
+.actions-main .save-day-btn { width: auto; min-width: 220px; }
+.actions-secondary { flex: 1 1 auto; min-width: 0; max-width: none; flex-direction: row; gap: 0.25rem; }
+.actions-secondary .action-item { flex: 1 1 0; min-width: 0; }
+.actions-secondary .secondary-btn { width: 100%; }
+.help-popover { left: 0; right: auto; }
+}
 
-    .grid-2 { display:grid; grid-template-columns: 1fr; gap: var(--space-5); }
-    @media (min-width: 768px) {
-      .grid-2 { grid-template-columns: 1.2fr .8fr; }
-      .body-containers { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (min-width: 1100px) {
-      .wrap {
-        width: min(calc(100vw - 120mm), 1400px);
-        max-width: none;
-        margin-left: auto;
-        margin-right: auto;
-      }
-    }
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center; }
-    .modal-overlay.active { display: flex; }
-    .modal-content { background: var(--color-surface); border-radius: var(--radius-xl); padding: var(--space-5); max-width: 500px; width: 90%; box-shadow: var(--shadow); }
-    .modal-title { font-size: var(--text-lg); font-weight: 700; margin: 0 0 var(--space-4) 0; }
-    .modal-input { width: 100%; padding: var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-lg); font-size: 0.85rem; margin-bottom: var(--space-3); font-family: var(--font-body); }
-    .modal-input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(1, 105, 111, 0.1); }
-    .name-fields input { width: 120px; margin-right: 0.4rem; padding: 0.3rem 0.5rem !important; height: 26px; line-height: 1.2; }
-    .modal-buttons { display: flex; gap: var(--space-3); justify-content: flex-end; }
-    .modal-btn { padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); border: 1px solid var(--color-border); cursor: pointer; font-size: var(--text-sm); transition: all 0.2s ease; }
-    .modal-btn-cancel { background: var(--color-surface); color: var(--color-text); }
-    .modal-btn-cancel:hover { background: var(--color-surface-2); }
-    .modal-btn-confirm { background: var(--color-primary); color: white; border-color: var(--color-primary); }
-    .modal-btn-confirm:hover { background: var(--color-primary-hover); }
-    .custom-item { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: var(--color-primary-soft, rgba(1,105,111,0.1)); border-radius: var(--radius-lg); font-size: var(--text-sm); border: 1px solid var(--color-primary); }
-    .custom-item .delete-icon { cursor: pointer; opacity: 0.7; font-weight: bold; }
-    .custom-item .delete-icon:hover { opacity: 1; }
-    .chips { display:flex; flex-wrap:wrap; gap: clamp(0.4rem, 1.5vw, .65rem); }
-    .chip { min-height: 34px; border: 1px solid var(--color-border); border-radius: var(--radius-full); background: var(--color-surface-2); color: var(--color-text); padding: .45rem .75rem; cursor:pointer; display:inline-flex; align-items:center; gap:.45rem; font-size: .78rem; transition: all 0.15s ease; }
-    .chip:active { transform: scale(0.95); }
-    .chip:hover { border-color: var(--color-primary); }
-    .chip-add-btn { background: var(--color-primary); color: white; border-color: var(--color-primary); }
-    .chip-add-btn:hover { background: var(--color-primary-hover); }
-    .chip-delete { margin-left: auto; cursor: pointer; opacity: 0.7; font-size: 0.9em; padding: 0 .25rem; }
-    .chip-delete:hover { opacity: 1; }
-    .toggle-btns { display:flex; gap: 0.5rem; margin-bottom: var(--space-3); }
-    .toggle-btn { border:1px solid var(--color-border); border-radius: var(--radius-lg); padding:.45rem .75rem; cursor:pointer; background: var(--color-surface); color: var(--color-text); }
-    .toggle-btn.selected { border-color: var(--color-primary); background: var(--color-primary-soft); }
-    .toggle-btn--positive { color: var(--color-positive); border-color: var(--color-positive); }
-    .toggle-btn--negative { color: var(--color-negative); border-color: var(--color-negative); }
-    .toggle-btn--positive.selected { background: var(--color-positive-soft); }
-    .toggle-btn--negative.selected { background: var(--color-negative-soft); }
-    .chip.active { background: var(--color-primary); border-color: var(--color-primary); color: white; }
-    .chip.positive { border-color: color-mix(in srgb, var(--color-positive) 30%, var(--color-border)); }
-    .chip.negative { border-color: color-mix(in srgb, var(--color-negative) 30%, var(--color-border)); }
-    /* Icônes émotions seulement via classes spécifiques */
-    .chip.soft-positive.active { background: var(--color-positive-soft); color: var(--color-text); border-color: var(--color-positive); }
-    .chip.soft-negative.active { background: var(--color-negative-soft); color: var(--color-text); border-color: var(--color-negative); }
-    .chip-emotion-positive::before { content: '☀️ '; }
-    .chip-emotion-negative::before { content: '⛈️ '; }
-    .chip-body-positive::before { content: '+ '; color: var(--color-positive); font-weight:700; }
-    .chip-body-negative::before { content: '- '; color: var(--color-negative); font-weight:700; }
-    .fatigue-grid {
-      display: flex;
-      flex-wrap: nowrap;
-      justify-content: center;
-      gap: clamp(0.25rem, 1.2vw, 0.45rem);
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      padding-top: 0.5rem;
-      padding-bottom: 0.5rem;
-      min-width: 0;
-    }
-    .fatigue-btn {
-      min-height: clamp(30px, 6vw, 40px);
-      height: auto;
-      line-height: 1;
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--color-border);
-      cursor: pointer;
-      font-weight: 700;
-      padding: clamp(0.18rem, 0.9vw, 0.42rem) clamp(0.30rem, 0.9vw, 0.55rem);
-      min-width: clamp(1.8rem, 5vw, 2.8rem);
-      max-width: clamp(2.8rem, 8vw, 3.6rem);
-      text-align: center;
-      font-size: clamp(0.62rem, 1.5vw, 0.88rem);
-      white-space: nowrap;
-    }
-    .fatigue-btn.active { outline: 3px solid color-mix(in srgb, var(--color-primary) 40%, transparent); outline-offset: 2px; }
-    .f5{background:#2d6d2b;color:#fff}.f4{background:#3f8a32;color:#fff}.f3{background:#56a138;color:#fff}.f2{background:#74b442;color:#17310e}.f1{background:#9ac955;color:#1f2612}.f0{background:#ddd7c9;color:#28251d}.n1{background:#f2c3c7;color:#4b1d21}.n2{background:#eca2aa;color:#5a2026}.n3{background:#df7b84;color:#fff}.n4{background:#c95763;color:#fff}.n5{background:#a82f3f;color:#fff}
-    .select-row { display:flex; gap: clamp(0.4rem, 1.4vw, 0.8rem); flex-wrap: wrap; align-items:center; }
-    .select-group { display:flex; gap: 0.4rem; align-items:center; min-width: 180px; }
-    .select-box { min-height: clamp(28px, 3.5vw, 34px); padding: clamp(0.15rem, 0.85vw, 0.28rem) clamp(0.3rem, 0.9vw, 0.55rem); font-size: clamp(0.76rem, 1.75vw, 0.92rem); }
-    @media (max-width: 700px) {
-      .select-row { flex-direction: column; align-items: stretch; }
-      .select-group { width:100%; }
-    }
+.grid-2 { display:grid; grid-template-columns: 1fr; gap: var(--space-5); }
+@media (min-width: 768px) {
+.grid-2 { grid-template-columns: 1.2fr .8fr; }
+.body-containers { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1100px) {
+.wrap {
+width: min(calc(100vw - 120mm), 1400px);
+max-width: none;
+margin-left: auto;
+margin-right: auto;
+}
+}
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center; }
+.modal-overlay.active { display: flex; }
+.modal-content { background: var(--color-surface); border-radius: var(--radius-xl); padding: var(--space-5); max-width: 500px; width: 90%; box-shadow: var(--shadow); }
+.modal-title { font-size: var(--text-lg); font-weight: 700; margin: 0 0 var(--space-4) 0; }
+.modal-input { width: 100%; padding: var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-lg); font-size: 0.85rem; margin-bottom: var(--space-3); font-family: var(--font-body); }
+.modal-input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(1, 105, 111, 0.1); }
+.name-fields input { width: 120px; margin-right: 0.4rem; padding: 0.3rem 0.5rem !important; height: 26px; line-height: 1.2; }
+.modal-buttons { display: flex; gap: var(--space-3); justify-content: flex-end; }
+.modal-btn { padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); border: 1px solid var(--color-border); cursor: pointer; font-size: var(--text-sm); transition: all 0.2s ease; }
+.modal-btn-cancel { background: var(--color-surface); color: var(--color-text); }
+.modal-btn-cancel:hover { background: var(--color-surface-2); }
+.modal-btn-confirm { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+.modal-btn-confirm:hover { background: var(--color-primary-hover); }
+.custom-item { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: var(--color-primary-soft, rgba(1,105,111,0.1)); border-radius: var(--radius-lg); font-size: var(--text-sm); border: 1px solid var(--color-primary); }
+.custom-item .delete-icon { cursor: pointer; opacity: 0.7; font-weight: bold; }
+.custom-item .delete-icon:hover { opacity: 1; }
+.chips { display:flex; flex-wrap:wrap; gap: clamp(0.4rem, 1.5vw, .65rem); }
+.chip { min-height: 34px; border: 1px solid var(--color-border); border-radius: var(--radius-full); background: var(--color-surface-2); color: var(--color-text); padding: .45rem .75rem; cursor:pointer; display:inline-flex; align-items:center; gap:.45rem; font-size: .78rem; transition: all 0.15s ease; }
+.chip:active { transform: scale(0.95); }
+.chip:hover { border-color: var(--color-primary); }
+.chip-add-btn { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+.chip-add-btn:hover { background: var(--color-primary-hover); }
+.chip-delete { margin-left: auto; cursor: pointer; opacity: 0.7; font-size: 0.9em; padding: 0 .25rem; }
+.chip-delete:hover { opacity: 1; }
+.toggle-btns { display:flex; gap: 0.5rem; margin-bottom: var(--space-3); }
+.toggle-btn { border:1px solid var(--color-border); border-radius: var(--radius-lg); padding:.45rem .75rem; cursor:pointer; background: var(--color-surface); color: var(--color-text); }
+.toggle-btn.selected { border-color: var(--color-primary); background: var(--color-primary-soft); }
+.toggle-btn--positive { color: var(--color-positive); border-color: var(--color-positive); }
+.toggle-btn--negative { color: var(--color-negative); border-color: var(--color-negative); }
+.toggle-btn--positive.selected { background: var(--color-positive-soft); }
+.toggle-btn--negative.selected { background: var(--color-negative-soft); }
+.chip.active { background: var(--color-primary); border-color: var(--color-primary); color: white; }
+.chip.positive { border-color: color-mix(in srgb, var(--color-positive) 30%, var(--color-border)); }
+.chip.negative { border-color: color-mix(in srgb, var(--color-negative) 30%, var(--color-border)); }
+/* Icônes émotions seulement via classes spécifiques */
+.chip.soft-positive.active { background: var(--color-positive-soft); color: var(--color-text); border-color: var(--color-positive); }
+.chip.soft-negative.active { background: var(--color-negative-soft); color: var(--color-text); border-color: var(--color-negative); }
+.chip-emotion-positive::before { content: '☀️ '; }
+.chip-emotion-negative::before { content: '⛈️ '; }
+.chip-body-positive::before { content: '+ '; color: var(--color-positive); font-weight:700; }
+.chip-body-negative::before { content: '- '; color: var(--color-negative); font-weight:700; }
+.fatigue-grid {
+display: flex;
+flex-wrap: nowrap;
+justify-content: center;
+gap: clamp(0.25rem, 1.2vw, 0.45rem);
+overflow-x: auto;
+-webkit-overflow-scrolling: touch;
+padding-top: 0.5rem;
+padding-bottom: 0.5rem;
+min-width: 0;
+}
+.fatigue-btn {
+min-height: clamp(30px, 6vw, 40px);
+height: auto;
+line-height: 1;
+border-radius: var(--radius-lg);
+border: 1px solid var(--color-border);
+cursor: pointer;
+font-weight: 700;
+padding: clamp(0.18rem, 0.9vw, 0.42rem) clamp(0.30rem, 0.9vw, 0.55rem);
+min-width: clamp(1.8rem, 5vw, 2.8rem);
+max-width: clamp(2.8rem, 8vw, 3.6rem);
+text-align: center;
+font-size: clamp(0.62rem, 1.5vw, 0.88rem);
+white-space: nowrap;
+}
+.fatigue-btn.active { outline: 3px solid color-mix(in srgb, var(--color-primary) 40%, transparent); outline-offset: 2px; }
+.f5{background:#2d6d2b;color:#fff}.f4{background:#3f8a32;color:#fff}.f3{background:#56a138;color:#fff}.f2{background:#74b442;color:#17310e}.f1{background:#9ac955;color:#1f2612}.f0{background:#ddd7c9;color:#28251d}.n1{background:#f2c3c7;color:#4b1d21}.n2{background:#eca2aa;color:#5a2026}.n3{background:#df7b84;color:#fff}.n4{background:#c95763;color:#fff}.n5{background:#a82f3f;color:#fff}
+.select-row { display:flex; gap: clamp(0.4rem, 1.4vw, 0.8rem); flex-wrap: wrap; align-items:center; }
+.select-group { display:flex; gap: 0.4rem; align-items:center; min-width: 180px; }
+.select-box { min-height: clamp(28px, 3.5vw, 34px); padding: clamp(0.15rem, 0.85vw, 0.28rem) clamp(0.3rem, 0.9vw, 0.55rem); font-size: clamp(0.76rem, 1.75vw, 0.92rem); }
+@media (max-width: 700px) {
+.select-row { flex-direction: column; align-items: stretch; }
+.select-group { width:100%; }
+}
 
-    .ghost-note { font-size: var(--text-sm); color: var(--color-text-muted); }
-    .summary-grid { display:flex; flex-wrap: wrap; align-items:center; justify-content:center; gap: clamp(0.25rem, 0.9vw, 0.5rem); }
-    .kpi { background: var(--color-surface-2); border:1px solid var(--color-border); border-radius: var(--radius-lg); padding: clamp(0.15rem, 0.7vw, 0.28rem) clamp(0.25rem, 0.9vw, 0.4rem); min-width: 70px; max-width: 100px; width: auto; box-sizing: border-box; text-align: center; }
-    .kpi-label { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 0.08rem; }
-    .kpi-value { margin-top: 0.08rem; font-size: clamp(0.95rem, 2.5vw, 1.2rem); font-weight:700; }
-    .kpi:not(:last-child) { margin-bottom: 0; }
-    .score-positive { color: var(--color-positive); }
-    .score-negative { color: var(--color-negative); }
-    .score-neutral { color: var(--color-neutral); }
-    .selected-list { display:flex; flex-wrap:wrap; gap: .5rem; margin-top: .85rem; }
-    .pill { padding: .45rem .8rem; border-radius: var(--radius-full); font-size: var(--text-sm); border: 1px solid var(--color-border); background: var(--color-surface-2); }
-    .pill.positive { background: var(--color-positive-soft); border-color: var(--color-positive); }
-    .pill.negative { background: var(--color-negative-soft); border-color: var(--color-negative); }
-    .footer-note { margin-top: var(--space-4); color: var(--color-text-muted); }
-    .capture-zone { display:grid; gap: var(--space-5); }
-    .date-tools { display:flex; flex-direction:column; align-items:flex-start; gap: 0.2rem; }
-    .date-row { display:flex; align-items:center; gap: var(--space-2); width:100%; flex-wrap:wrap; }
-    .date-badge { display:inline-flex; width:fit-content; padding:.45rem .8rem; border-radius: var(--radius-full); background: var(--color-surface-2); border:1px solid var(--color-border); color: var(--color-text-muted); font-size: var(--text-sm); }
-    .date-badge-btn:hover { border-color: var(--color-primary); color: var(--color-text); }
-    .date-input { min-height: 34px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding: 0.35rem 0.7rem; }
-    .date-help { max-width: 180px; margin-left: 1.5rem; margin-bottom: 0.15rem; font-size: 10px; line-height: 1.35; color: var(--color-text-muted); margin-top: 0; text-align: justify; }
-    .status { margin-top:.8rem; font-size: var(--text-sm); color: var(--color-text-muted); }
-    .charts-column { display:flex; flex-direction:column; gap: var(--space-4); align-items:center; }
-    .chart-card { background: var(--color-surface-2); border-radius: var(--radius-xl); border:1px solid var(--color-border); padding: var(--space-4); box-sizing:border-box; width: 92%; max-width: 100%; margin: 0 auto; }
-    .chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.75rem; }
-    .chart-title { font-size: var(--text-sm); font-weight:600; }
-    .chart-wrap { position: relative; height: 220px; width: 100%; }
-    @media (min-width: 768px) {
-      .chart-card {
-        width: calc(100% - 30mm);
-        max-width: 680px;
-      }
-    }
-    .history-list { display:grid; gap:.75rem; margin-top:1rem; }
-    .history-item { display:flex; justify-content:space-between; gap:1rem; border:1px solid var(--color-border); background: var(--color-surface-2); border-radius: var(--radius-lg); padding: .9rem 1rem; }
-    .history-meta { color: var(--color-text-muted); font-size: var(--text-sm); }
-    .chart-controls { display:flex; justify-content: space-between; align-items:center; margin-bottom: var(--space-3); }
-    .chart-controls button { min-height: 38px; padding: 0.35rem 0.8rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); cursor: pointer; }
-    .chart-controls button:hover { background: var(--color-surface-2); }
-    .chart-controls .current-month { font-weight: 600; }
-    .hidden { display:none; }
-    
-    /* Tablette et petits écrans */
-    @media (max-width: 767px) {
-      .grid-2, .summary-grid { grid-template-columns: 1fr; }
-      .fatigue-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
-      .topbar, .history-item { flex-direction: column; }
-    }
-    
-    /* Appareils mobiles */
-    @media (max-width: 767px) {
-      :root, [data-theme="light"] {
-        --text-xs: clamp(0.7rem, 0.68rem + 0.15vw, 0.8rem);
-        --text-sm: clamp(0.85rem, 0.82rem + 0.18vw, 0.95rem);
-        --text-base: clamp(0.95rem, 0.92rem + 0.2vw, 1.05rem);
-        --text-lg: clamp(1.1rem, 1.0rem + 0.5vw, 1.3rem);
-        --text-xl: clamp(1.3rem, 1.15rem + 0.8vw, 1.7rem);
-      }
-      
-      .name-fields input { width: clamp(70px, 30vw, 90px); padding: 0.25rem 0.4rem !important; height: 24px; }
-    }
-    
-    /* Petits mobiles */
-    @media (max-width: 480px) {
-      :root, [data-theme="light"] {
-        --text-xs: clamp(0.65rem, 0.63rem + 0.1vw, 0.75rem);
-        --text-sm: clamp(0.8rem, 0.78rem + 0.1vw, 0.9rem);
-        --text-base: clamp(0.9rem, 0.88rem + 0.15vw, 1rem);
-        --text-lg: clamp(1rem, 0.95rem + 0.3vw, 1.2rem);
-        --text-xl: clamp(1.15rem, 1.05rem + 0.5vw, 1.5rem);
-        --space-1: 0.2rem; --space-2: 0.4rem; --space-3: 0.6rem; --space-4: 0.85rem; --space-5: 1rem; --space-6: 1.25rem; --space-8: 1.5rem;
-      }
-      
-      .wrap { padding: var(--space-3); width: 100%; box-sizing: border-box; }
-      .topbar { flex-direction: column; gap: var(--space-2); align-items: stretch; }
-      .title { font-size: var(--text-lg); margin-bottom: var(--space-2); }
-      .toolbar { gap: var(--space-1); }
-      .name-fields input { width: clamp(60px, 25vw, 70px); padding: 0.2rem 0.3rem !important; height: 22px; font-size: 0.7rem; }
-      
-      .panel { padding: var(--space-3); border-radius: var(--radius-lg); }
-      .stack { gap: var(--space-4); }
-      
-      .theme-btn, .reset-btn, .capture-btn, .save-day-btn, .download-data-btn, .load-data-btn, .select-box {
-        min-height: 40px;
-        padding: 0.6rem 0.8rem;
-        font-size: var(--text-xs);
-        border-radius: var(--radius-lg);
-        flex: 1;
-        min-width: auto;
-      }
-      
-      .summary-grid { grid-template-columns: repeat(3,minmax(80px,1fr)); gap: var(--space-2); }
-      .select-row { gap: var(--space-1); flex-direction: column; align-items: stretch; }
-      .select-row label { font-size: var(--text-xs); }
-      .select-box { width: 100%; }
-      .section-title { margin-bottom: 0.5rem; font-size: var(--text-lg); }
-      .selected-list { gap: 0.35rem; margin-top: 0.5rem; }
-      .chart-wrap { height: 150px; }
-      .chart-card { padding: var(--space-2); }
-      .history-item { padding: 0.65rem 0.75rem; flex-direction: column; gap: 0.35rem; }
-      .history-meta { font-size: 0.65rem; }
-      .date-badge { padding: 0.35rem 0.6rem; font-size: 0.65rem; }
-      .status { font-size: 0.65rem; }
-      .footer-note { font-size: 0.65rem; margin-top: var(--space-2); }
-      .ghost-note { font-size: 0.65rem; }
-      .summary-grid { grid-template-columns: repeat(2, minmax(70px, 1fr)); gap: var(--space-2); }
-      .grid-2 { grid-template-columns: 1fr; }
-    }
-  </style>
+.ghost-note { font-size: var(--text-sm); color: var(--color-text-muted); }
+.summary-grid { display:flex; flex-wrap: wrap; align-items:center; justify-content:center; gap: clamp(0.25rem, 0.9vw, 0.5rem); }
+.kpi { background: var(--color-surface-2); border:1px solid var(--color-border); border-radius: var(--radius-lg); padding: clamp(0.15rem, 0.7vw, 0.28rem) clamp(0.25rem, 0.9vw, 0.4rem); min-width: 70px; max-width: 100px; width: auto; box-sizing: border-box; text-align: center; }
+.kpi-label { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 0.08rem; }
+.kpi-value { margin-top: 0.08rem; font-size: clamp(0.95rem, 2.5vw, 1.2rem); font-weight:700; }
+.kpi:not(:last-child) { margin-bottom: 0; }
+.score-positive { color: var(--color-positive); }
+.score-negative { color: var(--color-negative); }
+.score-neutral { color: var(--color-neutral); }
+.selected-list { display:flex; flex-wrap:wrap; gap: .5rem; margin-top: .85rem; }
+.pill { padding: .45rem .8rem; border-radius: var(--radius-full); font-size: var(--text-sm); border: 1px solid var(--color-border); background: var(--color-surface-2); }
+.pill.positive { background: var(--color-positive-soft); border-color: var(--color-positive); }
+.pill.negative { background: var(--color-negative-soft); border-color: var(--color-negative); }
+.footer-note { margin-top: var(--space-4); color: var(--color-text-muted); }
+.capture-zone { display:grid; gap: var(--space-5); }
+.date-tools { display:flex; flex-direction:column; align-items:flex-start; gap: 0.2rem; }
+.date-row { display:flex; align-items:center; gap: var(--space-2); width:100%; flex-wrap:wrap; }
+.date-badge { display:inline-flex; width:fit-content; padding:.45rem .8rem; border-radius: var(--radius-full); background: var(--color-surface-2); border:1px solid var(--color-border); color: var(--color-text-muted); font-size: var(--text-sm); }
+.date-badge-btn:hover { border-color: var(--color-primary); color: var(--color-text); }
+.date-input { min-height: 34px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding: 0.35rem 0.7rem; }
+.date-help { max-width: 180px; margin-left: 1.5rem; margin-bottom: 0.15rem; font-size: 10px; line-height: 1.35; color: var(--color-text-muted); margin-top: 0; text-align: justify; }
+.status { margin-top:.8rem; font-size: var(--text-sm); color: var(--color-text-muted); }
+.charts-column { display:flex; flex-direction:column; gap: var(--space-4); align-items:center; }
+.chart-card { background: var(--color-surface-2); border-radius: var(--radius-xl); border:1px solid var(--color-border); padding: var(--space-4); box-sizing:border-box; width: 92%; max-width: 100%; margin: 0 auto; }
+.chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.75rem; }
+.chart-title { font-size: var(--text-sm); font-weight:600; }
+.chart-wrap { position: relative; height: 220px; width: 100%; }
+@media (min-width: 768px) {
+.chart-card {
+width: calc(100% - 30mm);
+max-width: 680px;
+}
+}
+.history-list { display:grid; gap:.75rem; margin-top:1rem; }
+.history-item { display:flex; justify-content:space-between; gap:1rem; border:1px solid var(--color-border); background: var(--color-surface-2); border-radius: var(--radius-lg); padding: .9rem 1rem; }
+.history-meta { color: var(--color-text-muted); font-size: var(--text-sm); }
+.chart-controls { display:flex; justify-content: space-between; align-items:center; margin-bottom: var(--space-3); }
+.chart-controls button { min-height: 38px; padding: 0.35rem 0.8rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); cursor: pointer; }
+.chart-controls button:hover { background: var(--color-surface-2); }
+.chart-controls .current-month { font-weight: 600; }
+.hidden { display:none; }
+
+/* Tablette et petits écrans */
+@media (max-width: 767px) {
+.grid-2, .summary-grid { grid-template-columns: 1fr; }
+.fatigue-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.topbar, .history-item { flex-direction: column; }
+}
+
+/* Appareils mobiles */
+@media (max-width: 767px) {
+:root, [data-theme="light"] {
+--text-xs: clamp(0.7rem, 0.68rem + 0.15vw, 0.8rem);
+--text-sm: clamp(0.85rem, 0.82rem + 0.18vw, 0.95rem);
+--text-base: clamp(0.95rem, 0.92rem + 0.2vw, 1.05rem);
+--text-lg: clamp(1.1rem, 1.0rem + 0.5vw, 1.3rem);
+--text-xl: clamp(1.3rem, 1.15rem + 0.8vw, 1.7rem);
+}
+
+.name-fields input { width: clamp(70px, 30vw, 90px); padding: 0.25rem 0.4rem !important; height: 24px; }
+}
+
+/* Petits mobiles */
+@media (max-width: 480px) {
+:root, [data-theme="light"] {
+--text-xs: clamp(0.65rem, 0.63rem + 0.1vw, 0.75rem);
+--text-sm: clamp(0.8rem, 0.78rem + 0.1vw, 0.9rem);
+--text-base: clamp(0.9rem, 0.88rem + 0.15vw, 1rem);
+--text-lg: clamp(1rem, 0.95rem + 0.3vw, 1.2rem);
+--text-xl: clamp(1.15rem, 1.05rem + 0.5vw, 1.5rem);
+--space-1: 0.2rem; --space-2: 0.4rem; --space-3: 0.6rem; --space-4: 0.85rem; --space-5: 1rem; --space-6: 1.25rem; --space-8: 1.5rem;
+}
+
+.wrap { padding: var(--space-3); width: 100%; box-sizing: border-box; }
+.topbar { flex-direction: column; gap: var(--space-2); align-items: stretch; }
+.title { font-size: var(--text-lg); margin-bottom: var(--space-2); }
+.toolbar { gap: var(--space-1); }
+.name-fields input { width: clamp(60px, 25vw, 70px); padding: 0.2rem 0.3rem !important; height: 22px; font-size: 0.7rem; }
+
+.panel { padding: var(--space-3); border-radius: var(--radius-lg); }
+.stack { gap: var(--space-4); }
+
+.theme-btn, .reset-btn, .capture-btn, .save-day-btn, .download-data-btn, .load-data-btn, .select-box {
+min-height: 40px;
+padding: 0.6rem 0.8rem;
+font-size: var(--text-xs);
+border-radius: var(--radius-lg);
+flex: 1;
+min-width: auto;
+}
+
+.summary-grid { grid-template-columns: repeat(3,minmax(80px,1fr)); gap: var(--space-2); }
+.select-row { gap: var(--space-1); flex-direction: column; align-items: stretch; }
+.select-row label { font-size: var(--text-xs); }
+.select-box { width: 100%; }
+.section-title { margin-bottom: 0.5rem; font-size: var(--text-lg); }
+.selected-list { gap: 0.35rem; margin-top: 0.5rem; }
+.chart-wrap { height: 150px; }
+.chart-card { padding: var(--space-2); }
+.history-item { padding: 0.65rem 0.75rem; flex-direction: column; gap: 0.35rem; }
+.history-meta { font-size: 0.65rem; }
+.date-badge { padding: 0.35rem 0.6rem; font-size: 0.65rem; }
+.status { font-size: 0.65rem; }
+.footer-note { font-size: 0.65rem; margin-top: var(--space-2); }
+.ghost-note { font-size: 0.65rem; }
+.summary-grid { grid-template-columns: repeat(2, minmax(70px, 1fr)); gap: var(--space-2); }
+.grid-2 { grid-template-columns: 1fr; }
+}
+</style>
 </head>
 <body>
-  <main class="wrap stack">
-    <header class="topbar">
-      <div>
-        <h1 class="title">Bilan quotidien</h1>
-        <div class="name-fields">
-          <input type="text" id="userFirstName" class="modal-input" placeholder="Prénom" style="margin-bottom:0.5rem;">
-          <input type="text" id="userLastName" class="modal-input" placeholder="Nom" style="margin-bottom:0.5rem;">
-        </div>
-      </div>
-    </header>
+<main class="wrap stack">
+<header class="topbar">
+<div>
+<h1 class="title">Bilan quotidien</h1>
+<div class="name-fields">
+<input type="text" id="userFirstName" class="modal-input" placeholder="Prénom" style="margin-bottom:0.5rem;">
+<input type="text" id="userLastName" class="modal-input" placeholder="Nom" style="margin-bottom:0.5rem;">
+</div>
+</div>
+</header>
 
-    <section class="capture-zone" id="captureZone">
-      <div class="date-tools">
-        <div class="date-help">Si tu as oublié de faire un ou plusieurs bilans quotidiens, tu peux cliquer sur le bouton ci-dessous pour choisir la ou les journées qui te manquent.</div>
-        <div class="date-row">
-          <button class="date-badge date-badge-btn" id="dateBadge" type="button" title="Choisir une date pour ce bilan">Date</button>
-          <input class="date-input hidden" type="date" id="customDateInput">
-          <div class="toolbar">
-            <button class="theme-btn" type="button" id="themeBtn">🌙 / ☀️</button>
-            <button class="reset-btn" type="button" id="resetBtn">Recommencer</button>
-          </div>
-        </div>
-      </div>
+<section class="capture-zone" id="captureZone">
+<div class="date-tools">
+<div class="date-help">Si tu as oublié de faire un ou plusieurs bilans quotidiens, tu peux cliquer sur le bouton ci-dessous pour choisir la ou les journées qui te manquent.</div>
+<div class="date-row">
+<button class="date-badge date-badge-btn" id="dateBadge" type="button" title="Choisir une date pour ce bilan">Date</button>
+<input class="date-input hidden" type="date" id="customDateInput">
+<div class="toolbar">
+<button class="theme-btn" type="button" id="themeBtn">🌙 / ☀️</button>
+<button class="reset-btn" type="button" id="resetBtn">Recommencer</button>
+</div>
+</div>
+</div>
 
-      <section class="panel">
-        <h2 class="section-title">Activités</h2>
-        <div class="chips" id="activities"></div>
-        <button class="chip chip-add-btn" id="addActivityBtn" style="margin-top: var(--space-3);">+ Ajouter une activité</button>
-      </section>
+<section class="panel">
+<h2 class="section-title">Activités</h2>
+<div class="chips" id="activities"></div>
+<button class="chip chip-add-btn" id="addActivityBtn" style="margin-top: var(--space-3);">+ Ajouter une activité</button>
+</section>
 
-      <section class="panel">
-        <h2 class="section-title">Fatigue</h2>
-        <div class="fatigue-grid" id="fatigueButtons"></div>
-      </section>
+<section class="panel">
+<h2 class="section-title">Fatigue</h2>
+<div class="fatigue-grid" id="fatigueButtons"></div>
+</section>
 
-      <section class="panel">
-        <h2 class="section-title">Émotions</h2>
-        <div class="select-row">
-          <div class="select-group">
-            <label for="positiveSelect" class="ghost-note">☀️ Émotions positives</label>
-            <select id="positiveSelect" class="select-box"><option value=""></option></select>
-          </div>
-          <div class="select-group">
-            <label for="negativeSelect" class="ghost-note">⛈️ Émotions négatives</label>
-            <select id="negativeSelect" class="select-box"><option value=""></option></select>
-          </div>
-        </div>
-        <div class="selected-list" id="emotionList"></div>
-      </section>
+<section class="panel">
+<h2 class="section-title">Émotions</h2>
+<div class="select-row">
+<div class="select-group">
+<label for="positiveSelect" class="ghost-note">☀️ Émotions positives</label>
+<select id="positiveSelect" class="select-box"><option value=""></option></select>
+</div>
+<div class="select-group">
+<label for="negativeSelect" class="ghost-note">⛈️ Émotions négatives</label>
+<select id="negativeSelect" class="select-box"><option value=""></option></select>
+</div>
+</div>
+<div class="selected-list" id="emotionList"></div>
+</section>
 
-      <section class="panel">
-        <h2 class="section-title">Ressenti corporel</h2>
-        <div class="body-containers">
-          <div id="bodyPositiveContainer" style="background: var(--color-positive-soft); border-radius:var(--radius-lg); padding:var(--space-3);">
-            <strong>Positifs</strong>
-            <div class="chips" id="bodyPositiveFeelings" style="margin-top: var(--space-2);"></div>
-          </div>
-          <div id="bodyNegativeContainer" style="background: var(--color-negative-soft); border-radius:var(--radius-lg); padding:var(--space-3);">
-            <strong>Négatifs</strong>
-            <div class="chips" id="bodyNegativeFeelings" style="margin-top: var(--space-2);"></div>
-          </div>
-        </div>
-        <button class="chip chip-add-btn" id="addBodyBtn" style="margin-top: var(--space-3);">+ Ajouter un ressenti</button>
-      </section>
+<section class="panel">
+<h2 class="section-title">Ressenti corporel</h2>
+<div class="body-containers">
+<div id="bodyPositiveContainer" style="background: var(--color-positive-soft); border-radius:var(--radius-lg); padding:var(--space-3);">
+<strong>Positifs</strong>
+<div class="chips" id="bodyPositiveFeelings" style="margin-top: var(--space-2);"></div>
+</div>
+<div id="bodyNegativeContainer" style="background: var(--color-negative-soft); border-radius:var(--radius-lg); padding:var(--space-3);">
+<strong>Négatifs</strong>
+<div class="chips" id="bodyNegativeFeelings" style="margin-top: var(--space-2);"></div>
+</div>
+</div>
+<button class="chip chip-add-btn" id="addBodyBtn" style="margin-top: var(--space-3);">+ Ajouter un ressenti</button>
+</section>
 
-      <section class="panel">
-        <h2 class="section-title">Bilan</h2>
-        <div class="summary-grid">
-          <div class="kpi"><div class="kpi-label">Activités</div><div class="kpi-value score-neutral" id="activityScore">0</div></div>
-          <div class="kpi"><div class="kpi-label">Fatigue</div><div class="kpi-value score-neutral" id="fatigueScore">0</div></div>
-          <div class="kpi"><div class="kpi-label">Émotions</div><div class="kpi-value score-neutral" id="emotionScore">0</div></div>
-          <div class="kpi"><div class="kpi-label">Ressenti</div><div class="kpi-value score-neutral" id="bodyScore">0</div></div>
-        </div>
-        <p class="footer-note" id="summaryText">Commence par cocher ce qui correspond à aujourd’hui.</p>
-      </section>
-    </section>
+<section class="panel">
+<h2 class="section-title">Bilan</h2>
+<div class="summary-grid">
+<div class="kpi"><div class="kpi-label">Activités</div><div class="kpi-value score-neutral" id="activityScore">0</div></div>
+<div class="kpi"><div class="kpi-label">Fatigue</div><div class="kpi-value score-neutral" id="fatigueScore">0</div></div>
+<div class="kpi"><div class="kpi-label">Émotions</div><div class="kpi-value score-neutral" id="emotionScore">0</div></div>
+<div class="kpi"><div class="kpi-label">Ressenti</div><div class="kpi-value score-neutral" id="bodyScore">0</div></div>
+</div>
+<p class="footer-note" id="summaryText">Commence par cocher ce qui correspond à aujourd’hui.</p>
+</section>
+</section>
 
-    <section class="panel">
-      <div class="section-title" style="margin-bottom:.8rem;">Graphiques</div>
-      <div class="chart-controls">
-        <button type="button" id="prevMonthBtn">⟵ Mois précédent</button>
-        <div class="current-month" id="currentMonthLabel">Mois</div>
-        <button type="button" id="nextMonthBtn">Mois suivant ⟶</button>
-      </div>
-      <div class="charts-column" id="chartsColumn">
-        <div class="chart-card"><div class="chart-header"><div class="chart-title">Activités</div><div class="chart-month" id="chartMonthActivites"></div></div><div class="chart-wrap"><canvas id="chartActivites"></canvas></div></div>
-        <div class="chart-card"><div class="chart-header"><div class="chart-title">Fatigue</div><div class="chart-month" id="chartMonthFatigue"></div></div><div class="chart-wrap"><canvas id="chartFatigue"></canvas></div></div>
-        <div class="chart-card"><div class="chart-header"><div class="chart-title">Émotions</div><div class="chart-month" id="chartMonthEmotions"></div></div><div class="chart-wrap"><canvas id="chartEmotions"></canvas></div></div>
-        <div class="chart-card"><div class="chart-header"><div class="chart-title">Ressenti</div><div class="chart-month" id="chartMonthRessenti"></div></div><div class="chart-wrap"><canvas id="chartRessenti"></canvas></div></div>
-      </div>
-      <div class="history-list" id="historyList" style="display:none;"></div>
-    </section>
+<section class="panel">
+<div class="section-title" style="margin-bottom:.8rem;">Graphiques</div>
+<div class="chart-controls">
+<button type="button" id="prevMonthBtn">⟵ Mois précédent</button>
+<div class="current-month" id="currentMonthLabel">Mois</div>
+<button type="button" id="nextMonthBtn">Mois suivant ⟶</button>
+</div>
+<div class="charts-column" id="chartsColumn">
+<div class="chart-card"><div class="chart-header"><div class="chart-title">Activités</div><div class="chart-month" id="chartMonthActivites"></div></div><div class="chart-wrap"><canvas id="chartActivites"></canvas></div></div>
+<div class="chart-card"><div class="chart-header"><div class="chart-title">Fatigue</div><div class="chart-month" id="chartMonthFatigue"></div></div><div class="chart-wrap"><canvas id="chartFatigue"></canvas></div></div>
+<div class="chart-card"><div class="chart-header"><div class="chart-title">Émotions</div><div class="chart-month" id="chartMonthEmotions"></div></div><div class="chart-wrap"><canvas id="chartEmotions"></canvas></div></div>
+<div class="chart-card"><div class="chart-header"><div class="chart-title">Ressenti</div><div class="chart-month" id="chartMonthRessenti"></div></div><div class="chart-wrap"><canvas id="chartRessenti"></canvas></div></div>
+</div>
+<div class="history-list" id="historyList" style="display:none;"></div>
+</section>
 
-    <section class="panel">
-      <div class="actions-layout">
-        <div class="actions-main">
-          <button class="save-day-btn" type="button" id="saveDayBtn">Enregistrer la journée</button>
-        </div>
-        <div class="actions-secondary">
-          <div class="action-item">
-            <div class="action-inline">
-              <button class="help-trigger" type="button" aria-label="Aide pour Enregistrer en PDF">?</button>
-              <button class="secondary-btn" type="button" id="savePdfBtn">Enregistrer en PDF</button>
-            </div>
-            <div class="help-popover">Crée une version imprimable du bilan et des graphiques.</div>
-          </div>
-          <div class="action-item">
-            <div class="action-inline">
-              <button class="help-trigger" type="button" aria-label="Aide pour Exporter les données">?</button>
-              <button class="secondary-btn" type="button" id="exportDataBtn">Exporter les données</button>
-            </div>
-            <div class="help-popover">Enregistre ton historique et ta personnalisation dans un fichier pour pouvoir l'importer sur un autre navigateur.</div>
-          </div>
-          <div class="action-item">
-            <div class="action-inline">
-              <button class="help-trigger" type="button" aria-label="Aide pour Importer les données">?</button>
-              <button class="secondary-btn" type="button" id="importDataBtn">Importer les données</button>
-            </div>
-            <div class="help-popover">Si tu changes de navigateur, tu peux retrouver ton historique et ta personnalisation en important le fichier préalablement enregistré.</div>
-          </div>
-          <div class="action-item">
-            <div class="action-inline">
-              <button class="help-trigger" type="button" aria-label="Aide pour RAZ">?</button>
-              <button class="secondary-btn" type="button" id="resetConfigBtn">RAZ</button>
-            </div>
-            <div class="help-popover">Supprime ta personnalisation.</div>
-          </div>
-        </div>
-      </div>
-      <input class="hidden" type="file" id="dataFileInput" accept="application/json,.json">
-    </section>
+<section class="panel">
+<div class="actions-layout">
+<div class="actions-main">
+<button class="save-day-btn" type="button" id="saveDayBtn">Enregistrer la journée</button>
+</div>
+<div class="actions-secondary">
+<div class="action-item">
+<div class="action-inline">
+<button class="help-trigger" type="button" aria-label="Aide pour Enregistrer en PDF">?</button>
+<button class="secondary-btn" type="button" id="savePdfBtn">Enregistrer en PDF</button>
+</div>
+<div class="help-popover">Crée une version imprimable du bilan et des graphiques.</div>
+</div>
+<div class="action-item">
+<div class="action-inline">
+<button class="help-trigger" type="button" aria-label="Aide pour Exporter les données">?</button>
+<button class="secondary-btn" type="button" id="exportDataBtn">Exporter les données</button>
+</div>
+<div class="help-popover">Enregistre ton historique et ta personnalisation dans un fichier pour pouvoir l'importer sur un autre navigateur.</div>
+</div>
+<div class="action-item">
+<div class="action-inline">
+<button class="help-trigger" type="button" aria-label="Aide pour Importer les données">?</button>
+<button class="secondary-btn" type="button" id="importDataBtn">Importer les données</button>
+</div>
+<div class="help-popover">Si tu changes de navigateur, tu peux retrouver ton historique et ta personnalisation en important le fichier préalablement enregistré.</div>
+</div>
+<div class="action-item">
+<div class="action-inline">
+<button class="help-trigger" type="button" aria-label="Aide pour RAZ">?</button>
+<button class="secondary-btn" type="button" id="resetConfigBtn">RAZ</button>
+</div>
+<div class="help-popover">Supprime ta personnalisation.</div>
+</div>
+</div>
+</div>
+<input class="hidden" type="file" id="dataFileInput" accept="application/json,.json">
+</section>
 
-    <div class="status" id="captureStatus">Importe les données ou enregistre directement pour commencer un nouveau.</div>
-    <div class="last-save" id="lastSaveStatus" style="margin-top:0.5rem;color:var(--color-text-muted);"></div>
+<div class="status" id="captureStatus">Importe les données ou enregistre directement pour commencer un nouveau.</div>
+<div class="last-save" id="lastSaveStatus" style="margin-top:0.5rem;color:var(--color-text-muted);"></div>
 
-  <!-- Modales -->
-  <div class="modal-overlay" id="addActivityModal">
-    <div class="modal-content">
-      <h3 class="modal-title">Ajouter une activité</h3>
-      <input type="text" class="modal-input" id="activityInput" placeholder="Nom de l'activité">
-      <div class="modal-buttons">
-        <button class="modal-btn modal-btn-cancel" type="button" id="cancelActivityBtn">Annuler</button>
-        <button class="modal-btn modal-btn-confirm" type="button" id="confirmActivityBtn">Ajouter</button>
-      </div>
-    </div>
-  </div>
+<!-- Modales -->
+<div class="modal-overlay" id="addActivityModal">
+<div class="modal-content">
+<h3 class="modal-title">Ajouter une activité</h3>
+<input type="text" class="modal-input" id="activityInput" placeholder="Nom de l'activité">
+<div class="modal-buttons">
+<button class="modal-btn modal-btn-cancel" type="button" id="cancelActivityBtn">Annuler</button>
+<button class="modal-btn modal-btn-confirm" type="button" id="confirmActivityBtn">Ajouter</button>
+</div>
+</div>
+</div>
 
-  <div class="modal-overlay" id="addBodyModal">
-    <div class="modal-content">
-      <h3 class="modal-title">Ajouter un ressenti corporel</h3>
-      <input type="text" class="modal-input" id="bodyInput" placeholder="Description du ressenti">
-      <p style="margin:0.6rem 0 0.4rem 0;">Est-ce que ce ressenti est positif ou négatif ?</p>
-      <div class="toggle-btns">
-        <button type="button" class="toggle-btn toggle-btn--positive selected" id="bodyPositiveBtn">Positif</button>
-        <button type="button" class="toggle-btn toggle-btn--negative" id="bodyNegativeBtn">Négatif</button>
-      </div>
-      <div class="modal-buttons">
-        <button class="modal-btn modal-btn-cancel" type="button" id="cancelBodyBtn">Annuler</button>
-        <button class="modal-btn modal-btn-confirm" type="button" id="confirmBodyBtn">Ajouter</button>
-      </div>
-    </div>
-  </div>
+<div class="modal-overlay" id="addBodyModal">
+<div class="modal-content">
+<h3 class="modal-title">Ajouter un ressenti corporel</h3>
+<input type="text" class="modal-input" id="bodyInput" placeholder="Description du ressenti">
+<p style="margin:0.6rem 0 0.4rem 0;">Est-ce que ce ressenti est positif ou négatif ?</p>
+<div class="toggle-btns">
+<button type="button" class="toggle-btn toggle-btn--positive selected" id="bodyPositiveBtn">Positif</button>
+<button type="button" class="toggle-btn toggle-btn--negative" id="bodyNegativeBtn">Négatif</button>
+</div>
+<div class="modal-buttons">
+<button class="modal-btn modal-btn-cancel" type="button" id="cancelBodyBtn">Annuler</button>
+<button class="modal-btn modal-btn-confirm" type="button" id="confirmBodyBtn">Ajouter</button>
+</div>
+</div>
+</div>
 
-  <div class="modal-overlay" id="addEmotionModal">
-    <div class="modal-content">
-      <h3 class="modal-title" id="emotionModalTitle">Ajouter une émotion</h3>
-      <input type="text" class="modal-input" id="emotionInput" placeholder="Nom de l'émotion">
-      <div class="modal-buttons">
-        <button class="modal-btn modal-btn-cancel" type="button" id="cancelEmotionBtn">Annuler</button>
-        <button class="modal-btn modal-btn-confirm" type="button" id="confirmEmotionBtn">Ajouter</button>
-      </div>
-    </div>
-  </div>
+<div class="modal-overlay" id="addEmotionModal">
+<div class="modal-content">
+<h3 class="modal-title" id="emotionModalTitle">Ajouter une émotion</h3>
+<input type="text" class="modal-input" id="emotionInput" placeholder="Nom de l'émotion">
+<div class="modal-buttons">
+<button class="modal-btn modal-btn-cancel" type="button" id="cancelEmotionBtn">Annuler</button>
+<button class="modal-btn modal-btn-confirm" type="button" id="confirmEmotionBtn">Ajouter</button>
+</div>
+</div>
+</div>
 
-  <script>
-    // Configuration et données par défaut
-    const defaultActivities = ['Me laver','Prendre un petit déjeuner','Déjeuner','Dîner','Cuisiner','Boire','Passer l\'aspirateur'];
-    const defaultBodyFeelings = [
-      { label:'Muscles tendus', value:-1 },{ label:'Gorge nouée', value:-1 },{ label:'Nausée', value:-1 },{ label:'Mal au ventre', value:-1 },{ label:'Vertiges', value:-1 },{ label:'Palpitations', value:-1 },
-      { label:'Muscles détendus', value:1 },{ label:'Epaules relâchées', value:1 },{ label:'Vibration dans le corps', value:1 },{ label:'Légèreté', value:1 },{ label:'Respiration profonde', value:1 },{ label:'Mâchoire desserrée', value:1 }
-    ];
-    const defaultNegativeEmotions = ['Affolée','Agacée','Angoissée','Anxieuse','Apeurée','Contrariée','Exaspérée','Fâchée','Frustrée','Furieuse','Haineuse','Inquiète','Irritée','Mécontente','Méfiantes','Paniquée','Pessimiste','Préoccupée','Révoltée','Soucieuse','Sur les nerfs','Tendue','Vexée'];
-    const defaultPositiveEmotions = ['Amusée','Apaisée','Calme','Confiante','Contente','Détendue','Encouragée','Excitée','Fière','Heureuse','Joyeuse','Légère','Motivée','Optimiste','Rassurée','Satisfaite','Sereine'];
-    const fatigueLevels = [
-      { label:'+5', value:5, cls:'f5' },{ label:'+4', value:4, cls:'f4' },{ label:'+3', value:3, cls:'f3' },{ label:'+2', value:2, cls:'f2' },{ label:'+1', value:1, cls:'f1' },
-      { label:'0', value:0, cls:'f0' },
-      { label:'-1', value:-1, cls:'n1' },{ label:'-2', value:-2, cls:'n2' },{ label:'-3', value:-3, cls:'n3' },{ label:'-4', value:-4, cls:'n4' },{ label:'-5', value:-5, cls:'n5' }
-    ];
+<script>
+// Configuration et données par défaut
+const defaultActivities = ['Me laver','Prendre un petit déjeuner','Déjeuner','Dîner','Cuisiner','Boire','Passer l\'aspirateur'];
+const defaultBodyFeelings = [
+{ label:'Muscles tendus', value:-1 },{ label:'Gorge nouée', value:-1 },{ label:'Nausée', value:-1 },{ label:'Mal au ventre', value:-1 },{ label:'Vertiges', value:-1 },{ label:'Palpitations', value:-1 },
+{ label:'Muscles détendus', value:1 },{ label:'Epaules relâchées', value:1 },{ label:'Vibration dans le corps', value:1 },{ label:'Légèreté', value:1 },{ label:'Respiration profonde', value:1 },{ label:'Mâchoire desserrée', value:1 }
+];
+const defaultNegativeEmotions = ['Affolée','Agacée','Angoissée','Anxieuse','Apeurée','Contrariée','Exaspérée','Fâchée','Frustrée','Furieuse','Haineuse','Inquiète','Irritée','Mécontente','Méfiantes','Paniquée','Pessimiste','Préoccupée','Révoltée','Soucieuse','Sur les nerfs','Tendue','Vexée'];
+const defaultPositiveEmotions = ['Amusée','Apaisée','Calme','Confiante','Contente','Détendue','Encouragée','Excitée','Fière','Heureuse','Joyeuse','Légère','Motivée','Optimiste','Rassurée','Satisfaite','Sereine'];
+const fatigueLevels = [
+{ label:'+5', value:5, cls:'f5' },{ label:'+4', value:4, cls:'f4' },{ label:'+3', value:3, cls:'f3' },{ label:'+2', value:2, cls:'f2' },{ label:'+1', value:1, cls:'f1' },
+{ label:'0', value:0, cls:'f0' },
+{ label:'-1', value:-1, cls:'n1' },{ label:'-2', value:-2, cls:'n2' },{ label:'-3', value:-3, cls:'n3' },{ label:'-4', value:-4, cls:'n4' },{ label:'-5', value:-5, cls:'n5' }
+];
 
-    // Données mutables (peuvent être modifiées par l'utilisateur)
-    let activities = [...defaultActivities];
-    let bodyFeelings = defaultBodyFeelings.map(item => ({ ...item }));
-    let negativeEmotions = [...defaultNegativeEmotions];
-    let positiveEmotions = [...defaultPositiveEmotions];
+// Données mutables (peuvent être modifiées par l'utilisateur)
+let activities = [...defaultActivities];
+let bodyFeelings = defaultBodyFeelings.map(item => ({ ...item }));
+let negativeEmotions = [...defaultNegativeEmotions];
+let positiveEmotions = [...defaultPositiveEmotions];
 
-    let userFirstName = '';
-    let userLastName = '';
+let userFirstName = '';
+let userLastName = '';
 
-    const state = { activities:new Set(), fatigue:0, negativeEmotions:[], positiveEmotions:[], body:new Set() };
-    let historyRecords = [];
-    const charts = {};
-    let currentEmotionType = null;
-    let monthKeys = [];
-    let selectedMonthIndex = 0;
-    let selectedDateTime = new Date();
+const state = { activities:new Set(), fatigue:0, negativeEmotions:[], positiveEmotions:[], body:new Set() };
+let historyRecords = [];
+const charts = {};
+let currentEmotionType = null;
+let monthKeys = [];
+let selectedMonthIndex = 0;
+let selectedDateTime = new Date();
 
-    function sortEmotionValues(values) {
-      return values.sort((a, b) => a.localeCompare(b, 'fr', { sensitivity:'base' }));
-    }
+function sortEmotionValues(values) {
+return values.sort((a, b) => a.localeCompare(b, 'fr', { sensitivity:'base' }));
+}
 
-    function sortEmotionLists() {
-      sortEmotionValues(negativeEmotions);
-      sortEmotionValues(positiveEmotions);
-    }
+function sortEmotionLists() {
+sortEmotionValues(negativeEmotions);
+sortEmotionValues(positiveEmotions);
+}
 
-    // Chargement des données depuis localStorage
-    function loadFromLocalStorage() {
-      const saved = localStorage.getItem('bilanQuotidienConfig');
-      if (saved) {
-        try {
-          const config = JSON.parse(saved);
-          if (config.activities) activities = config.activities;
-          if (config.bodyFeelings) bodyFeelings = config.bodyFeelings;
-          if (config.negativeEmotions) negativeEmotions = config.negativeEmotions;
-          if (config.positiveEmotions) positiveEmotions = config.positiveEmotions;
-          if (config.userFirstName) userFirstName = config.userFirstName;
-          if (config.userLastName) userLastName = config.userLastName;
-          sortEmotionLists();
-        } catch (e) { console.error('Erreur dans le chargement localStorage:', e); }
-      }
+// Chargement des données depuis localStorage
+function loadFromLocalStorage() {
+const saved = localStorage.getItem('bilanQuotidienConfig');
+if (saved) {
+try {
+const config = JSON.parse(saved);
+if (config.activities) activities = config.activities;
+if (config.bodyFeelings) bodyFeelings = config.bodyFeelings;
+if (config.negativeEmotions) negativeEmotions = config.negativeEmotions;
+if (config.positiveEmotions) positiveEmotions = config.positiveEmotions;
+if (config.userFirstName) userFirstName = config.userFirstName;
+if (config.userLastName) userLastName = config.userLastName;
+sortEmotionLists();
+} catch (e) { console.error('Erreur dans le chargement localStorage:', e); }
+}
 
-      const savedHistory = localStorage.getItem('bilanQuotidienHistory');
-      if (savedHistory) {
-        try {
-          historyRecords = mergeRecords([], JSON.parse(savedHistory));
-        } catch (e) { console.error('Erreur dans le chargement de l\'historique:', e); }
-      }
-    }
+const savedHistory = localStorage.getItem('bilanQuotidienHistory');
+if (savedHistory) {
+try {
+historyRecords = mergeRecords([], JSON.parse(savedHistory));
+} catch (e) { console.error('Erreur dans le chargement de l\'historique:', e); }
+}
+}
 
-    // Sauvegarde dans localStorage
-    function saveToLocalStorage() {
-      const config = { activities, bodyFeelings, negativeEmotions, positiveEmotions, userFirstName, userLastName };
-      historyRecords = mergeRecords([], historyRecords);
-      localStorage.setItem('bilanQuotidienConfig', JSON.stringify(config));
-      localStorage.setItem('bilanQuotidienHistory', JSON.stringify(historyRecords));
-    }
+// Sauvegarde dans localStorage
+function saveToLocalStorage() {
+const config = { activities, bodyFeelings, negativeEmotions, positiveEmotions, userFirstName, userLastName };
+historyRecords = mergeRecords([], historyRecords);
+localStorage.setItem('bilanQuotidienConfig', JSON.stringify(config));
+localStorage.setItem('bilanQuotidienHistory', JSON.stringify(historyRecords));
+}
 
-    // Gestion des modales
-    function openModal(modalId) {
-      document.getElementById(modalId).classList.add('active');
-    }
+// Gestion des modales
+function openModal(modalId) {
+document.getElementById(modalId).classList.add('active');
+}
 
-    function closeModal(modalId) {
-      document.getElementById(modalId).classList.remove('active');
-    }
+function closeModal(modalId) {
+document.getElementById(modalId).classList.remove('active');
+}
 
-    const activitiesEl = document.getElementById('activities');
-    const fatigueEl = document.getElementById('fatigueButtons');
-    const emotionListEl = document.getElementById('emotionList');
-    const bodyPositiveEl = document.getElementById('bodyPositiveFeelings');
-    const bodyNegativeEl = document.getElementById('bodyNegativeFeelings');
-    const historyListEl = document.getElementById('historyList');
+const activitiesEl = document.getElementById('activities');
+const fatigueEl = document.getElementById('fatigueButtons');
+const emotionListEl = document.getElementById('emotionList');
+const bodyPositiveEl = document.getElementById('bodyPositiveFeelings');
+const bodyNegativeEl = document.getElementById('bodyNegativeFeelings');
+const historyListEl = document.getElementById('historyList');
 
-    function formatDisplayDate(d = new Date()) { return d.toLocaleDateString('fr-FR', { dateStyle:'full' }); }
-    function formatShortDate(iso) { return new Date(iso).toLocaleString('fr-FR', { dateStyle:'short', timeStyle:'short' }); }
-    function formatFileDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`; }
-    function formatPdfFileDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()}`; }
-    function formatInputDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
-    function dayKeyFromISO(iso) { const d = new Date(iso); const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
-    function signed(v) { return v>0 ? `+${v}` : String(v); }
-    function setScoreColor(el, v) { el.classList.remove('score-positive','score-negative','score-neutral'); if (v>0) el.classList.add('score-positive'); else if (v<0) el.classList.add('score-negative'); else el.classList.add('score-neutral'); }
-    function updateDateBadge() {
-      const dateBadge = document.getElementById('dateBadge');
-      const dateInput = document.getElementById('customDateInput');
-      if (dateBadge) dateBadge.textContent = `Bilan du ${formatDisplayDate(selectedDateTime)}`;
-      if (dateInput) {
-        dateInput.max = formatInputDate(new Date());
-        dateInput.value = formatInputDate(selectedDateTime);
-      }
-    }
+function formatDisplayDate(d = new Date()) { return d.toLocaleDateString('fr-FR', { dateStyle:'full' }); }
+function formatShortDate(iso) { return new Date(iso).toLocaleString('fr-FR', { dateStyle:'short', timeStyle:'short' }); }
+function formatFileDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`; }
+function formatPdfFileDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()}`; }
+function formatInputDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function dayKeyFromISO(iso) { const d = new Date(iso); const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function signed(v) { return v>0 ? `+${v}` : String(v); }
+function setScoreColor(el, v) { el.classList.remove('score-positive','score-negative','score-neutral'); if (v>0) el.classList.add('score-positive'); else if (v<0) el.classList.add('score-negative'); else el.classList.add('score-neutral'); }
+function updateDateBadge() {
+const dateBadge = document.getElementById('dateBadge');
+const dateInput = document.getElementById('customDateInput');
+if (dateBadge) dateBadge.textContent = `Bilan du ${formatDisplayDate(selectedDateTime)}`;
+if (dateInput) {
+dateInput.max = formatInputDate(new Date());
+dateInput.value = formatInputDate(selectedDateTime);
+}
+}
 
-    function computeScores() {
-      const activityScore = state.activities.size;
-      const fatigueScore = state.fatigue;
-      const emotionScore = state.positiveEmotions.length - state.negativeEmotions.length;
-      const bodyScore = [...state.body].reduce((sum, idx) => sum + bodyFeelings[idx].value, 0);
-      const total = activityScore + fatigueScore + emotionScore + bodyScore;
-      return { activityScore, fatigueScore, emotionScore, bodyScore, total };
-    }
+function computeScores() {
+const activityScore = state.activities.size;
+const fatigueScore = state.fatigue;
+const emotionScore = state.positiveEmotions.length - state.negativeEmotions.length;
+const bodyScore = [...state.body].reduce((sum, idx) => sum + bodyFeelings[idx].value, 0);
+const total = activityScore + fatigueScore + emotionScore + bodyScore;
+return { activityScore, fatigueScore, emotionScore, bodyScore, total };
+}
 
-    function renderActivities() {
-      activitiesEl.innerHTML = '';
-      activities.forEach((label, i) => {
-        const active = state.activities.has(i);
-        const btn = document.createElement('button');
-        btn.type='button';
-        btn.className='chip'+(active?' active':'');
-        
-        const labelSpan = document.createElement('span');
-        labelSpan.textContent = `${label} · +1`;
-        btn.appendChild(labelSpan);
-        
-        // Bouton de suppression pour toutes les activités
-        const deleteBtn = document.createElement('span');
-        deleteBtn.className = 'chip-delete';
-        deleteBtn.textContent = '✕';
-        deleteBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          activities.splice(i, 1);
-          state.activities.delete(i);
-          // ajuster l'état des indices ; on reconstruit les valeurs sélectionnées
-          const newActivities = new Set();
-          state.activities.forEach(idx => { if (idx < i) newActivities.add(idx); else if (idx > i) newActivities.add(idx-1); });
-          state.activities = newActivities;
-          saveToLocalStorage();
-          renderAll();
-        });
-        btn.appendChild(deleteBtn);
-        
-        btn.addEventListener('click', () => {
-          active ? state.activities.delete(i) : state.activities.add(i);
-          renderAll();
-        });
-        activitiesEl.appendChild(btn);
-      });
-    }
+function renderActivities() {
+activitiesEl.innerHTML = '';
+activities.forEach((label, i) => {
+const active = state.activities.has(i);
+const btn = document.createElement('button');
+btn.type='button';
+btn.className='chip'+(active?' active':'');
 
-    function renderFatigue() {
-      fatigueEl.innerHTML='';
-      fatigueLevels.forEach(level => {
-        const btn = document.createElement('button');
-        btn.type='button'; btn.className=`fatigue-btn ${level.cls}` + (state.fatigue===level.value?' active':''); btn.textContent=level.label;
-        btn.addEventListener('click', ()=>{ state.fatigue=level.value; renderAll(); });
-        fatigueEl.appendChild(btn);
-      });
-    }
+const labelSpan = document.createElement('span');
+labelSpan.textContent = `${label} · +1`;
+btn.appendChild(labelSpan);
 
-    function renderBody() {
-      bodyPositiveEl.innerHTML='';
-      bodyNegativeEl.innerHTML='';
-      bodyFeelings.forEach((item, i) => {
-        const active = state.body.has(i);
-        const btn = document.createElement('button');
-        const bodyClass = item.value > 0 ? 'chip-body-positive' : 'chip-body-negative';
-        btn.type='button';
-        btn.className=`chip ${bodyClass}` + (active?' active':'');
+// Bouton de suppression pour toutes les activités
+const deleteBtn = document.createElement('span');
+deleteBtn.className = 'chip-delete';
+deleteBtn.textContent = '✕';
+deleteBtn.addEventListener('click', (e) => {
+e.stopPropagation();
+activities.splice(i, 1);
+state.activities.delete(i);
+// ajuster l'état des indices ; on reconstruit les valeurs sélectionnées
+const newActivities = new Set();
+state.activities.forEach(idx => { if (idx < i) newActivities.add(idx); else if (idx > i) newActivities.add(idx-1); });
+state.activities = newActivities;
+saveToLocalStorage();
+renderAll();
+});
+btn.appendChild(deleteBtn);
 
-        const labelSpan = document.createElement('span');
-        labelSpan.textContent = `${item.label} · ${signed(item.value)}`;
-        btn.appendChild(labelSpan);
+btn.addEventListener('click', () => {
+active ? state.activities.delete(i) : state.activities.add(i);
+renderAll();
+});
+activitiesEl.appendChild(btn);
+});
+}
 
-        const deleteBtn = document.createElement('span');
-        deleteBtn.className = 'chip-delete';
-        deleteBtn.textContent = '✕';
-        deleteBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          bodyFeelings.splice(i, 1);
-          state.body.delete(i);
-          const newBody = new Set();
-          state.body.forEach(idx => { if (idx < i) newBody.add(idx); else if (idx > i) newBody.add(idx-1); });
-          state.body = newBody;
-          saveToLocalStorage();
-          renderAll();
-        });
-        btn.appendChild(deleteBtn);
+function renderFatigue() {
+fatigueEl.innerHTML='';
+fatigueLevels.forEach(level => {
+const btn = document.createElement('button');
+btn.type='button'; btn.className=`fatigue-btn ${level.cls}` + (state.fatigue===level.value?' active':''); btn.textContent=level.label;
+btn.addEventListener('click', ()=>{ state.fatigue=level.value; renderAll(); });
+fatigueEl.appendChild(btn);
+});
+}
 
-        btn.addEventListener('click', () => {
-          active ? state.body.delete(i) : state.body.add(i);
-          renderAll();
-        });
+function renderBody() {
+bodyPositiveEl.innerHTML='';
+bodyNegativeEl.innerHTML='';
+bodyFeelings.forEach((item, i) => {
+const active = state.body.has(i);
+const btn = document.createElement('button');
+const bodyClass = item.value > 0 ? 'chip-body-positive' : 'chip-body-negative';
+btn.type='button';
+btn.className=`chip ${bodyClass}` + (active?' active':'');
 
-        if (item.value > 0) bodyPositiveEl.appendChild(btn);
-        else bodyNegativeEl.appendChild(btn);
-      });
-    }
+const labelSpan = document.createElement('span');
+labelSpan.textContent = `${item.label} · ${signed(item.value)}`;
+btn.appendChild(labelSpan);
 
-    function renderEmotions() {
-      emotionListEl.innerHTML='';
-      state.negativeEmotions.forEach((emotion, idx) => {
-        const pill=document.createElement('button'); pill.type='button'; pill.className='pill negative'; pill.textContent=`${emotion} · -1 ×`;
-        pill.addEventListener('click', ()=>{ state.negativeEmotions.splice(idx,1); renderAll(); }); emotionListEl.appendChild(pill);
-      });
-      state.positiveEmotions.forEach((emotion, idx) => {
-        const pill=document.createElement('button'); pill.type='button'; pill.className='pill positive'; pill.textContent=`${emotion} · +1 ×`;
-        pill.addEventListener('click', ()=>{ state.positiveEmotions.splice(idx,1); renderAll(); }); emotionListEl.appendChild(pill);
-      });
-      if (!state.negativeEmotions.length && !state.positiveEmotions.length) {
-        const span=document.createElement('span'); span.className='ghost-note'; span.textContent='Aucune émotion ajoutée pour le moment.'; emotionListEl.appendChild(span);
-      }
-    }
+const deleteBtn = document.createElement('span');
+deleteBtn.className = 'chip-delete';
+deleteBtn.textContent = '✕';
+deleteBtn.addEventListener('click', (e) => {
+e.stopPropagation();
+bodyFeelings.splice(i, 1);
+state.body.delete(i);
+const newBody = new Set();
+state.body.forEach(idx => { if (idx < i) newBody.add(idx); else if (idx > i) newBody.add(idx-1); });
+state.body = newBody;
+saveToLocalStorage();
+renderAll();
+});
+btn.appendChild(deleteBtn);
 
-    function updateSummary() {
-      const { activityScore, fatigueScore, emotionScore, bodyScore, total } = computeScores();
-      [['activityScore',activityScore],['fatigueScore',fatigueScore],['emotionScore',emotionScore],['bodyScore',bodyScore]].forEach(([id,val])=>{ const el=document.getElementById(id); if (el) { el.textContent=signed(val); setScoreColor(el,val); }});
-      // message bilan supprimé pour affichage minimal
-      document.getElementById('summaryText').textContent='';
-      updateDateBadge();
-    }
+btn.addEventListener('click', () => {
+active ? state.body.delete(i) : state.body.add(i);
+renderAll();
+});
 
-    function populateSelect(selectId, options, bucket) {
-      const select=document.getElementById(selectId);
-      select.innerHTML = '<option value=""></option>';
-      options.forEach((item, idx) => {
-        const opt=document.createElement('option');
-        opt.value=idx;
-        opt.textContent=item;
-        select.appendChild(opt);
-      });
-      const addOpt = document.createElement('option');
-      addOpt.value='__add__';
-      addOpt.textContent='+ Ajouter personnalisé';
-      select.appendChild(addOpt);
+if (item.value > 0) bodyPositiveEl.appendChild(btn);
+else bodyNegativeEl.appendChild(btn);
+});
+}
 
-      select.onchange = () => {
-        const value=select.value;
-        if(!value) { select.value=''; return; }
-        if (value === '__add__') {
-          currentEmotionType = bucket;
-          openModal('addEmotionModal');
-          select.value='';
-        } else {
-          const emotionName = options[parseInt(value, 10)];
-          state[bucket].push(emotionName);
-          select.value='';
-          renderAll();
-        }
-      };
-    }
+function renderEmotions() {
+emotionListEl.innerHTML='';
+state.negativeEmotions.forEach((emotion, idx) => {
+const pill=document.createElement('button'); pill.type='button'; pill.className='pill negative'; pill.textContent=`${emotion} · -1 ×`;
+pill.addEventListener('click', ()=>{ state.negativeEmotions.splice(idx,1); renderAll(); }); emotionListEl.appendChild(pill);
+});
+state.positiveEmotions.forEach((emotion, idx) => {
+const pill=document.createElement('button'); pill.type='button'; pill.className='pill positive'; pill.textContent=`${emotion} · +1 ×`;
+pill.addEventListener('click', ()=>{ state.positiveEmotions.splice(idx,1); renderAll(); }); emotionListEl.appendChild(pill);
+});
+if (!state.negativeEmotions.length && !state.positiveEmotions.length) {
+const span=document.createElement('span'); span.className='ghost-note'; span.textContent='Aucune émotion ajoutée pour le moment.'; emotionListEl.appendChild(span);
+}
+}
 
-    function mergeRecords(existing, incoming) {
-      const byDay = new Map();
-      const all = [...existing, ...incoming];
-      all.forEach(rec => {
-        if (!rec.date) return;
-        const key = dayKeyFromISO(rec.date);
-        const current = byDay.get(key);
-        if (!current || new Date(rec.date) > new Date(current.date)) {
-          byDay.set(key, rec);
-        }
-      });
-      return Array.from(byDay.values()).sort((a,b)=>new Date(a.date)-new Date(b.date));
-    }
+function updateSummary() {
+const { activityScore, fatigueScore, emotionScore, bodyScore, total } = computeScores();
+[['activityScore',activityScore],['fatigueScore',fatigueScore],['emotionScore',emotionScore],['bodyScore',bodyScore]].forEach(([id,val])=>{ const el=document.getElementById(id); if (el) { el.textContent=signed(val); setScoreColor(el,val); }});
+// message bilan supprimé pour affichage minimal
+document.getElementById('summaryText').textContent='';
+updateDateBadge();
+}
 
-    function getMonthKeys(records) {
-      const keys = new Set();
-      records.forEach(r => {
-        if (!r.date) return;
-        const d = new Date(r.date);
-        keys.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
-      });
-      return Array.from(keys).sort();
-    }
+function populateSelect(selectId, options, bucket) {
+const select=document.getElementById(selectId);
+select.innerHTML = '<option value=""></option>';
+options.forEach((item, idx) => {
+const opt=document.createElement('option');
+opt.value=idx;
+opt.textContent=item;
+select.appendChild(opt);
+});
+const addOpt = document.createElement('option');
+addOpt.value='__add__';
+addOpt.textContent='+ Ajouter personnalisé';
+select.appendChild(addOpt);
 
-    function setSelectedMonth(index) {
-      if (!monthKeys.length) return;
-      selectedMonthIndex = Math.max(0, Math.min(index, monthKeys.length - 1));
-      document.getElementById('currentMonthLabel').textContent = monthKeys[selectedMonthIndex] ? `${monthKeys[selectedMonthIndex].slice(5,7)}/${monthKeys[selectedMonthIndex].slice(0,4)}` : 'Mois';
-      const prevBtn = document.getElementById('prevMonthBtn');
-      const nextBtn = document.getElementById('nextMonthBtn');
-      prevBtn.disabled = selectedMonthIndex === 0;
-      nextBtn.disabled = selectedMonthIndex === monthKeys.length - 1;
-      updateCharts();
-    }
+select.onchange = () => {
+const value=select.value;
+if(!value) { select.value=''; return; }
+if (value === '__add__') {
+currentEmotionType = bucket;
+openModal('addEmotionModal');
+select.value='';
+} else {
+const emotionName = options[parseInt(value, 10)];
+state[bucket].push(emotionName);
+select.value='';
+renderAll();
+}
+};
+}
 
-    function filterBySelectedMonth(records) {
-      if (!monthKeys.length) return records;
-      const selected = monthKeys[selectedMonthIndex];
-      if (!selected) return records;
-      return records.filter(r => {
-        if (!r.date) return false;
-        const d = new Date(r.date);
-        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-        return key === selected;
-      });
-    }
+function mergeRecords(existing, incoming) {
+const byDay = new Map();
+const all = [...existing, ...incoming];
+all.forEach(rec => {
+if (!rec.date) return;
+const key = dayKeyFromISO(rec.date);
+const current = byDay.get(key);
+if (!current || new Date(rec.date) > new Date(current.date)) {
+byDay.set(key, rec);
+}
+});
+return Array.from(byDay.values()).sort((a,b)=>new Date(a.date)-new Date(b.date));
+}
 
-    function updateCharts() {
-      const axisColor = getComputedStyle(document.documentElement).getPropertyValue('--color-text-muted').trim();
-      const primary = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
-      const filtered = filterBySelectedMonth(historyRecords);
-      const labels = filtered.map(r => new Date(r.date).toLocaleDateString('fr-FR', { day:'2-digit' }));
+function getMonthKeys(records) {
+const keys = new Set();
+records.forEach(r => {
+if (!r.date) return;
+const d = new Date(r.date);
+keys.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+});
+return Array.from(keys).sort();
+}
 
-      const selectedMonth = monthKeys[selectedMonthIndex] || '';
-      const monthName = selectedMonth ? `${selectedMonth.slice(5,7)}/${selectedMonth.slice(0,4)}` : '';
-      ['chartMonthActivites', 'chartMonthFatigue', 'chartMonthEmotions', 'chartMonthRessenti'].forEach(id => {
-        const el=document.getElementById(id);
-        if (el) el.textContent = monthName;
-      });
+function setSelectedMonth(index) {
+if (!monthKeys.length) return;
+selectedMonthIndex = Math.max(0, Math.min(index, monthKeys.length - 1));
+document.getElementById('currentMonthLabel').textContent = monthKeys[selectedMonthIndex] ? `${monthKeys[selectedMonthIndex].slice(5,7)}/${monthKeys[selectedMonthIndex].slice(0,4)}` : 'Mois';
+const prevBtn = document.getElementById('prevMonthBtn');
+const nextBtn = document.getElementById('nextMonthBtn');
+prevBtn.disabled = selectedMonthIndex === 0;
+nextBtn.disabled = selectedMonthIndex === monthKeys.length - 1;
+updateCharts();
+}
 
-      const series = {
-        activites: filtered.map(r => r.activityScore ?? r.activities?.length ?? 0),
-        fatigue: filtered.map(r => r.fatigue ?? 0),
-        emotions: filtered.map(r => r.emotionScore ?? ((r.positiveEmotions?.length||0)-(r.negativeEmotions?.length||0))),
-        ressenti: filtered.map(r => r.bodyScore ?? 0),
-        total: filtered.map(r => r.total ?? 0)
-      };
+function filterBySelectedMonth(records) {
+if (!monthKeys.length) return records;
+const selected = monthKeys[selectedMonthIndex];
+if (!selected) return records;
+return records.filter(r => {
+if (!r.date) return false;
+const d = new Date(r.date);
+const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+return key === selected;
+});
+}
 
-      function makeChart(id, data) {
-        const ctx = document.getElementById(id).getContext('2d');
-        if (charts[id]) charts[id].destroy();
-        charts[id] = new Chart(ctx, {
-          type:'line',
-          data:{ labels, datasets:[{ data, borderColor:primary, backgroundColor:primary+'33', fill:true, tension:.25, pointRadius:3 }]},
-          options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ ticks:{ color:axisColor }, grid:{ color:axisColor+'22' } }, y:{ min:-5, max:10, ticks:{ color:axisColor }, grid:{ color:axisColor+'22' } } } }
-        });
-      }
+function updateCharts() {
+const axisColor = getComputedStyle(document.documentElement).getPropertyValue('--color-text-muted').trim();
+const primary = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
+const filtered = filterBySelectedMonth(historyRecords);
+const labels = filtered.map(r => new Date(r.date).toLocaleDateString('fr-FR', { day:'2-digit' }));
 
-      makeChart('chartActivites', series.activites);
-      makeChart('chartFatigue', series.fatigue);
-      makeChart('chartEmotions', series.emotions);
-      makeChart('chartRessenti', series.ressenti);
-    }
+const selectedMonth = monthKeys[selectedMonthIndex] || '';
+const monthName = selectedMonth ? `${selectedMonth.slice(5,7)}/${selectedMonth.slice(0,4)}` : '';
+['chartMonthActivites', 'chartMonthFatigue', 'chartMonthEmotions', 'chartMonthRessenti'].forEach(id => {
+const el=document.getElementById(id);
+if (el) el.textContent = monthName;
+});
 
-    function renderHistory() {
-      historyListEl.innerHTML='';
-      if (!historyRecords.length) {
-        const empty=document.createElement('div'); empty.className='ghost-note'; empty.textContent='Aucune journée connue pour le moment.'; historyListEl.appendChild(empty);
-      } else {
-        historyRecords.slice().reverse().slice(0, 10).forEach(rec => {
-          const item=document.createElement('div'); item.className='history-item';
-          const totalScore = rec.total ?? 0;
-          item.innerHTML=`<div><strong>${formatShortDate(rec.date)}</strong><span class="history-meta">Score ${signed(totalScore)}</span></div>`;
-          historyListEl.appendChild(item);
-        });
-      }
-      monthKeys = getMonthKeys(historyRecords);
-      if (selectedMonthIndex >= monthKeys.length) selectedMonthIndex = Math.max(0, monthKeys.length - 1);
-      setSelectedMonth(selectedMonthIndex);
-      updateCharts();
-    }
+const series = {
+activites: filtered.map(r => r.activityScore ?? r.activities?.length ?? 0),
+fatigue: filtered.map(r => r.fatigue ?? 0),
+emotions: filtered.map(r => r.emotionScore ?? ((r.positiveEmotions?.length||0)-(r.negativeEmotions?.length||0))),
+ressenti: filtered.map(r => r.bodyScore ?? 0),
+total: filtered.map(r => r.total ?? 0)
+};
 
-    function downloadJsonFile() {
-      const data = { version:1, exportedAt:new Date().toISOString(), records:mergeRecords([], historyRecords) };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
-      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`bilan-quotidien-${formatFileDate()}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
-      document.getElementById('captureStatus').textContent='Fichier JSON téléchargé (historique complet).';
-    }
+function makeChart(id, data) {
+const ctx = document.getElementById(id).getContext('2d');
+if (charts[id]) charts[id].destroy();
+charts[id] = new Chart(ctx, {
+type:'line',
+data:{ labels, datasets:[{ data, borderColor:primary, backgroundColor:primary+'33', fill:true, tension:.25, pointRadius:3 }]},
+options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ ticks:{ color:axisColor }, grid:{ color:axisColor+'22' } }, y:{ min:-5, max:10, ticks:{ color:axisColor }, grid:{ color:axisColor+'22' } } } }
+});
+}
 
-    function buildTodayRecord() {
-      const scores = computeScores();
-      const now = new Date();
-      const selectedDay = new Date(selectedDateTime);
-      const recordDate = new Date(
-        selectedDay.getFullYear(),
-        selectedDay.getMonth(),
-        selectedDay.getDate(),
-        now.getHours(),
-        now.getMinutes(),
-        now.getSeconds(),
-        now.getMilliseconds()
-      );
-      return {
-        id: `${Date.now()}-${recordDate.toISOString()}`,
-        date: recordDate.toISOString(),
-        activities:[...state.activities].map(i=>activities[i]),
-        fatigue:state.fatigue,
-        negativeEmotions:[...state.negativeEmotions],
-        positiveEmotions:[...state.positiveEmotions],
-        body:[...state.body].map(i=>bodyFeelings[i].label),
-        ...scores
-      };
-    }
+makeChart('chartActivites', series.activites);
+makeChart('chartFatigue', series.fatigue);
+makeChart('chartEmotions', series.emotions);
+makeChart('chartRessenti', series.ressenti);
+}
 
-    function updateLastSaveText() {
-      const last = historyRecords.slice().sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
-      if (last) {
-        const d = new Date(last.date);
-        const pad = n => String(n).padStart(2,'0');
-        document.getElementById('lastSaveStatus').textContent = `Dernier enregistrement le ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-      }
-    }
+function renderHistory() {
+historyListEl.innerHTML='';
+if (!historyRecords.length) {
+const empty=document.createElement('div'); empty.className='ghost-note'; empty.textContent='Aucune journée connue pour le moment.'; historyListEl.appendChild(empty);
+} else {
+historyRecords.slice().reverse().slice(0, 10).forEach(rec => {
+const item=document.createElement('div'); item.className='history-item';
+const totalScore = rec.total ?? 0;
+item.innerHTML=`<div><strong>${formatShortDate(rec.date)}</strong><span class="history-meta">Score ${signed(totalScore)}</span></div>`;
+historyListEl.appendChild(item);
+});
+}
+monthKeys = getMonthKeys(historyRecords);
+if (selectedMonthIndex >= monthKeys.length) selectedMonthIndex = Math.max(0, monthKeys.length - 1);
+setSelectedMonth(selectedMonthIndex);
+updateCharts();
+}
 
-    function saveTodayRecord() {
-      const todayRecord = buildTodayRecord();
-      historyRecords = mergeRecords(historyRecords, [todayRecord]);
-      saveToLocalStorage();
-      renderHistory();
-      updateLastSaveText();
-      document.getElementById('captureStatus').textContent='Journée enregistrée localement.';
-    }
+function downloadJsonFile() {
+const data = { version:1, exportedAt:new Date().toISOString(), records:mergeRecords([], historyRecords) };
+const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`bilan-quotidien-${formatFileDate()}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+document.getElementById('captureStatus').textContent='Fichier JSON téléchargé (historique complet).';
+}
 
-    function loadJsonFile(file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const parsed = JSON.parse(reader.result);
-          const incoming = Array.isArray(parsed) ? parsed : (parsed.records || []);
-          historyRecords = mergeRecords(historyRecords, incoming);
-          renderHistory();
-          document.getElementById('captureStatus').textContent='JSON importé et fusionné avec l’historique existant.';
-        } catch {
-          document.getElementById('captureStatus').textContent='Le fichier JSON est invalide.';
-        }
-      };
-      reader.readAsText(file, 'utf-8');
-    }
+function buildTodayRecord() {
+const scores = computeScores();
+const now = new Date();
+const selectedDay = new Date(selectedDateTime);
+const recordDate = new Date(
+selectedDay.getFullYear(),
+selectedDay.getMonth(),
+selectedDay.getDate(),
+now.getHours(),
+now.getMinutes(),
+now.getSeconds(),
+now.getMilliseconds()
+);
+return {
+id: `${Date.now()}-${recordDate.toISOString()}`,
+date: recordDate.toISOString(),
+activities:[...state.activities].map(i=>activities[i]),
+fatigue:state.fatigue,
+negativeEmotions:[...state.negativeEmotions],
+positiveEmotions:[...state.positiveEmotions],
+body:[...state.body].map(i=>bodyFeelings[i].label),
+...scores
+};
+}
 
-    async function captureAsImage() {
-      const status=document.getElementById('captureStatus'); status.textContent='Création de la capture…';
-      const zone=document.getElementById('captureZone');
-      try {
-        const canvas=await html2canvas(zone, { backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--color-bg').trim(), scale:2, useCORS:true });
-        canvas.toBlob(blob => {
-          if (!blob) { status.textContent='Impossible de générer l’image.'; return; }
-          const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`bilan-quotidien-${formatFileDate()}.png`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); status.textContent='Capture téléchargée.';
-        }, 'image/png');
-      } catch { status.textContent='La capture a échoué dans ce navigateur.'; }
-    }
+function updateLastSaveText() {
+const last = historyRecords.slice().sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
+if (last) {
+const d = new Date(last.date);
+const pad = n => String(n).padStart(2,'0');
+document.getElementById('lastSaveStatus').textContent = `Dernier enregistrement le ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+}
 
-    function renderAll() { renderActivities(); renderFatigue(); renderBody(); renderEmotions(); updateSummary(); }
+function saveTodayRecord() {
+const todayRecord = buildTodayRecord();
+historyRecords = mergeRecords(historyRecords, [todayRecord]);
+saveToLocalStorage();
+renderHistory();
+updateLastSaveText();
+document.getElementById('captureStatus').textContent='Journée enregistrée localement.';
+}
 
+function loadJsonFile(file) {
+const reader = new FileReader();
+reader.onload = () => {
+try {
+const parsed = JSON.parse(reader.result);
+const incoming = Array.isArray(parsed) ? parsed : (parsed.records || []);
+historyRecords = mergeRecords(historyRecords, incoming);
+renderHistory();
+document.getElementById('captureStatus').textContent='JSON importé et fusionné avec l’historique existant.';
+} catch {
+document.getElementById('captureStatus').textContent='Le fichier JSON est invalide.';
+}
+};
+reader.readAsText(file, 'utf-8');
+}
+
+async function captureAsImage() {
+const status=document.getElementById('captureStatus'); status.textContent='Création de la capture…';
+const zone=document.getElementById('captureZone');
+try {
+const canvas=await html2canvas(zone, { backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--color-bg').trim(), scale:2, useCORS:true });
+canvas.toBlob(blob => {
+if (!blob) { status.textContent='Impossible de générer l’image.'; return; }
+const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`bilan-quotidien-${formatFileDate()}.png`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); status.textContent='Capture téléchargée.';
+}, 'image/png');
+} catch { status.textContent='La capture a échoué dans ce navigateur.'; }
+}
+
+function renderAll() { renderActivities(); renderFatigue(); renderBody(); renderEmotions(); updateSummary(); }
+
+    function exportToPDF() {
     async function exportToPDF() {
-      const status=document.getElementById('captureStatus');
-      const titleText = document.querySelector('.title')?.textContent || 'Bilan quotidien';
-      const nameText = [userFirstName, userLastName].filter(Boolean).join(' ').trim();
+const status=document.getElementById('captureStatus');
+      status.textContent='Préparation de la boîte d’impression...';
+
+      const headStyles = [...document.querySelectorAll('head style, head link[rel="stylesheet"]')]
+        .map(el => el.outerHTML)
+        .join('');
+
+const titleText = document.querySelector('.title')?.textContent || 'Bilan quotidien';
+const nameText = [userFirstName, userLastName].filter(Boolean).join(' ').trim();
       const pdfFileName = `bilan-quotidien du ${formatPdfFileDate(selectedDateTime)}`;
 
-      const captureClone = document.getElementById('captureZone').cloneNode(true);
-      captureClone.querySelectorAll('.toolbar, .date-help, .date-input, .help-trigger, .help-popover, .chart-controls, .chip-add-btn').forEach(el => el.remove());
+const captureClone = document.getElementById('captureZone').cloneNode(true);
+captureClone.querySelectorAll('.toolbar, .date-help, .date-input, .help-trigger, .help-popover, .chart-controls, .chip-add-btn').forEach(el => el.remove());
 
-      const graphsClone = document.querySelector('.charts-column')?.closest('section.panel')?.cloneNode(true);
-      graphsClone?.querySelector('.chart-controls')?.remove();
-      graphsClone?.querySelectorAll('.help-trigger, .help-popover').forEach(el => el.remove());
+const graphsClone = document.querySelector('.charts-column')?.closest('section.panel')?.cloneNode(true);
+graphsClone?.querySelector('.chart-controls')?.remove();
+graphsClone?.querySelectorAll('.help-trigger, .help-popover').forEach(el => el.remove());
 
       [captureClone, graphsClone].forEach(root => {
         root?.querySelectorAll('.panel, .chart-card, .history-item').forEach(el => {
@@ -988,335 +995,359 @@
       if (graphsClone) pdfContainer.appendChild(graphsClone);
       document.body.appendChild(pdfContainer);
 
+      const isPhoneLike = window.matchMedia('(max-width: 767px)').matches || window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+
+      if (isPhoneLike && typeof html2pdf !== 'undefined') {
+        status.textContent='Préparation du PDF...';
+        try {
+          await html2pdf().set({
+            margin: 10,
+            filename: `${pdfFileName}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 1400 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+          }).from(pdfContainer).save();
+          status.textContent='PDF enregistré.';
+        } catch (error) {
+          console.error('Erreur export PDF:', error);
+          status.textContent='La génération du PDF a échoué.';
+        } finally {
+          pdfContainer.remove();
+        }
+        return;
+      }
+
       status.textContent='Préparation de la boîte d’impression...';
       const headStyles = [...document.querySelectorAll('head style, head link[rel="stylesheet"]')]
         .map(el => el.outerHTML)
         .join('');
 
-      const printExtraStyle = `
-        <style>
-          @page { size: A4; margin: 12mm; }
-          body { margin: 0; font-family: var(--font-body), Arial, sans-serif; background: #fff; color: #000; zoom: 0.8; }
-          .print-wrap { max-width: 100%; }
-          .print-header { margin-bottom: 1rem; }
-          .print-title { margin: 0 0 0.2rem 0; font-size: 1.45rem; font-weight: 700; }
-          .print-name { margin: 0; font-size: 0.95rem; color: #444; }
-          .panel, .chart-card, .history-item { break-inside: avoid; page-break-inside: avoid; box-shadow: none !important; }
-          .toolbar, .date-help, .date-input, .help-trigger, .help-popover, .chart-controls, .chip-add-btn { display: none !important; }
-        </style>
-      `;
+const printExtraStyle = `
+       <style>
+         @page { size: A4; margin: 12mm; }
+         body { margin: 0; font-family: var(--font-body), Arial, sans-serif; background: #fff; color: #000; zoom: 0.8; }
+         .print-wrap { max-width: 100%; }
+         .print-header { margin-bottom: 1rem; }
+         .print-title { margin: 0 0 0.2rem 0; font-size: 1.45rem; font-weight: 700; }
+         .print-name { margin: 0; font-size: 0.95rem; color: #444; }
+         .panel, .chart-card, .history-item { break-inside: avoid; page-break-inside: avoid; box-shadow: none !important; }
+         .toolbar, .date-help, .date-input, .help-trigger, .help-popover, .chart-controls, .chip-add-btn { display: none !important; }
+       </style>
+     `;
 
-      const nameHtml = nameText ? `<p class="print-name">${nameText}</p>` : '';
-      const originalPageTitle = document.title;
-      const pageTitleEl = document.querySelector('title');
-      document.title = pdfFileName;
-      if (pageTitleEl) pageTitleEl.textContent = pdfFileName;
-      const html = `
-        <html>
-          <head>
-            <title>${pdfFileName}</title>
-            ${headStyles}
-            ${printExtraStyle}
-          </head>
-          <body>
-            <div class="print-wrap">
-              <header class="print-header">
-                <h1 class="print-title">${titleText}</h1>
-                ${nameHtml}
-              </header>
-              ${captureClone.outerHTML}
-              ${graphsClone ? graphsClone.outerHTML : ''}
-            </div>
-          </body>
-        </html>
-      `;
+const nameHtml = nameText ? `<p class="print-name">${nameText}</p>` : '';
+      const pdfFileName = `bilan-quotidien du ${formatPdfFileDate(selectedDateTime)}`;
+const originalPageTitle = document.title;
+const pageTitleEl = document.querySelector('title');
+document.title = pdfFileName;
+if (pageTitleEl) pageTitleEl.textContent = pdfFileName;
+const html = `
+       <html>
+         <head>
+           <title>${pdfFileName}</title>
+           ${headStyles}
+           ${printExtraStyle}
+         </head>
+         <body>
+           <div class="print-wrap">
+             <header class="print-header">
+               <h1 class="print-title">${titleText}</h1>
+               ${nameHtml}
+             </header>
+             ${captureClone.outerHTML}
+             ${graphsClone ? graphsClone.outerHTML : ''}
+           </div>
+         </body>
+       </html>
+     `;
 
-      const printFrame = document.createElement('iframe');
-      printFrame.setAttribute('aria-hidden', 'true');
-      printFrame.style.position = 'fixed';
-      printFrame.style.width = '0';
-      printFrame.style.height = '0';
-      printFrame.style.right = '0';
-      printFrame.style.bottom = '0';
-      printFrame.style.border = '0';
-      printFrame.style.opacity = '0';
-      document.body.appendChild(printFrame);
+const printFrame = document.createElement('iframe');
+printFrame.setAttribute('aria-hidden', 'true');
+printFrame.style.position = 'fixed';
+printFrame.style.width = '0';
+printFrame.style.height = '0';
+printFrame.style.right = '0';
+printFrame.style.bottom = '0';
+printFrame.style.border = '0';
+printFrame.style.opacity = '0';
+document.body.appendChild(printFrame);
 
-      const frameWindow = printFrame.contentWindow;
-      const frameDoc = frameWindow?.document;
-      if (!frameWindow || !frameDoc) {
-        document.title = originalPageTitle;
-        if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
+const frameWindow = printFrame.contentWindow;
+const frameDoc = frameWindow?.document;
+if (!frameWindow || !frameDoc) {
+document.title = originalPageTitle;
+if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
         pdfContainer.remove();
-        printFrame.remove();
-        status.textContent='Impossible d’ouvrir la boîte d’impression.';
-        return;
-      }
+printFrame.remove();
+status.textContent='Impossible d’ouvrir la boîte d’impression.';
+return;
+}
 
-      const cleanupPrintFrame = () => {
-        document.title = originalPageTitle;
-        if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
+const cleanupPrintFrame = () => {
+document.title = originalPageTitle;
+if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
         pdfContainer.remove();
-        setTimeout(() => printFrame.remove(), 300);
-      };
+setTimeout(() => printFrame.remove(), 300);
+};
 
-      let printed = false;
-      const launchPrint = () => {
-        if (printed) return;
-        printed = true;
-        frameWindow.focus();
-        frameWindow.print();
-        status.textContent='Boîte d’impression ouverte.';
-      };
+let printed = false;
+const launchPrint = () => {
+if (printed) return;
+printed = true;
+frameWindow.focus();
+frameWindow.print();
+status.textContent='Boîte d’impression ouverte.';
+};
 
-      frameWindow.onafterprint = () => {
-        cleanupPrintFrame();
-      };
+frameWindow.onafterprint = () => {
+cleanupPrintFrame();
+};
 
-      frameDoc.open();
-      frameDoc.write(html);
-      frameDoc.close();
-      frameDoc.title = pdfFileName;
-      printFrame.title = pdfFileName;
+frameDoc.open();
+frameDoc.write(html);
+frameDoc.close();
+frameDoc.title = pdfFileName;
+printFrame.title = pdfFileName;
 
-      printFrame.onload = () => setTimeout(launchPrint, 150);
-      setTimeout(launchPrint, 400);
-      setTimeout(() => {
-        if (document.title === pdfFileName) {
-          document.title = originalPageTitle;
-          if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
-        }
-      }, 4000);
-    }
+printFrame.onload = () => setTimeout(launchPrint, 150);
+setTimeout(launchPrint, 400);
+setTimeout(() => {
+if (document.title === pdfFileName) {
+document.title = originalPageTitle;
+if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
+}
+}, 4000);
+}
 
-    function exportJsonData() {
-      const config = { activities, bodyFeelings, negativeEmotions, positiveEmotions, userFirstName, userLastName };
-      const data = { version:1, exportedAt:new Date().toISOString(), records:mergeRecords([], historyRecords), config };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
-      const a=document.createElement('a');
-      a.href=URL.createObjectURL(blob);
-      const userId = `${userLastName || 'unknown'}-${userFirstName || 'user'}`.toLowerCase().replace(/\s+/g,'-');
-      a.download=`donnees-bilan-quotidien-de-${userId}.json`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(a.href);
-      document.getElementById('captureStatus').textContent='Fichier exporté (historique + personnalisations).';
-    }
+function exportJsonData() {
+const config = { activities, bodyFeelings, negativeEmotions, positiveEmotions, userFirstName, userLastName };
+const data = { version:1, exportedAt:new Date().toISOString(), records:mergeRecords([], historyRecords), config };
+const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+const a=document.createElement('a');
+a.href=URL.createObjectURL(blob);
+const userId = `${userLastName || 'unknown'}-${userFirstName || 'user'}`.toLowerCase().replace(/\s+/g,'-');
+a.download=`donnees-bilan-quotidien-de-${userId}.json`;
+document.body.appendChild(a);
+a.click();
+a.remove();
+URL.revokeObjectURL(a.href);
+document.getElementById('captureStatus').textContent='Fichier exporté (historique + personnalisations).';
+}
 
-    function importJsonData(file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const parsed = JSON.parse(reader.result);
-          const incoming = Array.isArray(parsed) ? parsed : (parsed.records || []);
-          
-          // Importer la configuration si présente
-          if (parsed.config) {
-            activities = parsed.config.activities || activities;
-            bodyFeelings = parsed.config.bodyFeelings || bodyFeelings;
-            negativeEmotions = parsed.config.negativeEmotions || negativeEmotions;
-            positiveEmotions = parsed.config.positiveEmotions || positiveEmotions;
-            sortEmotionLists();
-            populateSelect('negativeSelect', negativeEmotions, 'negativeEmotions');
-            populateSelect('positiveSelect', positiveEmotions, 'positiveEmotions');
-            saveToLocalStorage();
-          }
-          
-          historyRecords = mergeRecords(historyRecords, incoming);
-          renderAll();
-          renderHistory();
-          document.getElementById('captureStatus').textContent='JSON importé et fusionné avec l\'historique existant.';
-        } catch {
-          document.getElementById('captureStatus').textContent='Le fichier JSON est invalide.';
-        }
-      };
-      reader.readAsText(file, 'utf-8');
-    }
+function importJsonData(file) {
+const reader = new FileReader();
+reader.onload = () => {
+try {
+const parsed = JSON.parse(reader.result);
+const incoming = Array.isArray(parsed) ? parsed : (parsed.records || []);
 
-    function resetCustomizations() {
-      const shouldReset = window.confirm('Remettre les personnalisations par défaut ? Les bilans enregistrés seront conservés.');
-      if (!shouldReset) return;
+// Importer la configuration si présente
+if (parsed.config) {
+activities = parsed.config.activities || activities;
+bodyFeelings = parsed.config.bodyFeelings || bodyFeelings;
+negativeEmotions = parsed.config.negativeEmotions || negativeEmotions;
+positiveEmotions = parsed.config.positiveEmotions || positiveEmotions;
+sortEmotionLists();
+populateSelect('negativeSelect', negativeEmotions, 'negativeEmotions');
+populateSelect('positiveSelect', positiveEmotions, 'positiveEmotions');
+saveToLocalStorage();
+}
 
-      activities = [...defaultActivities];
-      bodyFeelings = defaultBodyFeelings.map(item => ({ ...item }));
-      negativeEmotions = [...defaultNegativeEmotions];
-      positiveEmotions = [...defaultPositiveEmotions];
-      sortEmotionLists();
+historyRecords = mergeRecords(historyRecords, incoming);
+renderAll();
+renderHistory();
+document.getElementById('captureStatus').textContent='JSON importé et fusionné avec l\'historique existant.';
+} catch {
+document.getElementById('captureStatus').textContent='Le fichier JSON est invalide.';
+}
+};
+reader.readAsText(file, 'utf-8');
+}
 
-      state.activities.clear();
-      state.fatigue = 0;
-      state.negativeEmotions = [];
-      state.positiveEmotions = [];
-      state.body.clear();
+function resetCustomizations() {
+const shouldReset = window.confirm('Remettre les personnalisations par défaut ? Les bilans enregistrés seront conservés.');
+if (!shouldReset) return;
 
-      populateSelect('negativeSelect', negativeEmotions, 'negativeEmotions');
-      populateSelect('positiveSelect', positiveEmotions, 'positiveEmotions');
-      saveToLocalStorage();
-      renderAll();
-      renderHistory();
-      document.getElementById('captureStatus').textContent='Les personnalisations ont été remises par défaut. L’historique a été conservé.';
-    }
+activities = [...defaultActivities];
+bodyFeelings = defaultBodyFeelings.map(item => ({ ...item }));
+negativeEmotions = [...defaultNegativeEmotions];
+positiveEmotions = [...defaultPositiveEmotions];
+sortEmotionLists();
 
-    // Événements principaux
-    document.getElementById('resetBtn').addEventListener('click', ()=>{ state.activities.clear(); state.fatigue=0; state.negativeEmotions=[]; state.positiveEmotions=[]; state.body.clear(); renderAll(); });
-    document.getElementById('themeBtn').addEventListener('click', ()=>{ const root=document.documentElement; root.setAttribute('data-theme', root.getAttribute('data-theme')==='dark'?'light':'dark'); setTimeout(renderHistory, 40); });
-    document.getElementById('dateBadge').addEventListener('click', () => {
-      const dateInput = document.getElementById('customDateInput');
-      dateInput.classList.toggle('hidden');
-      updateDateBadge();
-      if (!dateInput.classList.contains('hidden')) {
-        dateInput.focus();
-        if (typeof dateInput.showPicker === 'function') dateInput.showPicker();
-      }
-    });
-    document.getElementById('customDateInput').addEventListener('change', (e) => {
-      if (!e.target.value) return;
-      const [year, month, day] = e.target.value.split('-').map(Number);
-      const now = new Date();
-      const pickedDate = new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
-      selectedDateTime = pickedDate > now ? now : pickedDate;
-      updateDateBadge();
-      e.target.classList.add('hidden');
-    });
-    document.getElementById('customDateInput').addEventListener('blur', (e) => {
-      setTimeout(() => e.target.classList.add('hidden'), 120);
-    });
-    document.getElementById('saveDayBtn').addEventListener('click', saveTodayRecord);
-    document.getElementById('savePdfBtn').addEventListener('click', exportToPDF);
-    document.getElementById('exportDataBtn').addEventListener('click', exportJsonData);
-    document.getElementById('resetConfigBtn').addEventListener('click', resetCustomizations);
-    document.getElementById('importDataBtn').addEventListener('click', ()=>document.getElementById('dataFileInput').click());
-    document.getElementById('dataFileInput').addEventListener('change', e => { const file=e.target.files[0]; if (file) importJsonData(file); });
-    document.querySelectorAll('.help-trigger').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const item = btn.closest('.action-item');
-        const wasOpen = item.classList.contains('help-open');
-        document.querySelectorAll('.action-item.help-open').forEach(el => el.classList.remove('help-open'));
-        if (!wasOpen) item.classList.add('help-open');
-      });
-    });
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.action-item')) {
-        document.querySelectorAll('.action-item.help-open').forEach(el => el.classList.remove('help-open'));
-      }
-    });
-    document.getElementById('prevMonthBtn').addEventListener('click', () => setSelectedMonth(selectedMonthIndex - 1));
-    document.getElementById('nextMonthBtn').addEventListener('click', () => setSelectedMonth(selectedMonthIndex + 1));
+state.activities.clear();
+state.fatigue = 0;
+state.negativeEmotions = [];
+state.positiveEmotions = [];
+state.body.clear();
 
-    document.getElementById('userFirstName').addEventListener('change', (e) => { userFirstName = e.target.value.trim(); saveToLocalStorage(); });
-    document.getElementById('userLastName').addEventListener('change', (e) => { userLastName = e.target.value.trim(); saveToLocalStorage(); });
+populateSelect('negativeSelect', negativeEmotions, 'negativeEmotions');
+populateSelect('positiveSelect', positiveEmotions, 'positiveEmotions');
+saveToLocalStorage();
+renderAll();
+renderHistory();
+document.getElementById('captureStatus').textContent='Les personnalisations ont été remises par défaut. L’historique a été conservé.';
+}
 
-    // Gestion des modales pour les activités
-    document.getElementById('addActivityBtn').addEventListener('click', () => openModal('addActivityModal'));
-    document.getElementById('cancelActivityBtn').addEventListener('click', () => {
-      closeModal('addActivityModal');
-      document.getElementById('activityInput').value = '';
-    });
-    document.getElementById('confirmActivityBtn').addEventListener('click', () => {
-      const value = document.getElementById('activityInput').value.trim();
-      if (value) {
-        activities.push(value);
-        saveToLocalStorage();
-        renderAll();
-        closeModal('addActivityModal');
-        document.getElementById('activityInput').value = '';
-      }
-    });
+// Événements principaux
+document.getElementById('resetBtn').addEventListener('click', ()=>{ state.activities.clear(); state.fatigue=0; state.negativeEmotions=[]; state.positiveEmotions=[]; state.body.clear(); renderAll(); });
+document.getElementById('themeBtn').addEventListener('click', ()=>{ const root=document.documentElement; root.setAttribute('data-theme', root.getAttribute('data-theme')==='dark'?'light':'dark'); setTimeout(renderHistory, 40); });
+document.getElementById('dateBadge').addEventListener('click', () => {
+const dateInput = document.getElementById('customDateInput');
+dateInput.classList.toggle('hidden');
+updateDateBadge();
+if (!dateInput.classList.contains('hidden')) {
+dateInput.focus();
+if (typeof dateInput.showPicker === 'function') dateInput.showPicker();
+}
+});
+document.getElementById('customDateInput').addEventListener('change', (e) => {
+if (!e.target.value) return;
+const [year, month, day] = e.target.value.split('-').map(Number);
+const now = new Date();
+const pickedDate = new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+selectedDateTime = pickedDate > now ? now : pickedDate;
+updateDateBadge();
+e.target.classList.add('hidden');
+});
+document.getElementById('customDateInput').addEventListener('blur', (e) => {
+setTimeout(() => e.target.classList.add('hidden'), 120);
+});
+document.getElementById('saveDayBtn').addEventListener('click', saveTodayRecord);
+document.getElementById('savePdfBtn').addEventListener('click', exportToPDF);
+document.getElementById('exportDataBtn').addEventListener('click', exportJsonData);
+document.getElementById('resetConfigBtn').addEventListener('click', resetCustomizations);
+document.getElementById('importDataBtn').addEventListener('click', ()=>document.getElementById('dataFileInput').click());
+document.getElementById('dataFileInput').addEventListener('change', e => { const file=e.target.files[0]; if (file) importJsonData(file); });
+document.querySelectorAll('.help-trigger').forEach(btn => {
+btn.addEventListener('click', (e) => {
+e.stopPropagation();
+const item = btn.closest('.action-item');
+const wasOpen = item.classList.contains('help-open');
+document.querySelectorAll('.action-item.help-open').forEach(el => el.classList.remove('help-open'));
+if (!wasOpen) item.classList.add('help-open');
+});
+});
+document.addEventListener('click', (e) => {
+if (!e.target.closest('.action-item')) {
+document.querySelectorAll('.action-item.help-open').forEach(el => el.classList.remove('help-open'));
+}
+});
+document.getElementById('prevMonthBtn').addEventListener('click', () => setSelectedMonth(selectedMonthIndex - 1));
+document.getElementById('nextMonthBtn').addEventListener('click', () => setSelectedMonth(selectedMonthIndex + 1));
 
-    // Gestion des modales pour le ressenti corporel
-    let bodyValue = 1;
-    const bodyPlusBtn = document.getElementById('bodyPositiveBtn');
-    const bodyMinusBtn = document.getElementById('bodyNegativeBtn');
+document.getElementById('userFirstName').addEventListener('change', (e) => { userFirstName = e.target.value.trim(); saveToLocalStorage(); });
+document.getElementById('userLastName').addEventListener('change', (e) => { userLastName = e.target.value.trim(); saveToLocalStorage(); });
 
-    function updateBodyToggle(selected) {
-      bodyValue = selected;
-      if (selected === 1) {
-        bodyPlusBtn.classList.add('selected');
-        bodyMinusBtn.classList.remove('selected');
-      } else {
-        bodyPlusBtn.classList.remove('selected');
-        bodyMinusBtn.classList.add('selected');
-      }
-    }
+// Gestion des modales pour les activités
+document.getElementById('addActivityBtn').addEventListener('click', () => openModal('addActivityModal'));
+document.getElementById('cancelActivityBtn').addEventListener('click', () => {
+closeModal('addActivityModal');
+document.getElementById('activityInput').value = '';
+});
+document.getElementById('confirmActivityBtn').addEventListener('click', () => {
+const value = document.getElementById('activityInput').value.trim();
+if (value) {
+activities.push(value);
+saveToLocalStorage();
+renderAll();
+closeModal('addActivityModal');
+document.getElementById('activityInput').value = '';
+}
+});
 
-    bodyPlusBtn.addEventListener('click', () => updateBodyToggle(1));
-    bodyMinusBtn.addEventListener('click', () => updateBodyToggle(-1));
+// Gestion des modales pour le ressenti corporel
+let bodyValue = 1;
+const bodyPlusBtn = document.getElementById('bodyPositiveBtn');
+const bodyMinusBtn = document.getElementById('bodyNegativeBtn');
 
-    document.getElementById('addBodyBtn').addEventListener('click', () => {
-      updateBodyToggle(1);
-      openModal('addBodyModal');
-    });
-    document.getElementById('cancelBodyBtn').addEventListener('click', () => {
-      closeModal('addBodyModal');
-      document.getElementById('bodyInput').value = '';
-    });
-    document.getElementById('confirmBodyBtn').addEventListener('click', () => {
-      const value = document.getElementById('bodyInput').value.trim();
-      if (value) {
-        bodyFeelings.push({ label: value, value: bodyValue });
-        saveToLocalStorage();
-        renderAll();
-        closeModal('addBodyModal');
-        document.getElementById('bodyInput').value = '';
-      }
-    });
+function updateBodyToggle(selected) {
+bodyValue = selected;
+if (selected === 1) {
+bodyPlusBtn.classList.add('selected');
+bodyMinusBtn.classList.remove('selected');
+} else {
+bodyPlusBtn.classList.remove('selected');
+bodyMinusBtn.classList.add('selected');
+}
+}
 
-    // Gestion des modales pour les émotions
-    document.getElementById('cancelEmotionBtn').addEventListener('click', () => {
-      closeModal('addEmotionModal');
-      document.getElementById('emotionInput').value = '';
-    });
-    document.getElementById('confirmEmotionBtn').addEventListener('click', () => {
-      const value = document.getElementById('emotionInput').value.trim();
-      if (value && currentEmotionType) {
-        if (currentEmotionType === 'negativeEmotions') {
-          negativeEmotions.push(value);
-        } else {
-          positiveEmotions.push(value);
-        }
-        sortEmotionLists();
-        saveToLocalStorage();
-        const bucket = currentEmotionType;
-        populateSelect(bucket === 'negativeEmotions' ? 'negativeSelect' : 'positiveSelect', bucket === 'negativeEmotions' ? negativeEmotions : positiveEmotions, bucket);
-        state[bucket].push(value);
-        renderAll();
-        closeModal('addEmotionModal');
-        document.getElementById('emotionInput').value = '';
-        currentEmotionType = null;
-      }
-    });
+bodyPlusBtn.addEventListener('click', () => updateBodyToggle(1));
+bodyMinusBtn.addEventListener('click', () => updateBodyToggle(-1));
 
-    // Fermer les modales en cliquant en dehors
-    document.querySelectorAll('.modal-overlay').forEach(modal => {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          closeModal(modal.id);
-        }
-      });
-    });
+document.getElementById('addBodyBtn').addEventListener('click', () => {
+updateBodyToggle(1);
+openModal('addBodyModal');
+});
+document.getElementById('cancelBodyBtn').addEventListener('click', () => {
+closeModal('addBodyModal');
+document.getElementById('bodyInput').value = '';
+});
+document.getElementById('confirmBodyBtn').addEventListener('click', () => {
+const value = document.getElementById('bodyInput').value.trim();
+if (value) {
+bodyFeelings.push({ label: value, value: bodyValue });
+saveToLocalStorage();
+renderAll();
+closeModal('addBodyModal');
+document.getElementById('bodyInput').value = '';
+}
+});
 
-    // Enter pour confirmer dans les inputs
-    document.getElementById('activityInput').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') document.getElementById('confirmActivityBtn').click();
-    });
-    document.getElementById('bodyInput').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') document.getElementById('confirmBodyBtn').click();
-    });
-    document.getElementById('emotionInput').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') document.getElementById('confirmEmotionBtn').click();
-    });
+// Gestion des modales pour les émotions
+document.getElementById('cancelEmotionBtn').addEventListener('click', () => {
+closeModal('addEmotionModal');
+document.getElementById('emotionInput').value = '';
+});
+document.getElementById('confirmEmotionBtn').addEventListener('click', () => {
+const value = document.getElementById('emotionInput').value.trim();
+if (value && currentEmotionType) {
+if (currentEmotionType === 'negativeEmotions') {
+negativeEmotions.push(value);
+} else {
+positiveEmotions.push(value);
+}
+sortEmotionLists();
+saveToLocalStorage();
+const bucket = currentEmotionType;
+populateSelect(bucket === 'negativeEmotions' ? 'negativeSelect' : 'positiveSelect', bucket === 'negativeEmotions' ? negativeEmotions : positiveEmotions, bucket);
+state[bucket].push(value);
+renderAll();
+closeModal('addEmotionModal');
+document.getElementById('emotionInput').value = '';
+currentEmotionType = null;
+}
+});
 
-    // Initialisation
-    loadFromLocalStorage();
-    document.getElementById('userFirstName').value = userFirstName;
-    document.getElementById('userLastName').value = userLastName;
-    populateSelect('negativeSelect', negativeEmotions, 'negativeEmotions');
-    populateSelect('positiveSelect', positiveEmotions, 'positiveEmotions');
-    renderAll();
-    renderHistory();
-    updateLastSaveText();
-  </script>
+// Fermer les modales en cliquant en dehors
+document.querySelectorAll('.modal-overlay').forEach(modal => {
+modal.addEventListener('click', (e) => {
+if (e.target === modal) {
+closeModal(modal.id);
+}
+});
+});
+
+// Enter pour confirmer dans les inputs
+document.getElementById('activityInput').addEventListener('keypress', (e) => {
+if (e.key === 'Enter') document.getElementById('confirmActivityBtn').click();
+});
+document.getElementById('bodyInput').addEventListener('keypress', (e) => {
+if (e.key === 'Enter') document.getElementById('confirmBodyBtn').click();
+});
+document.getElementById('emotionInput').addEventListener('keypress', (e) => {
+if (e.key === 'Enter') document.getElementById('confirmEmotionBtn').click();
+});
+
+// Initialisation
+loadFromLocalStorage();
+document.getElementById('userFirstName').value = userFirstName;
+document.getElementById('userLastName').value = userLastName;
+populateSelect('negativeSelect', negativeEmotions, 'negativeEmotions');
+populateSelect('positiveSelect', positiveEmotions, 'positiveEmotions');
+renderAll();
+renderHistory();
+updateLastSaveText();
+</script>
 </body>
 </html>
