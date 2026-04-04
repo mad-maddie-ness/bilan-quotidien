@@ -35,9 +35,9 @@
     button:active { transform: scale(0.98); }
     select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23606060' d='M6 9L1 4h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 2.2rem; }
     input[type="file"] { cursor: pointer; }
-    .wrap { width: 100%; margin: 0 auto; padding: clamp(0.5rem, 2vw, var(--space-4)); box-sizing: border-box; }
+    .wrap { width: 100%; max-width: 1180px; margin: 0 auto; padding: clamp(0.75rem, 2.4vw, 1.5rem); box-sizing: border-box; }
     .topbar { display:flex; justify-content:space-between; align-items:flex-start; gap: var(--space-2); margin-bottom: var(--space-4); }
-    .title { font-size: 1.4rem; font-weight: 700; margin:0; }
+    .title { font-size: 3.6rem; font-weight: 700; margin:0; }
     body { font-size: 0.88rem; overflow-x: auto; }
     .muted { color: var(--color-text-muted); }
     .panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); box-shadow: var(--shadow); padding: clamp(var(--space-3), 3vw, var(--space-5)); width: 100%; box-sizing: border-box; min-width: 0; }
@@ -48,10 +48,10 @@
     .body-containers { display: grid; grid-template-columns: 1fr; gap: var(--space-3); width: 100%; box-sizing: border-box; min-width: 0; }
     .grid-2, .summary-grid, .fatigue-grid, .topbar, .history-item, .name-fields input, .chart-card { min-width: 0; }
     .theme-btn {
-      min-height: 26px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding: 0.2rem 0.4rem; font-size: 0.75rem;
+      min-height: 34px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding: 0.35rem 0.7rem; font-size: 0.75rem;
     }
     .reset-btn, .select-box {
-      min-height: 26px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding: 0.2rem 0.4rem;
+      min-height: 34px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding: 0.35rem 0.7rem;
     }
     .save-day-btn {
       min-height: 46px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-primary); color: white; border-color: var(--color-primary); padding: 0.8rem 1.2rem;
@@ -59,12 +59,75 @@
     .download-data-btn, .load-data-btn, .capture-btn {
       min-height: 36px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-primary); color: white; border-color: var(--color-primary); padding: 0.45rem 0.7rem; font-size: 0.86rem;
     }
+    .secondary-btn {
+      min-height: 24px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface-2); color: var(--color-text); padding: 0.1rem 0.32rem; font-size: 0.56rem; line-height: 1.1;
+    }
     .capture-btn:hover, .save-day-btn:hover, .download-data-btn:hover, .load-data-btn:hover { background: var(--color-primary-hover); }
+    .secondary-btn:hover { background: var(--color-surface); border-color: var(--color-primary); }
+    .actions-layout { display:flex; flex-direction:column; gap: 0.4rem; align-items:stretch; }
+    .actions-main { width: 100%; max-width: 290px; }
+    .actions-main .save-day-btn { width: 100%; }
+    .actions-secondary { display:flex; flex-direction:column; gap: 0.25rem; width: 100%; max-width: 170px; }
+    .action-item { position: relative; display:flex; width:100%; min-width:0; }
+    .action-inline { display:flex; align-items:center; gap: 0.2rem; width:100%; min-width:0; }
+    .actions-secondary .secondary-btn { flex: 1 1 auto; width: 100%; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .help-trigger {
+      display: none;
+      flex: 0 0 auto;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      color: var(--color-text-muted);
+      font-size: 0.62rem;
+      font-weight: 700;
+      padding: 0;
+      align-items: center;
+      justify-content: center;
+    }
+    .help-popover {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      z-index: 20;
+      width: min(220px, calc(100vw - 2.5rem));
+      padding: 0.45rem 0.55rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      color: var(--color-text);
+      box-shadow: var(--shadow);
+      font-size: 0.68rem;
+      line-height: 1.3;
+    }
+    .action-item.help-open .help-popover { display: block; }
+    @media (hover: none), (pointer: coarse) {
+      .help-trigger { display: inline-flex; }
+    }
+    @media (min-width: 768px) {
+      .actions-layout { flex-direction:row; align-items:center; gap: 0.45rem; }
+      .actions-main { width: auto; max-width: none; flex: 0 0 auto; }
+      .actions-main .save-day-btn { width: auto; min-width: 220px; }
+      .actions-secondary { flex: 1 1 auto; min-width: 0; max-width: none; flex-direction: row; gap: 0.25rem; }
+      .actions-secondary .action-item { flex: 1 1 0; min-width: 0; }
+      .actions-secondary .secondary-btn { width: 100%; }
+      .help-popover { right: auto; left: 0; }
+    }
 
     .grid-2 { display:grid; grid-template-columns: 1fr; gap: var(--space-5); }
-    @media (min-width: 900px) {
+    @media (min-width: 768px) {
       .grid-2 { grid-template-columns: 1.2fr .8fr; }
       .body-containers { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 1100px) {
+      .wrap {
+        width: min(calc(100vw - 120mm), 1400px);
+        max-width: none;
+        margin-left: auto;
+        margin-right: auto;
+      }
     }
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center; }
     .modal-overlay.active { display: flex; }
@@ -158,13 +221,24 @@
     .pill.negative { background: var(--color-negative-soft); border-color: var(--color-negative); }
     .footer-note { margin-top: var(--space-4); color: var(--color-text-muted); }
     .capture-zone { display:grid; gap: var(--space-5); }
+    .date-tools { display:flex; flex-direction:column; align-items:flex-start; gap: 0.2rem; }
+    .date-row { display:flex; align-items:center; gap: var(--space-2); width:100%; flex-wrap:wrap; }
     .date-badge { display:inline-flex; width:fit-content; padding:.45rem .8rem; border-radius: var(--radius-full); background: var(--color-surface-2); border:1px solid var(--color-border); color: var(--color-text-muted); font-size: var(--text-sm); }
+    .date-badge-btn:hover { border-color: var(--color-primary); color: var(--color-text); }
+    .date-input { min-height: 34px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding: 0.35rem 0.7rem; }
+    .date-help { max-width: 180px; margin-left: 1.5rem; margin-bottom: 0.15rem; font-size: 10px; line-height: 1.35; color: var(--color-text-muted); margin-top: 0; text-align: justify; }
     .status { margin-top:.8rem; font-size: var(--text-sm); color: var(--color-text-muted); }
-    .charts-column { display:flex; flex-direction:column; gap: var(--space-4); }
-    .chart-card { background: var(--color-surface-2); border-radius: var(--radius-xl); border:1px solid var(--color-border); padding: var(--space-4); box-sizing:border-box; }
+    .charts-column { display:flex; flex-direction:column; gap: var(--space-4); align-items:center; }
+    .chart-card { background: var(--color-surface-2); border-radius: var(--radius-xl); border:1px solid var(--color-border); padding: var(--space-4); box-sizing:border-box; width: 92%; max-width: 100%; margin: 0 auto; }
     .chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.75rem; }
     .chart-title { font-size: var(--text-sm); font-weight:600; }
-    .chart-wrap { position: relative; height: 220px; }
+    .chart-wrap { position: relative; height: 220px; width: 100%; }
+    @media (min-width: 768px) {
+      .chart-card {
+        width: calc(100% - 30mm);
+        max-width: 680px;
+      }
+    }
     .history-list { display:grid; gap:.75rem; margin-top:1rem; }
     .history-item { display:flex; justify-content:space-between; gap:1rem; border:1px solid var(--color-border); background: var(--color-surface-2); border-radius: var(--radius-lg); padding: .9rem 1rem; }
     .history-meta { color: var(--color-text-muted); font-size: var(--text-sm); }
@@ -175,14 +249,14 @@
     .hidden { display:none; }
     
     /* Tablette et petits écrans */
-    @media (max-width: 960px) {
+    @media (max-width: 767px) {
       .grid-2, .summary-grid { grid-template-columns: 1fr; }
       .fatigue-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
       .topbar, .history-item { flex-direction: column; }
     }
     
     /* Appareils mobiles */
-    @media (max-width: 768px) {
+    @media (max-width: 767px) {
       :root, [data-theme="light"] {
         --text-xs: clamp(0.7rem, 0.68rem + 0.15vw, 0.8rem);
         --text-sm: clamp(0.85rem, 0.82rem + 0.18vw, 0.95rem);
@@ -252,14 +326,20 @@
           <input type="text" id="userLastName" class="modal-input" placeholder="Nom" style="margin-bottom:0.5rem;">
         </div>
       </div>
-      <div class="toolbar">
-        <button class="theme-btn" type="button" id="themeBtn">🌙 / ☀️</button>
-        <button class="reset-btn" type="button" id="resetBtn">Recommencer</button>
-      </div>
     </header>
 
     <section class="capture-zone" id="captureZone">
-      <div class="date-badge" id="dateBadge">Date</div>
+      <div class="date-tools">
+        <div class="date-help">Si tu as oublié de faire un ou plusieurs bilans quotidiens, tu peux cliquer sur le bouton ci-dessous pour choisir la ou les journées qui te manquent.</div>
+        <div class="date-row">
+          <button class="date-badge date-badge-btn" id="dateBadge" type="button" title="Choisir une date pour ce bilan">Date</button>
+          <input class="date-input hidden" type="date" id="customDateInput">
+          <div class="toolbar">
+            <button class="theme-btn" type="button" id="themeBtn">🌙 / ☀️</button>
+            <button class="reset-btn" type="button" id="resetBtn">Recommencer</button>
+          </div>
+        </div>
+      </div>
 
       <section class="panel">
         <h2 class="section-title">Activités</h2>
@@ -331,15 +411,42 @@
     </section>
 
     <section class="panel">
-      <div class="toolbar" style="justify-content:space-between; align-items:flex-end;">
-        <button class="save-day-btn" type="button" id="saveDayBtn" style="margin-right:auto;">Enregistrer la journée</button>
-        <div style="display:flex; gap:0.35rem;">
-          <button class="save-day-btn" type="button" id="savePdfBtn" style="background:#f0f0f0;color:#666;font-size:0.78rem;padding:0.35rem 0.6rem;min-height:30px;">Enregistrer en PDF</button>
-          <button class="download-data-btn" type="button" id="exportDataBtn" style="background:#f0f0f0;color:#666;font-size:0.78rem;padding:0.35rem 0.6rem;min-height:30px;">Exporter les données</button>
-          <button class="load-data-btn" type="button" id="importDataBtn" style="background:#f0f0f0;color:#666;font-size:0.78rem;padding:0.35rem 0.6rem;min-height:30px;">Importer les données</button>
+      <div class="actions-layout">
+        <div class="actions-main">
+          <button class="save-day-btn" type="button" id="saveDayBtn">Enregistrer la journée</button>
         </div>
-        <input class="hidden" type="file" id="dataFileInput" accept="application/json,.json">
+        <div class="actions-secondary">
+          <div class="action-item">
+            <div class="action-inline">
+              <button class="secondary-btn" type="button" id="savePdfBtn" title="Crée une version imprimable du bilan et des graphiques.">Enregistrer en PDF</button>
+              <button class="help-trigger" type="button" aria-label="Aide pour Enregistrer en PDF">?</button>
+            </div>
+            <div class="help-popover">Crée une version imprimable du bilan et des graphiques.</div>
+          </div>
+          <div class="action-item">
+            <div class="action-inline">
+              <button class="secondary-btn" type="button" id="exportDataBtn" title="Enregistre ton historique et ta personnalisation dans un fichier pour pouvoir l'importer sur un autre navigateur.">Exporter les données</button>
+              <button class="help-trigger" type="button" aria-label="Aide pour Exporter les données">?</button>
+            </div>
+            <div class="help-popover">Enregistre ton historique et ta personnalisation dans un fichier pour pouvoir l'importer sur un autre navigateur.</div>
+          </div>
+          <div class="action-item">
+            <div class="action-inline">
+              <button class="secondary-btn" type="button" id="importDataBtn" title="Si tu changes de navigateur, tu peux retrouver ton historique et ta personnalisation en important le fichier préalablement enregistré.">Importer les données</button>
+              <button class="help-trigger" type="button" aria-label="Aide pour Importer les données">?</button>
+            </div>
+            <div class="help-popover">Si tu changes de navigateur, tu peux retrouver ton historique et ta personnalisation en important le fichier préalablement enregistré.</div>
+          </div>
+          <div class="action-item">
+            <div class="action-inline">
+              <button class="secondary-btn" type="button" id="resetConfigBtn" title="Supprime ta personnalisation.">RAZ</button>
+              <button class="help-trigger" type="button" aria-label="Aide pour RAZ">?</button>
+            </div>
+            <div class="help-popover">Supprime ta personnalisation.</div>
+          </div>
+        </div>
       </div>
+      <input class="hidden" type="file" id="dataFileInput" accept="application/json,.json">
     </section>
 
     <div class="status" id="captureStatus">Importe les données ou enregistre directement pour commencer un nouveau.</div>
@@ -386,10 +493,10 @@
 
   <script>
     // Configuration et données par défaut
-    const defaultActivities = ['Me laver','Vider la litière','Mettre le soin à Louna','Jeter le rouleau de papier toilette','Faire l\'aspirateur','Jeter bouteille d\'eau','Me faire à manger','Me nettoyer le visage le soir','Faire ce que j\'ai dit qu\'il fallait que je fasse'];
+    const defaultActivities = ['Me laver','Prendre un petit déjeuner','Déjeuner','Dîner','Cuisiner','Boire','Passer l\'aspirateur'];
     const defaultBodyFeelings = [
-      { label:'Boule dans la gorge', value:-1 },{ label:'Muscles tendus', value:-1 },{ label:'Palpitations', value:-1 },{ label:'Flush', value:-1 },{ label:'Douleurs au ventre', value:-1 },
-      { label:'Gorge qui vibre', value:1 },{ label:'Muscles détendus', value:1 },{ label:'Frisson', value:1 },{ label:'Bougeotte', value:1 }
+      { label:'Muscles tendus', value:-1 },{ label:'Gorge nouée', value:-1 },{ label:'Nausée', value:-1 },{ label:'Mal au ventre', value:-1 },{ label:'Vertiges', value:-1 },{ label:'Palpitations', value:-1 },
+      { label:'Muscles détendus', value:1 },{ label:'Epaules relâchées', value:1 },{ label:'Vibration dans le corps', value:1 },{ label:'Légèreté', value:1 },{ label:'Respiration profonde', value:1 },{ label:'Mâchoire desserrée', value:1 }
     ];
     const defaultNegativeEmotions = ['Affolée','Agacée','Angoissée','Anxieuse','Apeurée','Contrariée','Exaspérée','Fâchée','Frustrée','Furieuse','Haineuse','Inquiète','Irritée','Mécontente','Méfiantes','Paniquée','Pessimiste','Préoccupée','Révoltée','Soucieuse','Sur les nerfs','Tendue','Vexée'];
     const defaultPositiveEmotions = ['Amusée','Apaisée','Calme','Confiante','Contente','Détendue','Encouragée','Excitée','Fière','Heureuse','Joyeuse','Légère','Motivée','Optimiste','Rassurée','Satisfaite','Sereine'];
@@ -401,7 +508,7 @@
 
     // Données mutables (peuvent être modifiées par l'utilisateur)
     let activities = [...defaultActivities];
-    let bodyFeelings = [...defaultBodyFeelings];
+    let bodyFeelings = defaultBodyFeelings.map(item => ({ ...item }));
     let negativeEmotions = [...defaultNegativeEmotions];
     let positiveEmotions = [...defaultPositiveEmotions];
 
@@ -414,6 +521,16 @@
     let currentEmotionType = null;
     let monthKeys = [];
     let selectedMonthIndex = 0;
+    let selectedDateTime = new Date();
+
+    function sortEmotionValues(values) {
+      return values.sort((a, b) => a.localeCompare(b, 'fr', { sensitivity:'base' }));
+    }
+
+    function sortEmotionLists() {
+      sortEmotionValues(negativeEmotions);
+      sortEmotionValues(positiveEmotions);
+    }
 
     // Chargement des données depuis localStorage
     function loadFromLocalStorage() {
@@ -427,13 +544,14 @@
           if (config.positiveEmotions) positiveEmotions = config.positiveEmotions;
           if (config.userFirstName) userFirstName = config.userFirstName;
           if (config.userLastName) userLastName = config.userLastName;
+          sortEmotionLists();
         } catch (e) { console.error('Erreur dans le chargement localStorage:', e); }
       }
 
       const savedHistory = localStorage.getItem('bilanQuotidienHistory');
       if (savedHistory) {
         try {
-          historyRecords = JSON.parse(savedHistory);
+          historyRecords = mergeRecords([], JSON.parse(savedHistory));
         } catch (e) { console.error('Erreur dans le chargement de l\'historique:', e); }
       }
     }
@@ -441,6 +559,7 @@
     // Sauvegarde dans localStorage
     function saveToLocalStorage() {
       const config = { activities, bodyFeelings, negativeEmotions, positiveEmotions, userFirstName, userLastName };
+      historyRecords = mergeRecords([], historyRecords);
       localStorage.setItem('bilanQuotidienConfig', JSON.stringify(config));
       localStorage.setItem('bilanQuotidienHistory', JSON.stringify(historyRecords));
     }
@@ -461,12 +580,22 @@
     const bodyNegativeEl = document.getElementById('bodyNegativeFeelings');
     const historyListEl = document.getElementById('historyList');
 
-    function formatDisplayDate(d = new Date()) { return d.toLocaleString('fr-FR', { dateStyle:'full', timeStyle:'short' }); }
+    function formatDisplayDate(d = new Date()) { return d.toLocaleDateString('fr-FR', { dateStyle:'full' }); }
     function formatShortDate(iso) { return new Date(iso).toLocaleString('fr-FR', { dateStyle:'short', timeStyle:'short' }); }
     function formatFileDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`; }
+    function formatInputDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
     function dayKeyFromISO(iso) { const d = new Date(iso); const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
     function signed(v) { return v>0 ? `+${v}` : String(v); }
     function setScoreColor(el, v) { el.classList.remove('score-positive','score-negative','score-neutral'); if (v>0) el.classList.add('score-positive'); else if (v<0) el.classList.add('score-negative'); else el.classList.add('score-neutral'); }
+    function updateDateBadge() {
+      const dateBadge = document.getElementById('dateBadge');
+      const dateInput = document.getElementById('customDateInput');
+      if (dateBadge) dateBadge.textContent = `Bilan du ${formatDisplayDate(selectedDateTime)}`;
+      if (dateInput) {
+        dateInput.max = formatInputDate(new Date());
+        dateInput.value = formatInputDate(selectedDateTime);
+      }
+    }
 
     function computeScores() {
       const activityScore = state.activities.size;
@@ -583,7 +712,7 @@
       [['activityScore',activityScore],['fatigueScore',fatigueScore],['emotionScore',emotionScore],['bodyScore',bodyScore]].forEach(([id,val])=>{ const el=document.getElementById(id); if (el) { el.textContent=signed(val); setScoreColor(el,val); }});
       // message bilan supprimé pour affichage minimal
       document.getElementById('summaryText').textContent='';
-      document.getElementById('dateBadge').textContent=`Bilan du ${formatDisplayDate()}`;
+      updateDateBadge();
     }
 
     function populateSelect(selectId, options, bucket) {
@@ -600,7 +729,7 @@
       addOpt.textContent='+ Ajouter personnalisé';
       select.appendChild(addOpt);
 
-      select.addEventListener('change', ()=>{
+      select.onchange = () => {
         const value=select.value;
         if(!value) { select.value=''; return; }
         if (value === '__add__') {
@@ -608,12 +737,12 @@
           openModal('addEmotionModal');
           select.value='';
         } else {
-          const emotionName = options[parseInt(value)];
+          const emotionName = options[parseInt(value, 10)];
           state[bucket].push(emotionName);
           select.value='';
           renderAll();
         }
-      });
+      };
     }
 
     function mergeRecords(existing, incoming) {
@@ -719,7 +848,7 @@
     }
 
     function downloadJsonFile() {
-      const data = { version:1, exportedAt:new Date().toISOString(), records:historyRecords };
+      const data = { version:1, exportedAt:new Date().toISOString(), records:mergeRecords([], historyRecords) };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
       const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`bilan-quotidien-${formatFileDate()}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
       document.getElementById('captureStatus').textContent='Fichier JSON téléchargé (historique complet).';
@@ -728,9 +857,19 @@
     function buildTodayRecord() {
       const scores = computeScores();
       const now = new Date();
+      const selectedDay = new Date(selectedDateTime);
+      const recordDate = new Date(
+        selectedDay.getFullYear(),
+        selectedDay.getMonth(),
+        selectedDay.getDate(),
+        now.getHours(),
+        now.getMinutes(),
+        now.getSeconds(),
+        now.getMilliseconds()
+      );
       return {
-        id: now.toISOString(),
-        date: now.toISOString(),
+        id: `${Date.now()}-${recordDate.toISOString()}`,
+        date: recordDate.toISOString(),
         activities:[...state.activities].map(i=>activities[i]),
         fatigue:state.fatigue,
         negativeEmotions:[...state.negativeEmotions],
@@ -959,7 +1098,7 @@
 
     function exportJsonData() {
       const config = { activities, bodyFeelings, negativeEmotions, positiveEmotions, userFirstName, userLastName };
-      const data = { version:1, exportedAt:new Date().toISOString(), records:historyRecords, config };
+      const data = { version:1, exportedAt:new Date().toISOString(), records:mergeRecords([], historyRecords), config };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
       const a=document.createElement('a');
       a.href=URL.createObjectURL(blob);
@@ -985,6 +1124,9 @@
             bodyFeelings = parsed.config.bodyFeelings || bodyFeelings;
             negativeEmotions = parsed.config.negativeEmotions || negativeEmotions;
             positiveEmotions = parsed.config.positiveEmotions || positiveEmotions;
+            sortEmotionLists();
+            populateSelect('negativeSelect', negativeEmotions, 'negativeEmotions');
+            populateSelect('positiveSelect', positiveEmotions, 'positiveEmotions');
             saveToLocalStorage();
           }
           
@@ -999,14 +1141,74 @@
       reader.readAsText(file, 'utf-8');
     }
 
+    function resetCustomizations() {
+      const shouldReset = window.confirm('Remettre les personnalisations par défaut ? Les bilans enregistrés seront conservés.');
+      if (!shouldReset) return;
+
+      activities = [...defaultActivities];
+      bodyFeelings = defaultBodyFeelings.map(item => ({ ...item }));
+      negativeEmotions = [...defaultNegativeEmotions];
+      positiveEmotions = [...defaultPositiveEmotions];
+      sortEmotionLists();
+
+      state.activities.clear();
+      state.fatigue = 0;
+      state.negativeEmotions = [];
+      state.positiveEmotions = [];
+      state.body.clear();
+
+      populateSelect('negativeSelect', negativeEmotions, 'negativeEmotions');
+      populateSelect('positiveSelect', positiveEmotions, 'positiveEmotions');
+      saveToLocalStorage();
+      renderAll();
+      renderHistory();
+      document.getElementById('captureStatus').textContent='Les personnalisations ont été remises par défaut. L’historique a été conservé.';
+    }
+
     // Événements principaux
     document.getElementById('resetBtn').addEventListener('click', ()=>{ state.activities.clear(); state.fatigue=0; state.negativeEmotions=[]; state.positiveEmotions=[]; state.body.clear(); renderAll(); });
     document.getElementById('themeBtn').addEventListener('click', ()=>{ const root=document.documentElement; root.setAttribute('data-theme', root.getAttribute('data-theme')==='dark'?'light':'dark'); setTimeout(renderHistory, 40); });
+    document.getElementById('dateBadge').addEventListener('click', () => {
+      const dateInput = document.getElementById('customDateInput');
+      dateInput.classList.toggle('hidden');
+      updateDateBadge();
+      if (!dateInput.classList.contains('hidden')) {
+        dateInput.focus();
+        if (typeof dateInput.showPicker === 'function') dateInput.showPicker();
+      }
+    });
+    document.getElementById('customDateInput').addEventListener('change', (e) => {
+      if (!e.target.value) return;
+      const [year, month, day] = e.target.value.split('-').map(Number);
+      const now = new Date();
+      const pickedDate = new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+      selectedDateTime = pickedDate > now ? now : pickedDate;
+      updateDateBadge();
+      e.target.classList.add('hidden');
+    });
+    document.getElementById('customDateInput').addEventListener('blur', (e) => {
+      setTimeout(() => e.target.classList.add('hidden'), 120);
+    });
     document.getElementById('saveDayBtn').addEventListener('click', saveTodayRecord);
     document.getElementById('savePdfBtn').addEventListener('click', exportToPDF);
     document.getElementById('exportDataBtn').addEventListener('click', exportJsonData);
+    document.getElementById('resetConfigBtn').addEventListener('click', resetCustomizations);
     document.getElementById('importDataBtn').addEventListener('click', ()=>document.getElementById('dataFileInput').click());
     document.getElementById('dataFileInput').addEventListener('change', e => { const file=e.target.files[0]; if (file) importJsonData(file); });
+    document.querySelectorAll('.help-trigger').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const item = btn.closest('.action-item');
+        const wasOpen = item.classList.contains('help-open');
+        document.querySelectorAll('.action-item.help-open').forEach(el => el.classList.remove('help-open'));
+        if (!wasOpen) item.classList.add('help-open');
+      });
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.action-item')) {
+        document.querySelectorAll('.action-item.help-open').forEach(el => el.classList.remove('help-open'));
+      }
+    });
     document.getElementById('prevMonthBtn').addEventListener('click', () => setSelectedMonth(selectedMonthIndex - 1));
     document.getElementById('nextMonthBtn').addEventListener('click', () => setSelectedMonth(selectedMonthIndex + 1));
 
@@ -1081,6 +1283,7 @@
         } else {
           positiveEmotions.push(value);
         }
+        sortEmotionLists();
         saveToLocalStorage();
         const bucket = currentEmotionType;
         populateSelect(bucket === 'negativeEmotions' ? 'negativeSelect' : 'positiveSelect', bucket === 'negativeEmotions' ? negativeEmotions : positiveEmotions, bucket);
