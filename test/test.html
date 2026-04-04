@@ -599,6 +599,7 @@
     function formatDisplayDate(d = new Date()) { return d.toLocaleDateString('fr-FR', { dateStyle:'full' }); }
     function formatShortDate(iso) { return new Date(iso).toLocaleString('fr-FR', { dateStyle:'short', timeStyle:'short' }); }
     function formatFileDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`; }
+    function formatPdfFileDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()}`; }
     function formatInputDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
     function dayKeyFromISO(iso) { const d = new Date(iso); const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
     function signed(v) { return v>0 ? `+${v}` : String(v); }
@@ -945,13 +946,7 @@
 
     function exportToPDF() {
       const status=document.getElementById('captureStatus');
-      status.textContent='Préparation de l’impression...';
-
-      const jobWindow = window.open('', '_blank');
-      if (!jobWindow) {
-        status.textContent="Impossible d'ouvrir une nouvelle fenêtre d'impression.";
-        return;
-      }
+      status.textContent='Préparation de la boîte d’impression...';
 
       const headStyles = [...document.querySelectorAll('head style, head link[rel="stylesheet"]')]
         .map(el => el.outerHTML)
@@ -960,156 +955,106 @@
       const titleText = document.querySelector('.title')?.textContent || 'Bilan quotidien';
       const nameText = [userFirstName, userLastName].filter(Boolean).join(' ').trim();
 
+      const captureClone = document.getElementById('captureZone').cloneNode(true);
+      captureClone.querySelectorAll('.toolbar, .date-help, .date-input, .help-trigger, .help-popover, .chart-controls, .chip-add-btn').forEach(el => el.remove());
+
+      const graphsClone = document.querySelector('.charts-column')?.closest('section.panel')?.cloneNode(true);
+      graphsClone?.querySelector('.chart-controls')?.remove();
+      graphsClone?.querySelectorAll('.help-trigger, .help-popover').forEach(el => el.remove());
+
       const printExtraStyle = `
         <style>
-          body { margin: 0; font-family: var(--font-body), Arial, sans-serif; background: #fff; color: #000; }
-          .page { width: 210mm; height: 297mm; box-sizing: border-box; padding: 15mm; page-break-after: always; position: relative; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; }
-          .page:first-child .print-header { display: block; }
-          .page:not(:first-child) .print-header { display: none; }
-          .page-content { width: 100%; max-width: 180mm; height: calc(297mm - 52mm); margin-left: auto; margin-right: auto; overflow: visible; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
-          .page-inner { width: 100%; transform-origin: top left; }
-          .page:last-child { page-break-after: auto; }
-          .print-header { margin-bottom: 0.8rem; padding-bottom: 0.35rem; border-bottom: 1px solid #ddd; text-align:center; }
-          .print-title { margin: 0; font-size: 1.45rem; font-weight: 700; }
-          .print-name { margin: 0.2rem 0 0; font-size: 1.05rem; color: #444; }
-          .print-footer { position: absolute; bottom: 8mm; left: 0; right: 0; font-size: 9px; color: #666; text-align: center; border: none; padding: 0; margin: 0; }
-          @page { size: A4; margin: 0; }
-          .panel, .chart-card, .history-item, .charts-column { break-inside: avoid; page-break-inside: avoid; }
-          .no-print { display: none !important; }
-          .charts-column { display: grid; grid-template-columns: repeat(2, 80mm); gap: 6mm; width: 100%; max-width: calc(2 * 80mm + 6mm); margin: 0 auto; justify-content: center; }
-          .chart-card { width: 80mm; max-width: 80mm; margin: 0; padding: 4px; box-sizing: border-box; }
-          .chart-wrap { width: 100% !important; max-width: 80mm; height: 100px !important; }
-          .chart-wrap canvas { width: 100% !important; height: 100% !important; }
-          .page-content { overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
-          .page { page-break-inside: avoid; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; }
+          @page { size: A4; margin: 12mm; }
+          body { margin: 0; font-family: var(--font-body), Arial, sans-serif; background: #fff; color: #000; zoom: 0.8; }
+          .print-wrap { max-width: 100%; }
+          .print-header { margin-bottom: 1rem; }
+          .print-title { margin: 0 0 0.2rem 0; font-size: 1.45rem; font-weight: 700; }
+          .print-name { margin: 0; font-size: 0.95rem; color: #444; }
+          .panel, .chart-card, .history-item { break-inside: avoid; page-break-inside: avoid; box-shadow: none !important; }
+          .toolbar, .date-help, .date-input, .help-trigger, .help-popover, .chart-controls, .chip-add-btn { display: none !important; }
         </style>
       `;
 
-      const captureZone = document.getElementById('captureZone');
-      const captureClone = captureZone.cloneNode(true);
-      captureClone.style.margin = '0';
-      captureClone.style.padding = '0';
-
-      const dateBadgeHtml = captureClone.querySelector('.date-badge')?.outerHTML || '';
-      const panelEls = Array.from(captureClone.querySelectorAll('section.panel'));
-      const activitiesHtml = panelEls[0]?.outerHTML || '';
-      const fatigueHtml = panelEls[1]?.outerHTML || '';
-      const emotionsHtml = panelEls[2]?.outerHTML || '';
-      const bodyHtml = panelEls[3]?.outerHTML || '';
-      const bilanHtml = panelEls[4]?.outerHTML || '';
-
-      const graphsRoot = document.querySelector('.charts-column')?.closest('section.panel');
-      const graphsControls = graphsRoot?.querySelector('.chart-controls')?.outerHTML || '';
-      const graphCards = Array.from(graphsRoot?.querySelectorAll('.chart-card') || []);
-      const firstChartCardsHtml = graphCards.slice(0, 3).map(card => card.outerHTML).join('');
-      const remainingChartCardsHtml = graphCards.slice(3).map(card => card.outerHTML).join('');
-      const graphsPage1 = `${graphsControls}<div class="charts-column">${firstChartCardsHtml}</div>`;
-      const graphsPage2 = remainingChartCardsHtml ? `<div class="charts-column">${remainingChartCardsHtml}</div>` : '';
-
+      const nameHtml = nameText ? `<p class="print-name">${nameText}</p>` : '';
+      const pdfFileName = `bilan-quotidien du ${formatPdfFileDate(selectedDateTime)}`;
+      const originalPageTitle = document.title;
+      const pageTitleEl = document.querySelector('title');
+      document.title = pdfFileName;
+      if (pageTitleEl) pageTitleEl.textContent = pdfFileName;
       const html = `
         <html>
           <head>
-            <title>PDF Bilan</title>
+            <title>${pdfFileName}</title>
             ${headStyles}
             ${printExtraStyle}
           </head>
           <body>
-            <div class="page">
+            <div class="print-wrap">
               <header class="print-header">
                 <h1 class="print-title">${titleText}</h1>
+                ${nameHtml}
               </header>
-              <div class="page-content"><div class="page-inner">
-                ${dateBadgeHtml}
-                ${activitiesHtml}
-                ${fatigueHtml}
-                ${emotionsHtml}
-                ${bodyHtml}
-              </div></div>
-              <footer class="print-footer">${nameText || 'Prénom Nom'}</footer>
+              ${captureClone.outerHTML}
+              ${graphsClone ? graphsClone.outerHTML : ''}
             </div>
-            <div class="page">
-              <header class="print-header">
-                <h1 class="print-title">${titleText}</h1>
-              </header>
-              <div class="page-content"><div class="page-inner">
-                ${bilanHtml}
-              </div></div>
-              <footer class="print-footer">${nameText || 'Prénom Nom'}</footer>
-            </div>
-            <div class="page">
-              <header class="print-header">
-                <h1 class="print-title">${titleText}</h1>
-              </header>
-              <div class="page-content"><div class="page-inner">
-                ${graphsPage1}
-              </div></div>
-              <footer class="print-footer">${nameText || 'Prénom Nom'}</footer>
-            </div>
-            ${graphsPage2 ? `
-            <div class="page">
-              <header class="print-header">
-                <h1 class="print-title">${titleText}</h1>
-              </header>
-              <div class="page-content"><div class="page-inner">
-                ${graphsPage2}
-              </div></div>
-              <footer class="print-footer">${nameText || 'Prénom Nom'}</footer>
-            </div>
-            ` : ''}
           </body>
         </html>
       `;
 
-      jobWindow.document.open();
-      jobWindow.document.write(html);
-      jobWindow.document.close();
+      const printFrame = document.createElement('iframe');
+      printFrame.setAttribute('aria-hidden', 'true');
+      printFrame.style.position = 'fixed';
+      printFrame.style.width = '0';
+      printFrame.style.height = '0';
+      printFrame.style.right = '0';
+      printFrame.style.bottom = '0';
+      printFrame.style.border = '0';
+      printFrame.style.opacity = '0';
+      document.body.appendChild(printFrame);
 
-      function scalePageContent(windowRef) {
-        const pages = windowRef.document.querySelectorAll('.page');
-        pages.forEach(page => {
-          const content = page.querySelector('.page-content');
-          const inner = page.querySelector('.page-inner');
-          if (!content || !inner) return;
-
-          const header = page.querySelector('.print-header');
-          const footer = page.querySelector('.print-footer');
-          const headerHeight = header ? header.getBoundingClientRect().height : 0;
-          const footerHeight = footer ? footer.getBoundingClientRect().height : 0;
-          const pageHeight = page.getBoundingClientRect().height;
-          const availableHeight = Math.max(0, pageHeight - headerHeight - footerHeight - 10);
-
-          inner.style.transform = '';
-          inner.style.width = '100%';
-
-          const naturalHeight = inner.scrollHeight;
-          if (naturalHeight > 0 && availableHeight > 0) {
-            const scale = Math.min(1, availableHeight / naturalHeight);
-            if (scale < 1) {
-              inner.style.transform = `scale(${scale})`;
-              inner.style.transformOrigin = 'top left';
-              inner.style.width = `${100 / scale}%`;
-            }
-          }
-        });
+      const frameWindow = printFrame.contentWindow;
+      const frameDoc = frameWindow?.document;
+      if (!frameWindow || !frameDoc) {
+        document.title = originalPageTitle;
+        if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
+        printFrame.remove();
+        status.textContent='Impossible d’ouvrir la boîte d’impression.';
+        return;
       }
 
-      jobWindow.onload = () => {
-        jobWindow.focus();
-        try { scalePageContent(jobWindow); } catch (e) { console.warn('Scaling PDF content failed', e); }
-        const footers = jobWindow.document.querySelectorAll('.print-footer');
-        footers.forEach((footer, index) => {
-          const pageNumber = index + 1;
-          const totalPages = footers.length;
-          footer.textContent = `${nameText || 'Prénom Nom'} - page ${pageNumber}/${totalPages}`;
-          footer.style.fontSize = '9px';
-          footer.style.bottom = '4mm';
-          footer.style.position = 'absolute';
-          footer.style.left = '0';
-          footer.style.right = '0';
-        });
-        jobWindow.print();
+      const cleanupPrintFrame = () => {
+        document.title = originalPageTitle;
+        if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
+        setTimeout(() => printFrame.remove(), 300);
+      };
+
+      let printed = false;
+      const launchPrint = () => {
+        if (printed) return;
+        printed = true;
+        frameWindow.focus();
+        frameWindow.print();
         status.textContent='Boîte d’impression ouverte.';
       };
+
+      frameWindow.onafterprint = () => {
+        cleanupPrintFrame();
+      };
+
+      frameDoc.open();
+      frameDoc.write(html);
+      frameDoc.close();
+      frameDoc.title = pdfFileName;
+      printFrame.title = pdfFileName;
+
+      printFrame.onload = () => setTimeout(launchPrint, 150);
+      setTimeout(launchPrint, 400);
+      setTimeout(() => {
+        if (document.title === pdfFileName) {
+          document.title = originalPageTitle;
+          if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
+        }
+      }, 4000);
     }
 
     function exportJsonData() {
