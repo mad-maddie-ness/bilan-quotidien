@@ -944,16 +944,11 @@
 
     function renderAll() { renderActivities(); renderFatigue(); renderBody(); renderEmotions(); updateSummary(); }
 
-    function exportToPDF() {
+    async function exportToPDF() {
       const status=document.getElementById('captureStatus');
-      status.textContent='Préparation de la boîte d’impression...';
-
-      const headStyles = [...document.querySelectorAll('head style, head link[rel="stylesheet"]')]
-        .map(el => el.outerHTML)
-        .join('');
-
       const titleText = document.querySelector('.title')?.textContent || 'Bilan quotidien';
       const nameText = [userFirstName, userLastName].filter(Boolean).join(' ').trim();
+      const pdfFileName = `bilan-quotidien du ${formatPdfFileDate(selectedDateTime)}`;
 
       const captureClone = document.getElementById('captureZone').cloneNode(true);
       captureClone.querySelectorAll('.toolbar, .date-help, .date-input, .help-trigger, .help-popover, .chart-controls, .chip-add-btn').forEach(el => el.remove());
@@ -961,6 +956,65 @@
       const graphsClone = document.querySelector('.charts-column')?.closest('section.panel')?.cloneNode(true);
       graphsClone?.querySelector('.chart-controls')?.remove();
       graphsClone?.querySelectorAll('.help-trigger, .help-popover').forEach(el => el.remove());
+
+      [captureClone, graphsClone].forEach(root => {
+        root?.querySelectorAll('.panel, .chart-card, .history-item').forEach(el => {
+          el.style.breakInside = 'avoid';
+          el.style.pageBreakInside = 'avoid';
+          el.style.boxShadow = 'none';
+        });
+      });
+
+      const pdfContainer = document.createElement('div');
+      pdfContainer.style.position = 'fixed';
+      pdfContainer.style.left = '-10000px';
+      pdfContainer.style.top = '0';
+      pdfContainer.style.width = '190mm';
+      pdfContainer.style.padding = '0';
+      pdfContainer.style.background = '#ffffff';
+      pdfContainer.style.color = '#000000';
+      pdfContainer.style.zIndex = '-1';
+      pdfContainer.style.zoom = '0.8';
+
+      const header = document.createElement('div');
+      header.style.marginBottom = '10mm';
+      header.innerHTML = `
+        <h1 style="margin:0 0 2mm 0; font-size:1.45rem; font-weight:700;">${titleText}</h1>
+        ${nameText ? `<p style="margin:0; font-size:0.95rem; color:#444;">${nameText}</p>` : ''}
+      `;
+
+      pdfContainer.appendChild(header);
+      pdfContainer.appendChild(captureClone);
+      if (graphsClone) pdfContainer.appendChild(graphsClone);
+      document.body.appendChild(pdfContainer);
+
+      const isPhoneLike = window.matchMedia('(max-width: 767px)').matches || window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+
+      if (isPhoneLike && typeof html2pdf !== 'undefined') {
+        status.textContent='Préparation du PDF...';
+        try {
+          await html2pdf().set({
+            margin: 10,
+            filename: `${pdfFileName}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 1400 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+          }).from(pdfContainer).save();
+          status.textContent='PDF enregistré.';
+        } catch (error) {
+          console.error('Erreur export PDF:', error);
+          status.textContent='La génération du PDF a échoué.';
+        } finally {
+          pdfContainer.remove();
+        }
+        return;
+      }
+
+      status.textContent='Préparation de la boîte d’impression...';
+      const headStyles = [...document.querySelectorAll('head style, head link[rel="stylesheet"]')]
+        .map(el => el.outerHTML)
+        .join('');
 
       const printExtraStyle = `
         <style>
@@ -976,7 +1030,6 @@
       `;
 
       const nameHtml = nameText ? `<p class="print-name">${nameText}</p>` : '';
-      const pdfFileName = `bilan-quotidien du ${formatPdfFileDate(selectedDateTime)}`;
       const originalPageTitle = document.title;
       const pageTitleEl = document.querySelector('title');
       document.title = pdfFileName;
@@ -1017,6 +1070,7 @@
       if (!frameWindow || !frameDoc) {
         document.title = originalPageTitle;
         if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
+        pdfContainer.remove();
         printFrame.remove();
         status.textContent='Impossible d’ouvrir la boîte d’impression.';
         return;
@@ -1025,6 +1079,7 @@
       const cleanupPrintFrame = () => {
         document.title = originalPageTitle;
         if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
+        pdfContainer.remove();
         setTimeout(() => printFrame.remove(), 300);
       };
 
