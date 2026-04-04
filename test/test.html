@@ -68,7 +68,7 @@
     .actions-main { width: 100%; max-width: 290px; }
     .actions-main .save-day-btn { width: 100%; }
     .actions-secondary { display:flex; flex-direction:column; gap: 0.25rem; width: 100%; max-width: 170px; }
-    .action-item { position: relative; display:flex; width:100%; min-width:0; }
+    .action-item { position: relative; display:flex; width:100%; min-width:0; overflow: visible; }
     .action-inline { display:flex; align-items:center; gap: 0.2rem; width:100%; min-width:0; }
     .actions-secondary .secondary-btn { flex: 1 1 auto; width: 100%; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .help-trigger {
@@ -105,16 +105,18 @@
       word-break: break-word;
     }
     .action-item.help-open .help-popover { display: block; }
+    @media (hover: hover) and (pointer: fine) {
+      .action-item:hover .help-popover,
+      .action-item:focus-within .help-popover { display: block; }
+    }
     @media (max-width: 767px) {
       .help-popover {
-        position: fixed;
-        left: 0.75rem;
-        right: 0.75rem;
-        top: auto;
-        bottom: 0.75rem;
-        width: auto;
-        max-width: none;
-        z-index: 1000;
+        top: calc(100% + 4px);
+        left: 0;
+        right: auto;
+        bottom: auto;
+        width: min(210px, calc(100vw - 2rem));
+        max-width: calc(100vw - 2rem);
       }
     }
     @media (hover: none), (pointer: coarse) {
@@ -432,29 +434,29 @@
         <div class="actions-secondary">
           <div class="action-item">
             <div class="action-inline">
-              <button class="secondary-btn" type="button" id="savePdfBtn" title="Crée une version imprimable du bilan et des graphiques.">Enregistrer en PDF</button>
               <button class="help-trigger" type="button" aria-label="Aide pour Enregistrer en PDF">?</button>
+              <button class="secondary-btn" type="button" id="savePdfBtn">Enregistrer en PDF</button>
             </div>
             <div class="help-popover">Crée une version imprimable du bilan et des graphiques.</div>
           </div>
           <div class="action-item">
             <div class="action-inline">
-              <button class="secondary-btn" type="button" id="exportDataBtn" title="Enregistre ton historique et ta personnalisation dans un fichier pour pouvoir l'importer sur un autre navigateur.">Exporter les données</button>
               <button class="help-trigger" type="button" aria-label="Aide pour Exporter les données">?</button>
+              <button class="secondary-btn" type="button" id="exportDataBtn">Exporter les données</button>
             </div>
             <div class="help-popover">Enregistre ton historique et ta personnalisation dans un fichier pour pouvoir l'importer sur un autre navigateur.</div>
           </div>
           <div class="action-item">
             <div class="action-inline">
-              <button class="secondary-btn" type="button" id="importDataBtn" title="Si tu changes de navigateur, tu peux retrouver ton historique et ta personnalisation en important le fichier préalablement enregistré.">Importer les données</button>
               <button class="help-trigger" type="button" aria-label="Aide pour Importer les données">?</button>
+              <button class="secondary-btn" type="button" id="importDataBtn">Importer les données</button>
             </div>
             <div class="help-popover">Si tu changes de navigateur, tu peux retrouver ton historique et ta personnalisation en important le fichier préalablement enregistré.</div>
           </div>
           <div class="action-item">
             <div class="action-inline">
-              <button class="secondary-btn" type="button" id="resetConfigBtn" title="Supprime ta personnalisation.">RAZ</button>
               <button class="help-trigger" type="button" aria-label="Aide pour RAZ">?</button>
+              <button class="secondary-btn" type="button" id="resetConfigBtn">RAZ</button>
             </div>
             <div class="help-popover">Supprime ta personnalisation.</div>
           </div>
