@@ -263,6 +263,12 @@
     .chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.75rem; }
     .chart-title { font-size: var(--text-sm); font-weight:600; }
     .chart-wrap { position: relative; height: 220px; width: 100%; }
+    .chart-empty-note {
+      margin-top: 0.55rem;
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      text-align: center;
+    }
     @media (min-width: 768px) {
       .chart-card {
         width: calc(100% - 30mm);
@@ -711,18 +717,20 @@
 
     // Gestion des modales
     function openModal(modalId) {
-      document.getElementById(modalId).classList.add('active');
+      const modal = document.getElementById(modalId);
+      if (modal) modal.classList.add('active');
     }
 
     function closeModal(modalId) {
-      document.getElementById(modalId).classList.remove('active');
+      const modal = document.getElementById(modalId);
+      if (modal) modal.classList.remove('active');
     }
 
     const privacyNoticeStorageKey = 'bilanQuotidienHidePrivacyNotice';
 
     function closePrivacyNotice() {
       const checkbox = document.getElementById('hidePrivacyNoticeCheckbox');
-      if (checkbox?.checked) localStorage.setItem(privacyNoticeStorageKey, 'true');
+      if (checkbox && checkbox.checked) localStorage.setItem(privacyNoticeStorageKey, 'true');
       else localStorage.removeItem(privacyNoticeStorageKey);
       closeModal('privacyNoticeModal');
     }
@@ -752,7 +760,7 @@
 
     function getRecordForDay(targetDate) {
       const key = dayKeyFromISO(targetDate.toISOString());
-      return historyRecords.find(rec => rec?.date && dayKeyFromISO(rec.date) === key) || null;
+      return historyRecords.find(rec => rec && rec.date && dayKeyFromISO(rec.date) === key) || null;
     }
 
     function createUiSnapshot() {
@@ -786,7 +794,7 @@
     function loadRecordIntoUi(record, targetDate) {
       selectedDateTime = new Date(targetDate);
       state.activities = new Set((record.activities || []).map(label => activities.indexOf(label)).filter(index => index >= 0));
-      state.fatigue = record.fatigue ?? 0;
+      state.fatigue = coalesce(record.fatigue, 0);
       state.negativeEmotions = [...(record.negativeEmotions || [])];
       state.positiveEmotions = [...(record.positiveEmotions || [])];
       state.body = new Set((record.body || []).map(label => bodyFeelings.findIndex(item => item.label === label)).filter(index => index >= 0));
@@ -809,8 +817,8 @@
 
     function confirmPdfExport() {
       const dateInput = document.getElementById('pdfExportDateInput');
-      if (!dateInput?.value) {
-        dateInput?.focus();
+      if (!dateInput || !dateInput.value) {
+        if (dateInput) dateInput.focus();
         return;
       }
       const [year, month, day] = dateInput.value.split('-').map(Number);
@@ -824,14 +832,31 @@
     const bodyPositiveEl = document.getElementById('bodyPositiveFeelings');
     const bodyNegativeEl = document.getElementById('bodyNegativeFeelings');
     const historyListEl = document.getElementById('historyList');
+    const frenchWeekdays = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+    const frenchMonths = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 
-    function formatDisplayDate(d = new Date()) { return d.toLocaleDateString('fr-FR', { dateStyle:'full' }); }
-    function formatShortDate(iso) { return new Date(iso).toLocaleString('fr-FR', { dateStyle:'short', timeStyle:'short' }); }
+    function coalesce() {
+      for (let i = 0; i < arguments.length; i += 1) {
+        if (arguments[i] !== null && arguments[i] !== undefined) return arguments[i];
+      }
+      return null;
+    }
+
+    function formatDisplayDate(d = new Date()) {
+      return `${frenchWeekdays[d.getDay()]} ${d.getDate()} ${frenchMonths[d.getMonth()]} ${d.getFullYear()}`;
+    }
+
+    function formatShortDate(iso) {
+      const d = new Date(iso);
+      const pad = n => String(n).padStart(2, '0');
+      return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
     function formatFileDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`; }
     function formatPdfFileDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()}`; }
     function formatInputDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
     function dayKeyFromISO(iso) { const d = new Date(iso); const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
-    function getRecordSavedTime(rec) { return new Date(rec?.savedAt || rec?.updatedAt || rec?.date || 0).getTime(); }
+    function getRecordSavedTime(rec) { return new Date((rec && (rec.savedAt || rec.updatedAt || rec.date)) || 0).getTime(); }
     function signed(v) { return v>0 ? `+${v}` : String(v); }
     function setScoreColor(el, v) { el.classList.remove('score-positive','score-negative','score-neutral'); if (v>0) el.classList.add('score-positive'); else if (v<0) el.classList.add('score-negative'); else el.classList.add('score-neutral'); }
     function updateDateBadge() {
@@ -999,7 +1024,7 @@
       const byDay = new Map();
       const all = [...existing, ...incoming];
       all.forEach(rec => {
-        if (!rec?.date) return;
+        if (!rec || !rec.date) return;
         const key = dayKeyFromISO(rec.date);
         const current = byDay.get(key);
         if (!current || getRecordSavedTime(rec) >= getRecordSavedTime(current)) {
@@ -1042,28 +1067,150 @@
       });
     }
 
+    function setChartNote(chartId, message) {
+      const canvas = document.getElementById(chartId);
+      if (!canvas || !canvas.parentElement || !canvas.parentElement.parentElement) return;
+      const card = canvas.parentElement.parentElement;
+      let note = card.querySelector('.chart-empty-note');
+
+      if (!message) {
+        if (note) note.remove();
+        return;
+      }
+
+      if (!note) {
+        note = document.createElement('div');
+        note.className = 'chart-empty-note';
+        card.appendChild(note);
+      }
+      note.textContent = message;
+    }
+
+    function drawFallbackLineChart(canvas, data, labels, axisColor, primary, positive, negative) {
+      const ctx = canvas && canvas.getContext ? canvas.getContext('2d') : null;
+      if (!ctx) return false;
+
+      const ratio = window.devicePixelRatio || 1;
+      const parent = canvas.parentElement;
+      const width = Math.max(260, Math.round((parent && parent.clientWidth) || canvas.clientWidth || 300));
+      const height = Math.max(160, Math.round((parent && parent.clientHeight) || canvas.clientHeight || 220));
+
+      canvas.width = width * ratio;
+      canvas.height = height * ratio;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+
+      const padding = { top: 16, right: 12, bottom: 30, left: 30 };
+      const innerWidth = Math.max(10, width - padding.left - padding.right);
+      const innerHeight = Math.max(10, height - padding.top - padding.bottom);
+      const minY = -5;
+      const maxY = 10;
+      const yTicks = [-5, 0, 5, 10];
+
+      const xForIndex = (index, count) => {
+        if (count <= 1) return padding.left + innerWidth / 2;
+        return padding.left + (index / (count - 1)) * innerWidth;
+      };
+      const yForValue = value => padding.top + ((maxY - value) / (maxY - minY)) * innerHeight;
+
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = axisColor + '55';
+      ctx.fillStyle = axisColor;
+      ctx.font = '11px sans-serif';
+
+      yTicks.forEach(tick => {
+        const y = yForValue(tick);
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+        ctx.fillText(String(tick), 4, y + 4);
+      });
+
+      ctx.beginPath();
+      ctx.moveTo(padding.left, padding.top);
+      ctx.lineTo(padding.left, height - padding.bottom);
+      ctx.lineTo(width - padding.right, height - padding.bottom);
+      ctx.strokeStyle = axisColor + '88';
+      ctx.stroke();
+
+      if (labels && labels.length) {
+        ctx.textAlign = 'center';
+        labels.forEach((label, index) => {
+          const x = xForIndex(index, labels.length);
+          ctx.fillText(label, x, height - 8);
+        });
+        ctx.textAlign = 'start';
+      }
+
+      if (!data || !data.length) return true;
+
+      ctx.beginPath();
+      data.forEach((value, index) => {
+        const x = xForIndex(index, data.length);
+        const y = yForValue(value);
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = primary;
+      ctx.stroke();
+
+      data.forEach((value, index) => {
+        const x = xForIndex(index, data.length);
+        const y = yForValue(value);
+        ctx.beginPath();
+        ctx.arc(x, y, 3.2, 0, Math.PI * 2);
+        ctx.fillStyle = value < 0 ? negative : positive;
+        ctx.fill();
+      });
+
+      return true;
+    }
+
     function updateCharts() {
-      const axisColor = getComputedStyle(document.documentElement).getPropertyValue('--color-text-muted').trim();
-      const primary = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
-      const positive = getComputedStyle(document.documentElement).getPropertyValue('--color-positive').trim();
-      const negative = getComputedStyle(document.documentElement).getPropertyValue('--color-negative').trim();
+      const chartIds = ['chartActivites', 'chartFatigue', 'chartEmotions', 'chartRessenti'];
+      const rootStyles = getComputedStyle(document.documentElement);
+      const axisColor = rootStyles.getPropertyValue('--color-text-muted').trim();
+      const primary = rootStyles.getPropertyValue('--color-primary').trim();
+      const positive = rootStyles.getPropertyValue('--color-positive').trim();
+      const negative = rootStyles.getPropertyValue('--color-negative').trim();
       const filtered = filterBySelectedMonth(historyRecords);
-      const labels = filtered.map(r => new Date(r.date).toLocaleDateString('fr-FR', { day:'2-digit' }));
+      const labels = filtered.map(r => String(new Date(r.date).getDate()).padStart(2, '0'));
 
       const selectedMonth = monthKeys[selectedMonthIndex] || '';
       const monthName = selectedMonth ? `${selectedMonth.slice(5,7)}/${selectedMonth.slice(0,4)}` : '';
       ['chartMonthActivites', 'chartMonthFatigue', 'chartMonthEmotions', 'chartMonthRessenti'].forEach(id => {
-        const el=document.getElementById(id);
+        const el = document.getElementById(id);
         if (el) el.textContent = monthName;
       });
 
+      chartIds.forEach(id => {
+        if (charts[id]) {
+          charts[id].destroy();
+          delete charts[id];
+        }
+      });
+
       const series = {
-        activites: filtered.map(r => r.activityScore ?? r.activities?.length ?? 0),
-        fatigue: filtered.map(r => r.fatigue ?? 0),
-        emotions: filtered.map(r => r.emotionScore ?? ((r.positiveEmotions?.length||0)-(r.negativeEmotions?.length||0))),
-        ressenti: filtered.map(r => r.bodyScore ?? 0),
-        total: filtered.map(r => r.total ?? 0)
+        activites: filtered.map(r => coalesce(r.activityScore, Array.isArray(r.activities) ? r.activities.length : 0, 0)),
+        fatigue: filtered.map(r => coalesce(r.fatigue, 0)),
+        emotions: filtered.map(r => coalesce(r.emotionScore, (Array.isArray(r.positiveEmotions) ? r.positiveEmotions.length : 0) - (Array.isArray(r.negativeEmotions) ? r.negativeEmotions.length : 0), 0)),
+        ressenti: filtered.map(r => coalesce(r.bodyScore, 0)),
+        total: filtered.map(r => coalesce(r.total, 0))
       };
+
+      if (typeof window.Chart !== 'function') {
+        drawFallbackLineChart(document.getElementById('chartActivites'), series.activites, labels, axisColor, primary, positive, negative);
+        drawFallbackLineChart(document.getElementById('chartFatigue'), series.fatigue, labels, axisColor, primary, positive, negative);
+        drawFallbackLineChart(document.getElementById('chartEmotions'), series.emotions, labels, axisColor, primary, positive, negative);
+        drawFallbackLineChart(document.getElementById('chartRessenti'), series.ressenti, labels, axisColor, primary, positive, negative);
+        chartIds.forEach(id => setChartNote(id, filtered.length ? '' : 'Aucune journée enregistrée pour ce mois sur ce navigateur.'));
+        return;
+      }
 
       function buildZeroSplitSeries(baseData) {
         const points = [];
@@ -1092,64 +1239,70 @@
       }
 
       function makeChart(id, data) {
-        const ctx = document.getElementById(id).getContext('2d');
+        const canvas = document.getElementById(id);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          setChartNote(id, 'Le navigateur ne permet pas d’afficher ce graphique.');
+          return;
+        }
+
         const splitSeries = buildZeroSplitSeries(data);
-        if (charts[id]) charts[id].destroy();
-        charts[id] = new Chart(ctx, {
-          type:'line',
-          data:{
-            datasets:[{
-              data: splitSeries.points,
-              borderColor: primary,
-              backgroundColor: primary + '22',
-              fill: { target: 'origin', above: positive + '22', below: negative + '22' },
-              tension:.25,
-              pointRadius: context => (splitSeries.helperIndexes.has(context.dataIndex) ? 0 : 3),
-              pointHoverRadius: context => (splitSeries.helperIndexes.has(context.dataIndex) ? 0 : 4),
-              pointBackgroundColor: context => (context.raw.y < 0 ? negative : positive),
-              pointBorderColor: context => (context.raw.y < 0 ? negative : positive),
-              pointBorderWidth: 1.5,
-              segment: {
-                borderColor: context => ((context.p0.parsed.y < 0 || context.p1.parsed.y < 0) ? negative : positive)
-              }
-            }]
-          },
-          options:{
-            responsive:true,
-            maintainAspectRatio:false,
-            plugins:{ legend:{ display:false } },
-            scales:{
-              x:{
-                type: 'linear',
-                min: labels.length ? 0 : undefined,
-                max: labels.length ? labels.length - 1 : undefined,
-                offset: false,
-                ticks:{
-                  stepSize: 1,
-                  color:axisColor,
-                  callback: (value) => {
-                    const index = Number(value);
-                    return Number.isInteger(index) && labels[index] ? labels[index] : '';
-                  }
+
+        try {
+          charts[id] = new Chart(ctx, {
+            type:'line',
+            data:{
+              datasets:[{
+                data: splitSeries.points,
+                borderColor: primary,
+                backgroundColor: 'transparent',
+                fill: false,
+                borderWidth: 2.5,
+                tension:.25,
+                pointRadius: context => (splitSeries.helperIndexes.has(context.dataIndex) ? 0 : 3),
+                pointHoverRadius: context => (splitSeries.helperIndexes.has(context.dataIndex) ? 0 : 4),
+                pointBackgroundColor: context => (context.raw.y < 0 ? negative : positive),
+                pointBorderColor: context => (context.raw.y < 0 ? negative : positive),
+                pointBorderWidth: 1.5,
+                spanGaps: true
+              }]
+            },
+            options:{
+              responsive:true,
+              maintainAspectRatio:false,
+              plugins:{ legend:{ display:false } },
+              scales:{
+                x:{
+                  type: 'linear',
+                  min: labels.length ? 0 : undefined,
+                  max: labels.length ? labels.length - 1 : undefined,
+                  offset: false,
+                  ticks:{
+                    stepSize: 1,
+                    color:axisColor,
+                    callback: (value) => {
+                      const index = Number(value);
+                      return Number.isInteger(index) && labels[index] ? labels[index] : '';
+                    }
+                  },
+                  grid:{ color:axisColor+'22' }
                 },
-                grid:{ color:axisColor+'22' }
-              },
-              y:{
-                min:-5,
-                max:10,
-                ticks:{
-                  color: context => (context.tick.value < 0 ? negative : axisColor)
-                },
-                grid:{
-                  color: context => {
-                    if (context.tick.value === 0) return axisColor + '55';
-                    return context.tick.value < 0 ? negative + '22' : axisColor + '22';
-                  }
+                y:{
+                  min:-5,
+                  max:10,
+                  ticks:{ color:axisColor },
+                  grid:{ color:axisColor+'22' }
                 }
               }
             }
-          }
-        });
+          });
+          setChartNote(id, data.length ? '' : 'Aucune journée enregistrée pour ce mois sur ce navigateur.');
+        } catch (error) {
+          console.error('Erreur graphique:', error);
+          drawFallbackLineChart(canvas, data, labels, axisColor, primary, positive, negative);
+          setChartNote(id, data.length ? '' : 'Aucune journée enregistrée pour ce mois sur ce navigateur.');
+        }
       }
 
       makeChart('chartActivites', series.activites);
@@ -1165,7 +1318,7 @@
       } else {
         historyRecords.slice().reverse().slice(0, 10).forEach(rec => {
           const item=document.createElement('div'); item.className='history-item';
-          const totalScore = rec.total ?? 0;
+          const totalScore = coalesce(rec.total, 0);
           item.innerHTML=`<div><strong>${formatShortDate(rec.date)}</strong><span class="history-meta">Score ${signed(totalScore)}</span></div>`;
           historyListEl.appendChild(item);
         });
@@ -1240,28 +1393,33 @@
           historyRecords = mergeRecords(historyRecords, incoming);
           renderHistory();
           document.getElementById('captureStatus').textContent='JSON importé et fusionné avec l’historique existant.';
-        } catch {
+        } catch (error) {
+          console.error('Erreur import JSON :', error);
           document.getElementById('captureStatus').textContent='Le fichier JSON est invalide.';
         }
       };
       reader.readAsText(file, 'utf-8');
     }
 
-    async function captureAsImage() {
+    function captureAsImage() {
       const status=document.getElementById('captureStatus'); status.textContent='Création de la capture…';
       const zone=document.getElementById('captureZone');
-      try {
-        const canvas=await html2canvas(zone, { backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--color-bg').trim(), scale:2, useCORS:true });
-        canvas.toBlob(blob => {
-          if (!blob) { status.textContent='Impossible de générer l’image.'; return; }
-          const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`bilan-quotidien-${formatFileDate()}.png`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); status.textContent='Capture téléchargée.';
-        }, 'image/png');
-      } catch { status.textContent='La capture a échoué dans ce navigateur.'; }
+      html2canvas(zone, { backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--color-bg').trim(), scale:2, useCORS:true })
+        .then(canvas => {
+          canvas.toBlob(blob => {
+            if (!blob) { status.textContent='Impossible de générer l’image.'; return; }
+            const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`bilan-quotidien-${formatFileDate()}.png`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); status.textContent='Capture téléchargée.';
+          }, 'image/png');
+        })
+        .catch(error => {
+          console.error('Erreur capture:', error);
+          status.textContent='La capture a échoué dans ce navigateur.';
+        });
     }
 
     function renderAll() { renderActivities(); renderFatigue(); renderBody(); renderEmotions(); updateSummary(); }
 
-    async function exportToPDF(targetDate = selectedDateTime) {
+    function exportToPDF(targetDate = selectedDateTime) {
       const status = document.getElementById('captureStatus');
       const chosenDate = new Date(targetDate);
       const pdfFileName = `bilan-quotidien du ${formatPdfFileDate(chosenDate)}`;
@@ -1271,7 +1429,7 @@
       const currentDayKey = dayKeyFromISO(selectedDateTime.toISOString());
       const chosenDayKey = dayKeyFromISO(chosenDate.toISOString());
       const savedRecord = getRecordForDay(chosenDate);
-      let fallbackCleanupTimer = null;
+      let cleanupTimer = null;
 
       if (chosenDayKey === currentDayKey) {
         selectedDateTime = chosenDate;
@@ -1285,47 +1443,66 @@
         return;
       }
 
-      const handleWindowFocus = () => {
-        setTimeout(() => {
-          if (document.body.classList.contains('printing-pdf')) cleanupPrintMode();
-        }, 300);
-      };
-
       const cleanupPrintMode = () => {
-        if (fallbackCleanupTimer) {
-          clearTimeout(fallbackCleanupTimer);
-          fallbackCleanupTimer = null;
+        if (cleanupTimer) {
+          clearTimeout(cleanupTimer);
+          cleanupTimer = null;
         }
         document.body.classList.remove('printing-pdf');
         document.title = originalPageTitle;
         if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
         restoreUiSnapshot(snapshot);
         window.removeEventListener('afterprint', cleanupPrintMode);
-        window.removeEventListener('focus', handleWindowFocus);
       };
 
       document.body.classList.add('printing-pdf');
       document.title = pdfFileName;
       if (pageTitleEl) pageTitleEl.textContent = pdfFileName;
-      status.textContent = 'Préparation de l’impression...';
+      void document.body.offsetHeight;
 
-      window.addEventListener('afterprint', cleanupPrintMode, { once: true });
-      window.addEventListener('focus', handleWindowFocus, { once: true });
-      fallbackCleanupTimer = setTimeout(() => {
-        if (document.body.classList.contains('printing-pdf')) cleanupPrintMode();
-      }, 15000);
+      status.textContent = 'Préparation du PDF...';
 
-      try {
-        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-        await new Promise(resolve => setTimeout(resolve, 120));
-        void document.body.offsetHeight;
-        window.print();
-        status.textContent = 'Boîte d’impression ouverte.';
-      } catch (error) {
-        console.error('Erreur impression:', error);
-        status.textContent = 'Impossible d’ouvrir la boîte d’impression.';
-        cleanupPrintMode();
+      if (typeof window.html2pdf === 'function') {
+        const exportRoot = document.querySelector('main.wrap') || document.body;
+        return window.html2pdf().set({
+          margin: [8, 8, 10, 8],
+          filename: `${pdfFileName}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--color-bg').trim() || '#ffffff',
+            scrollY: 0,
+            windowWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth)
+          },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: { mode: ['css', 'legacy'] }
+        }).from(exportRoot).save().then(() => {
+          status.textContent = 'PDF enregistré.';
+          cleanupPrintMode();
+        }).catch(error => {
+          console.error('Erreur export PDF:', error);
+          status.textContent = 'Impossible d’enregistrer le PDF sur ce navigateur.';
+          cleanupPrintMode();
+        });
       }
+
+      if (typeof window.print === 'function') {
+        status.textContent = 'Boîte d’impression ouverte.';
+        window.addEventListener('afterprint', cleanupPrintMode, { once: true });
+        cleanupTimer = setTimeout(cleanupPrintMode, 15000);
+        try {
+          window.print();
+        } catch (error) {
+          console.error('Erreur impression:', error);
+          status.textContent = 'Impossible d’enregistrer le PDF sur ce navigateur.';
+          cleanupPrintMode();
+        }
+        return;
+      }
+
+      status.textContent = 'Impossible d’enregistrer le PDF sur ce navigateur.';
+      cleanupPrintMode();
     }
 
     function exportJsonData() {
@@ -1366,7 +1543,8 @@
           renderAll();
           renderHistory();
           document.getElementById('captureStatus').textContent='JSON importé et fusionné avec l\'historique existant.';
-        } catch {
+        } catch (error) {
+          console.error('Erreur import JSON :', error);
           document.getElementById('captureStatus').textContent='Le fichier JSON est invalide.';
         }
       };
@@ -1565,10 +1743,16 @@
     document.getElementById('userLastName').value = userLastName;
     populateSelect('negativeSelect', negativeEmotions, 'negativeEmotions');
     populateSelect('positiveSelect', positiveEmotions, 'positiveEmotions');
-    renderAll();
-    renderHistory();
-    updateLastSaveText();
     showPrivacyNoticeIfNeeded();
+
+    try {
+      renderAll();
+      renderHistory();
+      updateLastSaveText();
+    } catch (error) {
+      console.error('Erreur d\'initialisation :', error);
+      document.getElementById('captureStatus').textContent = 'Le bilan reste utilisable, mais certains éléments visuels de ce navigateur n’ont pas pu être chargés.';
+    }
   </script>
 </body>
 </html>
