@@ -300,22 +300,30 @@
         transform: none !important;
         transform-origin: top center !important;
       }
-      @supports not (zoom: 0.7) {
+      @supports not (zoom: 0.8) {
+        html {
+          font-size: 80% !important;
+        }
         body.printing-pdf .wrap {
           width: 100% !important;
-          margin: 0 !important;
-          transform: translateY(-2mm) scale(0.7) !important;
+          margin: -2mm 0 0 0 !important;
+          transform: none !important;
         }
       }
+      #captureZone,
       body.printing-pdf #captureZone {
         gap: 0.45rem !important;
         break-after: page;
         page-break-after: always;
       }
+      .panel,
       body.printing-pdf .panel {
-        padding: 0.7rem !important;
         box-shadow: none !important;
       }
+      body.printing-pdf .panel {
+        padding: 0.7rem !important;
+      }
+      .section-title,
       body.printing-pdf .section-title {
         margin-bottom: 0.45rem !important;
       }
@@ -326,21 +334,23 @@
         box-shadow: none !important;
         font-weight: 700 !important;
       }
-      body.printing-pdf .toolbar,
-      body.printing-pdf .date-help,
-      body.printing-pdf .date-input,
-      body.printing-pdf .help-trigger,
-      body.printing-pdf .help-popover,
-      body.printing-pdf .chart-controls,
-      body.printing-pdf .chip-add-btn,
-      body.printing-pdf .actions-layout,
-      body.printing-pdf #actionsPanel,
-      body.printing-pdf #captureStatus,
-      body.printing-pdf #lastSaveStatus,
-      body.printing-pdf #dataFileInput,
-      body.printing-pdf .modal-overlay {
+      .toolbar,
+      .date-help,
+      .date-input,
+      .help-trigger,
+      .help-popover,
+      .chart-controls,
+      .chip-add-btn,
+      .actions-layout,
+      #actionsPanel,
+      #captureStatus,
+      #lastSaveStatus,
+      #dataFileInput,
+      .modal-overlay {
         display: none !important;
       }
+      .chart-card,
+      .history-item,
       body.printing-pdf .chart-card,
       body.printing-pdf .history-item {
         break-inside: avoid;
@@ -1285,12 +1295,6 @@
         return;
       }
 
-      const handleWindowFocus = () => {
-        setTimeout(() => {
-          if (document.body.classList.contains('printing-pdf')) cleanupPrintMode();
-        }, 300);
-      };
-
       const cleanupPrintMode = () => {
         if (fallbackCleanupTimer) {
           clearTimeout(fallbackCleanupTimer);
@@ -1301,7 +1305,6 @@
         if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
         restoreUiSnapshot(snapshot);
         window.removeEventListener('afterprint', cleanupPrintMode);
-        window.removeEventListener('focus', handleWindowFocus);
       };
 
       document.body.classList.add('printing-pdf');
@@ -1310,10 +1313,9 @@
       status.textContent = 'Préparation de l’impression...';
 
       window.addEventListener('afterprint', cleanupPrintMode, { once: true });
-      window.addEventListener('focus', handleWindowFocus, { once: true });
       fallbackCleanupTimer = setTimeout(() => {
         if (document.body.classList.contains('printing-pdf')) cleanupPrintMode();
-      }, 15000);
+      }, 30000);
 
       try {
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
