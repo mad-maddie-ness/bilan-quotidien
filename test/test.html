@@ -264,6 +264,41 @@
     .chart-controls button:hover { background: var(--color-surface-2); }
     .chart-controls .current-month { font-weight: 600; }
     .hidden { display:none; }
+
+    @media print {
+      @page { size: A4; margin: 12mm; }
+      html, body {
+        background: #fff !important;
+        color: #000 !important;
+        overflow: visible !important;
+      }
+      body.printing-pdf .wrap {
+        max-width: none !important;
+        width: 100% !important;
+        padding: 0 !important;
+      }
+      body.printing-pdf .toolbar,
+      body.printing-pdf .date-help,
+      body.printing-pdf .date-input,
+      body.printing-pdf .help-trigger,
+      body.printing-pdf .help-popover,
+      body.printing-pdf .chart-controls,
+      body.printing-pdf .chip-add-btn,
+      body.printing-pdf .actions-layout,
+      body.printing-pdf #captureStatus,
+      body.printing-pdf #lastSaveStatus,
+      body.printing-pdf #dataFileInput,
+      body.printing-pdf .modal-overlay {
+        display: none !important;
+      }
+      body.printing-pdf .panel,
+      body.printing-pdf .chart-card,
+      body.printing-pdf .history-item {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        box-shadow: none !important;
+      }
+    }
     
     /* Tablette et petits écrans */
     @media (max-width: 767px) {
@@ -945,149 +980,38 @@
 
     function renderAll() { renderActivities(); renderFatigue(); renderBody(); renderEmotions(); updateSummary(); }
 
-    async function exportToPDF() {
-      const status=document.getElementById('captureStatus');
-      const titleText = document.querySelector('.title')?.textContent || 'Bilan quotidien';
-      const nameText = [userFirstName, userLastName].filter(Boolean).join(' ').trim();
+    function exportToPDF() {
+      const status = document.getElementById('captureStatus');
       const pdfFileName = `bilan-quotidien du ${formatPdfFileDate(selectedDateTime)}`;
-
-      const captureClone = document.getElementById('captureZone').cloneNode(true);
-      captureClone.querySelectorAll('.toolbar, .date-help, .date-input, .help-trigger, .help-popover, .chart-controls, .chip-add-btn').forEach(el => el.remove());
-
-      const graphsClone = document.querySelector('.charts-column')?.closest('section.panel')?.cloneNode(true);
-      graphsClone?.querySelector('.chart-controls')?.remove();
-      graphsClone?.querySelectorAll('.help-trigger, .help-popover').forEach(el => el.remove());
-
-      [captureClone, graphsClone].forEach(root => {
-        root?.querySelectorAll('.panel, .chart-card, .history-item').forEach(el => {
-          el.style.breakInside = 'avoid';
-          el.style.pageBreakInside = 'avoid';
-          el.style.boxShadow = 'none';
-        });
-      });
-
-      const pdfContainer = document.createElement('div');
-      pdfContainer.style.position = 'fixed';
-      pdfContainer.style.left = '-10000px';
-      pdfContainer.style.top = '0';
-      pdfContainer.style.width = '190mm';
-      pdfContainer.style.padding = '0';
-      pdfContainer.style.background = '#ffffff';
-      pdfContainer.style.color = '#000000';
-      pdfContainer.style.zIndex = '-1';
-      pdfContainer.style.zoom = '0.8';
-
-      const header = document.createElement('div');
-      header.style.marginBottom = '10mm';
-      header.innerHTML = `
-        <h1 style="margin:0 0 2mm 0; font-size:1.45rem; font-weight:700;">${titleText}</h1>
-        ${nameText ? `<p style="margin:0; font-size:0.95rem; color:#444;">${nameText}</p>` : ''}
-      `;
-
-      pdfContainer.appendChild(header);
-      pdfContainer.appendChild(captureClone);
-      if (graphsClone) pdfContainer.appendChild(graphsClone);
-      document.body.appendChild(pdfContainer);
-
-      status.textContent='Préparation de la boîte d’impression...';
-      const headStyles = [...document.querySelectorAll('head style, head link[rel="stylesheet"]')]
-        .map(el => el.outerHTML)
-        .join('');
-
-      const printExtraStyle = `
-        <style>
-          @page { size: A4; margin: 12mm; }
-          body { margin: 0; font-family: var(--font-body), Arial, sans-serif; background: #fff; color: #000; zoom: 0.8; }
-          .print-wrap { max-width: 100%; }
-          .print-header { margin-bottom: 1rem; }
-          .print-title { margin: 0 0 0.2rem 0; font-size: 1.45rem; font-weight: 700; }
-          .print-name { margin: 0; font-size: 0.95rem; color: #444; }
-          .panel, .chart-card, .history-item { break-inside: avoid; page-break-inside: avoid; box-shadow: none !important; }
-          .toolbar, .date-help, .date-input, .help-trigger, .help-popover, .chart-controls, .chip-add-btn { display: none !important; }
-        </style>
-      `;
-
-      const nameHtml = nameText ? `<p class="print-name">${nameText}</p>` : '';
       const originalPageTitle = document.title;
       const pageTitleEl = document.querySelector('title');
+
+      const cleanupPrintMode = () => {
+        document.body.classList.remove('printing-pdf');
+        document.title = originalPageTitle;
+        if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
+        window.removeEventListener('afterprint', cleanupPrintMode);
+      };
+
+      document.body.classList.add('printing-pdf');
       document.title = pdfFileName;
       if (pageTitleEl) pageTitleEl.textContent = pdfFileName;
-      const html = `
-        <html>
-          <head>
-            <title>${pdfFileName}</title>
-            ${headStyles}
-            ${printExtraStyle}
-          </head>
-          <body>
-            <div class="print-wrap">
-              <header class="print-header">
-                <h1 class="print-title">${titleText}</h1>
-                ${nameHtml}
-              </header>
-              ${captureClone.outerHTML}
-              ${graphsClone ? graphsClone.outerHTML : ''}
-            </div>
-          </body>
-        </html>
-      `;
+      status.textContent = 'Ouverture de la boîte d’impression...';
 
-      const printFrame = document.createElement('iframe');
-      printFrame.setAttribute('aria-hidden', 'true');
-      printFrame.style.position = 'fixed';
-      printFrame.style.width = '0';
-      printFrame.style.height = '0';
-      printFrame.style.right = '0';
-      printFrame.style.bottom = '0';
-      printFrame.style.border = '0';
-      printFrame.style.opacity = '0';
-      document.body.appendChild(printFrame);
+      window.addEventListener('afterprint', cleanupPrintMode, { once: true });
 
-      const frameWindow = printFrame.contentWindow;
-      const frameDoc = frameWindow?.document;
-      if (!frameWindow || !frameDoc) {
-        document.title = originalPageTitle;
-        if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
-        pdfContainer.remove();
-        printFrame.remove();
-        status.textContent='Impossible d’ouvrir la boîte d’impression.';
-        return;
+      try {
+        void document.body.offsetHeight;
+        window.print();
+        status.textContent = 'Boîte d’impression ouverte.';
+      } catch (error) {
+        console.error('Erreur impression:', error);
+        status.textContent = 'Impossible d’ouvrir la boîte d’impression.';
+      } finally {
+        setTimeout(() => {
+          if (document.body.classList.contains('printing-pdf')) cleanupPrintMode();
+        }, 800);
       }
-
-      const cleanupPrintFrame = () => {
-        document.title = originalPageTitle;
-        if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
-        pdfContainer.remove();
-        setTimeout(() => printFrame.remove(), 300);
-      };
-
-      let printed = false;
-      const launchPrint = () => {
-        if (printed) return;
-        printed = true;
-        frameWindow.focus();
-        frameWindow.print();
-        status.textContent='Boîte d’impression ouverte.';
-      };
-
-      frameWindow.onafterprint = () => {
-        cleanupPrintFrame();
-      };
-
-      frameDoc.open();
-      frameDoc.write(html);
-      frameDoc.close();
-      frameDoc.title = pdfFileName;
-      printFrame.title = pdfFileName;
-
-      printFrame.onload = () => setTimeout(launchPrint, 150);
-      setTimeout(launchPrint, 400);
-      setTimeout(() => {
-        if (document.title === pdfFileName) {
-          document.title = originalPageTitle;
-          if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
-        }
-      }, 4000);
     }
 
     function exportJsonData() {
