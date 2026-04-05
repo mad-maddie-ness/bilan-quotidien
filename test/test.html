@@ -308,9 +308,16 @@
     .pdf-export-meta {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.4rem 1rem;
+      gap: 0.2rem 0.9rem;
       color: var(--color-text-muted);
       font-size: var(--text-sm);
+    }
+    .pdf-export-meta span {
+      padding: 0 !important;
+      margin: 0 !important;
+      border: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
     }
 
     @media print {
@@ -1609,16 +1616,23 @@
       const meta = document.createElement('div');
       meta.className = 'pdf-export-meta';
 
-      const firstName = document.createElement('span');
-      firstName.textContent = userFirstName || '—';
+      const firstNameValue = (userFirstName || '').trim();
+      const lastNameValue = (userLastName || '').trim();
 
-      const lastName = document.createElement('span');
-      lastName.textContent = userLastName || '—';
+      if (firstNameValue) {
+        const firstName = document.createElement('span');
+        firstName.textContent = firstNameValue;
+        meta.appendChild(firstName);
+      }
 
-      meta.appendChild(firstName);
-      meta.appendChild(lastName);
+      if (lastNameValue) {
+        const lastName = document.createElement('span');
+        lastName.textContent = lastNameValue;
+        meta.appendChild(lastName);
+      }
+
       section.appendChild(title);
-      section.appendChild(meta);
+      if (meta.childNodes.length) section.appendChild(meta);
       return section;
     }
 
