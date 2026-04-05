@@ -1510,7 +1510,30 @@
       if (pageTitleEl) pageTitleEl.textContent = pdfFileName;
       void document.body.offsetHeight;
 
-      status.textContent = 'Préparation du PDF...';
+      status.textContent = 'Préparation de l’impression...';
+
+      if (typeof window.print === 'function') {
+        status.textContent = 'Boîte d’impression ouverte.';
+        window.addEventListener('afterprint', cleanupPrintMode, { once: true });
+        cleanupTimer = setTimeout(cleanupPrintMode, 15000);
+
+        try {
+          setTimeout(() => {
+            try {
+              window.print();
+            } catch (error) {
+              console.error('Erreur impression:', error);
+              status.textContent = 'Impossible d’ouvrir la boîte d’impression sur ce navigateur.';
+              cleanupPrintMode();
+            }
+          }, 120);
+        } catch (error) {
+          console.error('Erreur impression:', error);
+          status.textContent = 'Impossible d’ouvrir la boîte d’impression sur ce navigateur.';
+          cleanupPrintMode();
+        }
+        return;
+      }
 
       if (typeof window.html2pdf === 'function') {
         const exportRoot = document.querySelector('main.wrap') || document.body;
@@ -1535,20 +1558,6 @@
           status.textContent = 'Impossible d’enregistrer le PDF sur ce navigateur.';
           cleanupPrintMode();
         });
-      }
-
-      if (typeof window.print === 'function') {
-        status.textContent = 'Boîte d’impression ouverte.';
-        window.addEventListener('afterprint', cleanupPrintMode, { once: true });
-        cleanupTimer = setTimeout(cleanupPrintMode, 15000);
-        try {
-          window.print();
-        } catch (error) {
-          console.error('Erreur impression:', error);
-          status.textContent = 'Impossible d’enregistrer le PDF sur ce navigateur.';
-          cleanupPrintMode();
-        }
-        return;
       }
 
       status.textContent = 'Impossible d’enregistrer le PDF sur ce navigateur.';
