@@ -298,6 +298,8 @@
       gap: 0.45rem !important;
     }
     body.printing-pdf .topbar {
+      flex-direction: row !important;
+      align-items: flex-start !important;
       justify-content: center !important;
       margin-bottom: 0.35rem !important;
     }
@@ -312,6 +314,36 @@
     body.printing-pdf .name-fields {
       display: flex;
       justify-content: center;
+    }
+    body.printing-pdf .date-row {
+      flex-direction: row !important;
+      justify-content: center !important;
+      align-items: center !important;
+      gap: 0.35rem !important;
+    }
+    body.printing-pdf .select-row {
+      flex-direction: row !important;
+      align-items: stretch !important;
+      gap: 0.5rem !important;
+    }
+    body.printing-pdf .select-group {
+      width: auto !important;
+      min-width: 0 !important;
+      flex: 1 1 0;
+    }
+    body.printing-pdf .body-containers {
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: var(--space-3) !important;
+    }
+    body.printing-pdf .fatigue-grid {
+      justify-content: center !important;
+      overflow: visible !important;
+    }
+    body.printing-pdf .summary-grid {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      justify-content: center !important;
+      gap: clamp(0.25rem, 0.9vw, 0.5rem) !important;
     }
     body.printing-pdf .toolbar,
     body.printing-pdf .date-help,
@@ -1658,7 +1690,7 @@
       const chosenDayKey = dayKeyFromISO(chosenDate.toISOString());
       const savedRecord = getRecordForDay(chosenDate);
       let cleanupTimer = null;
-      const useCompactPrintLayout = usesCompactPrintLayout();
+      const useCompactPrintLayout = false;
 
       if (chosenDayKey === currentDayKey) {
         selectedDateTime = chosenDate;
