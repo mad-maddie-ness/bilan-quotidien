@@ -284,196 +284,6 @@
     .chart-controls .current-month { font-weight: 600; }
     .hidden { display:none; }
 
-    body.printing-pdf {
-      background: #fff !important;
-      color: #000 !important;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-    body.printing-pdf .wrap {
-      width: 170mm !important;
-      max-width: 170mm !important;
-      margin: 0 auto !important;
-      padding: 0 !important;
-      gap: 0.45rem !important;
-    }
-    body.printing-pdf .topbar {
-      flex-direction: row !important;
-      align-items: flex-start !important;
-      justify-content: center !important;
-      margin-bottom: 0.35rem !important;
-    }
-    body.printing-pdf .topbar > div {
-      width: 100%;
-      text-align: center;
-    }
-    body.printing-pdf .title {
-      font-size: 1.8rem !important;
-      margin-bottom: 0.25rem !important;
-    }
-    body.printing-pdf .name-fields {
-      display: flex;
-      justify-content: center;
-    }
-    body.printing-pdf .date-row {
-      flex-direction: row !important;
-      justify-content: center !important;
-      align-items: center !important;
-      gap: 0.35rem !important;
-    }
-    body.printing-pdf .select-row {
-      flex-direction: row !important;
-      align-items: stretch !important;
-      gap: 0.5rem !important;
-    }
-    body.printing-pdf .select-group {
-      width: auto !important;
-      min-width: 0 !important;
-      flex: 1 1 0;
-    }
-    body.printing-pdf .body-containers {
-      grid-template-columns: repeat(2, 1fr) !important;
-      gap: var(--space-3) !important;
-    }
-    body.printing-pdf .fatigue-grid {
-      justify-content: center !important;
-      overflow: visible !important;
-    }
-    body.printing-pdf .summary-grid {
-      display: flex !important;
-      flex-wrap: wrap !important;
-      justify-content: center !important;
-      gap: clamp(0.25rem, 0.9vw, 0.5rem) !important;
-    }
-    body.printing-pdf .toolbar,
-    body.printing-pdf .date-help,
-    body.printing-pdf .date-input,
-    body.printing-pdf .help-trigger,
-    body.printing-pdf .help-popover,
-    body.printing-pdf .chart-controls,
-    body.printing-pdf .chip-add-btn,
-    body.printing-pdf .actions-layout,
-    body.printing-pdf #actionsPanel,
-    body.printing-pdf #captureStatus,
-    body.printing-pdf #lastSaveStatus,
-    body.printing-pdf #dataFileInput,
-    body.printing-pdf .modal-overlay {
-      display: none !important;
-    }
-    body.printing-pdf #captureZone {
-      min-height: 225mm;
-      gap: 0.45rem !important;
-      align-content: center;
-      break-after: page;
-      page-break-after: always;
-    }
-    body.printing-pdf #captureZone > .panel,
-    body.printing-pdf #captureZone > .date-tools {
-      width: 100%;
-      max-width: 170mm;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    body.printing-pdf #chartsPanel {
-      break-before: page;
-      page-break-before: always;
-      min-height: 225mm;
-    }
-    body.printing-pdf #chartsPanel .section-title {
-      text-align: center;
-      margin-bottom: 0.35rem !important;
-    }
-    body.printing-pdf #chartsPanel .charts-column {
-      width: 100%;
-      max-width: 170mm;
-      margin: 0 auto;
-      gap: 0.3rem !important;
-    }
-    body.printing-pdf #chartsPanel .chart-card {
-      width: 100% !important;
-      max-width: none !important;
-      margin: 0 auto !important;
-      padding: 0.45rem !important;
-      box-shadow: none !important;
-    }
-    body.printing-pdf #chartsPanel .chart-wrap {
-      height: 32mm !important;
-    }
-    body.printing-pdf.mobile-print-layout {
-      --text-xs: 0.52rem;
-      --text-sm: 0.6rem;
-      --text-base: 0.68rem;
-      --text-lg: 0.8rem;
-      --text-xl: 1.1rem;
-      --space-1: 0.08rem; --space-2: 0.16rem; --space-3: 0.24rem; --space-4: 0.34rem; --space-5: 0.45rem; --space-6: 0.58rem; --space-8: 0.72rem;
-    }
-    body.printing-pdf.mobile-print-layout .wrap {
-      gap: 0.22rem !important;
-    }
-    body.printing-pdf.mobile-print-layout .panel {
-      padding: 0.32rem !important;
-      border-radius: 0.65rem !important;
-    }
-    body.printing-pdf.mobile-print-layout .section-title {
-      margin-bottom: 0.18rem !important;
-    }
-    body.printing-pdf.mobile-print-layout .date-row {
-      justify-content: center !important;
-      gap: 0.2rem !important;
-    }
-    body.printing-pdf.mobile-print-layout .select-row {
-      flex-direction: row !important;
-      align-items: flex-start !important;
-      gap: 0.22rem !important;
-    }
-    body.printing-pdf.mobile-print-layout .select-group {
-      width: auto !important;
-      min-width: 0 !important;
-      flex: 1 1 0;
-    }
-    body.printing-pdf.mobile-print-layout .body-containers {
-      grid-template-columns: repeat(2, 1fr) !important;
-      gap: 0.22rem !important;
-    }
-    body.printing-pdf.mobile-print-layout .chips,
-    body.printing-pdf.mobile-print-layout .selected-list,
-    body.printing-pdf.mobile-print-layout .summary-grid {
-      gap: 0.18rem !important;
-    }
-    body.printing-pdf.mobile-print-layout .chip,
-    body.printing-pdf.mobile-print-layout .pill {
-      min-height: 20px !important;
-      padding: 0.18rem 0.38rem !important;
-      font-size: 0.55rem !important;
-    }
-    body.printing-pdf.mobile-print-layout .fatigue-btn {
-      min-height: 20px !important;
-      padding: 0.08rem 0.24rem !important;
-      font-size: 0.52rem !important;
-    }
-    body.printing-pdf.mobile-print-layout .kpi {
-      min-width: 0 !important;
-      max-width: none !important;
-      padding: 0.16rem 0.2rem !important;
-    }
-    body.printing-pdf.mobile-print-layout #captureZone {
-      min-height: auto !important;
-      gap: 0.22rem !important;
-      align-content: start !important;
-    }
-    body.printing-pdf.mobile-print-layout #chartsPanel {
-      min-height: auto !important;
-    }
-    body.printing-pdf.mobile-print-layout #chartsPanel .charts-column {
-      gap: 0.2rem !important;
-    }
-    body.printing-pdf.mobile-print-layout #chartsPanel .chart-card {
-      padding: 0.3rem !important;
-    }
-    body.printing-pdf.mobile-print-layout #chartsPanel .chart-wrap {
-      height: 26mm !important;
-    }
-
     @media print {
       @page { size: A4; margin: 15mm 20mm 15mm 20mm; }
       html, body {
@@ -507,6 +317,19 @@
         gap: 0.45rem !important;
         break-after: page;
         page-break-after: always;
+      }
+      body.printing-pdf #chartsPanel {
+        break-before: page;
+        page-break-before: always;
+      }
+      body.printing-pdf #actionsPanel {
+        display: none !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
       }
       body.printing-pdf .panel {
         padding: 0.7rem !important;
@@ -542,22 +365,6 @@
         break-inside: avoid;
         page-break-inside: avoid;
         box-shadow: none !important;
-      }
-      body.printing-pdf.mobile-print-layout .wrap {
-        width: 170mm !important;
-        max-width: 170mm !important;
-        margin: 0 auto !important;
-        zoom: 0.84 !important;
-        transform: none !important;
-      }
-      @supports not (zoom: 0.84) {
-        body.printing-pdf.mobile-print-layout .wrap {
-          width: 200mm !important;
-          max-width: 200mm !important;
-          margin: 0 auto !important;
-          transform: scale(0.84) !important;
-          transform-origin: top center !important;
-        }
       }
     }
     
@@ -1690,7 +1497,7 @@
       const chosenDayKey = dayKeyFromISO(chosenDate.toISOString());
       const savedRecord = getRecordForDay(chosenDate);
       let cleanupTimer = null;
-      const useCompactPrintLayout = false;
+      let hasCleanedUp = false;
 
       if (chosenDayKey === currentDayKey) {
         selectedDateTime = chosenDate;
@@ -1704,7 +1511,21 @@
         return;
       }
 
+      const handleWindowFocus = () => {
+        setTimeout(() => {
+          if (document.body.classList.contains('printing-pdf')) cleanupPrintMode();
+        }, 400);
+      };
+
+      const handleVisibilityReturn = () => {
+        if (document.visibilityState === 'visible' && document.body.classList.contains('printing-pdf')) {
+          setTimeout(cleanupPrintMode, 400);
+        }
+      };
+
       const cleanupPrintMode = () => {
+        if (hasCleanedUp) return;
+        hasCleanedUp = true;
         if (cleanupTimer) {
           clearTimeout(cleanupTimer);
           cleanupTimer = null;
@@ -1715,11 +1536,12 @@
         if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
         restoreUiSnapshot(snapshot);
         window.removeEventListener('afterprint', cleanupPrintMode);
+        window.removeEventListener('focus', handleWindowFocus);
+        document.removeEventListener('visibilitychange', handleVisibilityReturn);
       };
 
       document.body.classList.add('printing-pdf');
-      if (useCompactPrintLayout) document.body.classList.add('mobile-print-layout');
-      else document.body.classList.remove('mobile-print-layout');
+      document.body.classList.remove('mobile-print-layout');
       document.title = pdfFileName;
       if (pageTitleEl) pageTitleEl.textContent = pdfFileName;
       void document.body.offsetHeight;
@@ -1729,7 +1551,11 @@
       if (typeof window.print === 'function') {
         status.textContent = 'Boîte d’impression ouverte.';
         window.addEventListener('afterprint', cleanupPrintMode, { once: true });
-        cleanupTimer = setTimeout(cleanupPrintMode, 15000);
+        window.addEventListener('focus', handleWindowFocus, { once: true });
+        document.addEventListener('visibilitychange', handleVisibilityReturn);
+        cleanupTimer = setTimeout(() => {
+          if (document.body.classList.contains('printing-pdf')) cleanupPrintMode();
+        }, 120000);
 
         try {
           setTimeout(() => {
