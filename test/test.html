@@ -1086,6 +1086,13 @@
       note.textContent = message;
     }
 
+    function prefersCanvasCharts() {
+      if (typeof window.matchMedia === 'function') {
+        if (window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(hover: none)').matches) return true;
+      }
+      return window.innerWidth <= 767;
+    }
+
     function drawFallbackLineChart(canvas, data, labels, axisColor, primary, positive, negative) {
       const ctx = canvas && canvas.getContext ? canvas.getContext('2d') : null;
       if (!ctx) return false;
@@ -1115,9 +1122,15 @@
         return padding.left + (index / (count - 1)) * innerWidth;
       };
       const yForValue = value => padding.top + ((maxY - value) / (maxY - minY)) * innerHeight;
+      const zeroY = yForValue(0);
+
+      ctx.fillStyle = positive + '12';
+      ctx.fillRect(padding.left, padding.top, innerWidth, Math.max(0, zeroY - padding.top));
+      ctx.fillStyle = negative + '12';
+      ctx.fillRect(padding.left, zeroY, innerWidth, Math.max(0, height - padding.bottom - zeroY));
 
       ctx.lineWidth = 1;
-      ctx.strokeStyle = axisColor + '55';
+      ctx.strokeStyle = axisColor + '35';
       ctx.fillStyle = axisColor;
       ctx.font = '11px sans-serif';
 
@@ -1126,7 +1139,9 @@
         ctx.beginPath();
         ctx.moveTo(padding.left, y);
         ctx.lineTo(width - padding.right, y);
+        ctx.strokeStyle = tick === 0 ? axisColor + '70' : (tick < 0 ? negative + '25' : axisColor + '22');
         ctx.stroke();
+        ctx.fillStyle = tick < 0 ? negative : axisColor;
         ctx.fillText(String(tick), 4, y + 4);
       });
 
@@ -1138,6 +1153,7 @@
       ctx.stroke();
 
       if (labels && labels.length) {
+        ctx.fillStyle = axisColor;
         ctx.textAlign = 'center';
         labels.forEach((label, index) => {
           const x = xForIndex(index, labels.length);
@@ -1148,16 +1164,39 @@
 
       if (!data || !data.length) return true;
 
-      ctx.beginPath();
-      data.forEach((value, index) => {
-        const x = xForIndex(index, data.length);
-        const y = yForValue(value);
-        if (index === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.lineWidth = 2.5;
-      ctx.strokeStyle = primary;
-      ctx.stroke();
+      for (let index = 1; index < data.length; index += 1) {
+        const previousValue = data[index - 1];
+        const currentValue = data[index];
+        const x1 = xForIndex(index - 1, data.length);
+        const y1 = yForValue(previousValue);
+        const x2 = xForIndex(index, data.length);
+        const y2 = yForValue(currentValue);
+
+        ctx.lineWidth = 2.5;
+
+        if ((previousValue >= 0 && currentValue >= 0) || (previousValue <= 0 && currentValue <= 0)) {
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.strokeStyle = previousValue < 0 || currentValue < 0 ? negative : positive;
+          ctx.stroke();
+        } else {
+          const ratioToZero = (0 - previousValue) / (currentValue - previousValue);
+          const midX = x1 + (x2 - x1) * ratioToZero;
+
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(midX, zeroY);
+          ctx.strokeStyle = previousValue < 0 ? negative : positive;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(midX, zeroY);
+          ctx.lineTo(x2, y2);
+          ctx.strokeStyle = currentValue < 0 ? negative : positive;
+          ctx.stroke();
+        }
+      }
 
       data.forEach((value, index) => {
         const x = xForIndex(index, data.length);
@@ -1166,6 +1205,9 @@
         ctx.arc(x, y, 3.2, 0, Math.PI * 2);
         ctx.fillStyle = value < 0 ? negative : positive;
         ctx.fill();
+        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = primary;
+        ctx.stroke();
       });
 
       return true;
@@ -1203,7 +1245,7 @@
         total: filtered.map(r => coalesce(r.total, 0))
       };
 
-      if (typeof window.Chart !== 'function') {
+      if (prefersCanvasCharts() || typeof window.Chart !== 'function') {
         drawFallbackLineChart(document.getElementById('chartActivites'), series.activites, labels, axisColor, primary, positive, negative);
         drawFallbackLineChart(document.getElementById('chartFatigue'), series.fatigue, labels, axisColor, primary, positive, negative);
         drawFallbackLineChart(document.getElementById('chartEmotions'), series.emotions, labels, axisColor, primary, positive, negative);
@@ -1256,16 +1298,17 @@
               datasets:[{
                 data: splitSeries.points,
                 borderColor: primary,
-                backgroundColor: 'transparent',
-                fill: false,
-                borderWidth: 2.5,
+                backgroundColor: primary + '22',
+                fill: { target: 'origin', above: positive + '22', below: negative + '22' },
                 tension:.25,
                 pointRadius: context => (splitSeries.helperIndexes.has(context.dataIndex) ? 0 : 3),
                 pointHoverRadius: context => (splitSeries.helperIndexes.has(context.dataIndex) ? 0 : 4),
                 pointBackgroundColor: context => (context.raw.y < 0 ? negative : positive),
                 pointBorderColor: context => (context.raw.y < 0 ? negative : positive),
                 pointBorderWidth: 1.5,
-                spanGaps: true
+                segment: {
+                  borderColor: context => ((context.p0.parsed.y < 0 || context.p1.parsed.y < 0) ? negative : positive)
+                }
               }]
             },
             options:{
@@ -1291,8 +1334,15 @@
                 y:{
                   min:-5,
                   max:10,
-                  ticks:{ color:axisColor },
-                  grid:{ color:axisColor+'22' }
+                  ticks:{
+                    color: context => (context.tick.value < 0 ? negative : axisColor)
+                  },
+                  grid:{
+                    color: context => {
+                      if (context.tick.value === 0) return axisColor + '55';
+                      return context.tick.value < 0 ? negative + '22' : axisColor + '22';
+                    }
+                  }
                 }
               }
             }
