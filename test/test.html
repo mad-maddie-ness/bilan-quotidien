@@ -259,10 +259,17 @@
     .date-help { max-width: 180px; margin-left: 1.5rem; margin-bottom: 0.15rem; font-size: 10px; line-height: 1.35; color: var(--color-text-muted); margin-top: 0; text-align: justify; }
     .status { margin-top:.8rem; font-size: var(--text-sm); color: var(--color-text-muted); }
     .charts-column { display:flex; flex-direction:column; gap: var(--space-4); align-items:center; }
-    .chart-card { background: var(--color-surface-2); border-radius: var(--radius-xl); border:1px solid var(--color-border); padding: var(--space-4); box-sizing:border-box; width: 92%; max-width: 100%; margin: 0 auto; }
+    .chart-card { background: var(--color-surface-2); border-radius: var(--radius-xl); border:1px solid var(--color-border); padding: var(--space-4); box-sizing:border-box; width: 92%; max-width: 100%; margin: 0 auto; overflow: hidden; }
     .chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.75rem; }
     .chart-title { font-size: var(--text-sm); font-weight:600; }
-    .chart-wrap { position: relative; height: 220px; width: 100%; }
+    .chart-wrap { position: relative; height: 220px; width: 100%; overflow: hidden; }
+    .chart-wrap canvas {
+      display: block;
+      width: 100% !important;
+      max-width: 100% !important;
+      height: 100% !important;
+      max-height: 100% !important;
+    }
     .chart-empty-note {
       margin-top: 0.55rem;
       font-size: var(--text-xs);
@@ -365,6 +372,17 @@
         break-inside: avoid;
         page-break-inside: avoid;
         box-shadow: none !important;
+      }
+      body.printing-pdf .chart-card,
+      body.printing-pdf .chart-wrap {
+        overflow: hidden !important;
+      }
+      body.printing-pdf .chart-wrap canvas {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        max-height: 100% !important;
       }
     }
     
@@ -1486,6 +1504,31 @@
 
     function renderAll() { renderActivities(); renderFatigue(); renderBody(); renderEmotions(); updateSummary(); }
 
+    function refreshChartsForPrintMode() {
+      if (typeof window.requestAnimationFrame !== 'function') {
+        updateCharts();
+        return;
+      }
+
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          const chartIds = ['chartActivites', 'chartFatigue', 'chartEmotions', 'chartRessenti'];
+          let resized = false;
+
+          chartIds.forEach(id => {
+            const chart = charts[id];
+            if (chart && typeof chart.resize === 'function') {
+              resized = true;
+              chart.resize();
+              if (typeof chart.update === 'function') chart.update('none');
+            }
+          });
+
+          if (!resized) updateCharts();
+        });
+      });
+    }
+
     function exportToPDF(targetDate = selectedDateTime) {
       const status = document.getElementById('captureStatus');
       const chosenDate = new Date(targetDate);
@@ -1545,6 +1588,7 @@
       document.title = pdfFileName;
       if (pageTitleEl) pageTitleEl.textContent = pdfFileName;
       void document.body.offsetHeight;
+      refreshChartsForPrintMode();
 
       status.textContent = 'Préparation de l’impression...';
 
@@ -1560,6 +1604,7 @@
         try {
           setTimeout(() => {
             try {
+              refreshChartsForPrintMode();
               window.print();
             } catch (error) {
               console.error('Erreur impression:', error);
