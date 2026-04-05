@@ -348,6 +348,77 @@
         box-shadow: none !important;
       }
     }
+
+    .pdf-export-stage {
+      position: fixed;
+      left: -100000px;
+      top: 0;
+      width: 210mm;
+      padding: 15mm 20mm;
+      background: #fff;
+      color: #000;
+      z-index: -1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .pdf-export-stage .wrap {
+      max-width: none !important;
+      width: 100% !important;
+      padding: 0 !important;
+      margin: -2mm 0 0 0 !important;
+      zoom: 0.8;
+      transform-origin: top center !important;
+      background: #fff !important;
+    }
+    @supports not (zoom: 0.8) {
+      .pdf-export-stage .wrap {
+        width: 125% !important;
+        margin: 0 !important;
+        transform: scale(0.8) !important;
+        transform-origin: top center !important;
+      }
+    }
+    .pdf-export-stage #captureZone {
+      gap: 0.45rem !important;
+      margin-bottom: 8mm !important;
+    }
+    .pdf-export-stage .panel {
+      box-shadow: none !important;
+      padding: 0.7rem !important;
+    }
+    .pdf-export-stage .section-title {
+      margin-bottom: 0.45rem !important;
+    }
+    .pdf-export-stage .toolbar,
+    .pdf-export-stage .date-help,
+    .pdf-export-stage .date-input,
+    .pdf-export-stage .help-trigger,
+    .pdf-export-stage .help-popover,
+    .pdf-export-stage .chart-controls,
+    .pdf-export-stage .chip-add-btn,
+    .pdf-export-stage .actions-layout,
+    .pdf-export-stage #actionsPanel,
+    .pdf-export-stage #captureStatus,
+    .pdf-export-stage #lastSaveStatus,
+    .pdf-export-stage #dataFileInput,
+    .pdf-export-stage .modal-overlay {
+      display: none !important;
+    }
+    .pdf-export-stage .chart-card,
+    .pdf-export-stage .history-item {
+      break-inside: avoid;
+      page-break-inside: avoid;
+      box-shadow: none !important;
+    }
+    .pdf-export-stage .chart-wrap {
+      height: 220px !important;
+    }
+    .pdf-export-stage .pdf-chart-image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
     
     /* Tablette et petits écrans */
     @media (max-width: 767px) {
@@ -527,7 +598,7 @@
               <button class="help-trigger" type="button" aria-label="Aide pour Enregistrer en PDF">?</button>
               <button class="secondary-btn" type="button" id="savePdfBtn">Enregistrer en PDF</button>
             </div>
-            <div class="help-popover">Ouvre la boîte d’impression pour enregistrer ou imprimer le bilan et les graphiques.</div>
+            <div class="help-popover">Génère un PDF à la demande en conservant la même mise en page que l’affichage actuel.</div>
           </div>
           <div class="action-item">
             <div class="action-inline">
@@ -1261,17 +1332,16 @@
 
     function renderAll() { renderActivities(); renderFatigue(); renderBody(); renderEmotions(); updateSummary(); }
 
-    function exportToPDF(targetDate = selectedDateTime) {
+    async function exportToPDF(targetDate = selectedDateTime) {
       const status = document.getElementById('captureStatus');
       const chosenDate = new Date(targetDate);
-      const pdfFileName = `bilan-quotidien du ${formatPdfFileDate(chosenDate)}`;
-      const originalPageTitle = document.title;
-      const pageTitleEl = document.querySelector('title');
+      const pdfFileName = `bilan-quotidien du ${formatPdfFileDate(chosenDate)}.pdf`;
       const snapshot = createUiSnapshot();
       const currentDayKey = dayKeyFromISO(selectedDateTime.toISOString());
       const chosenDayKey = dayKeyFromISO(chosenDate.toISOString());
       const savedRecord = getRecordForDay(chosenDate);
-      let hasCleanedUp = false;
+      const jsPDF = window.jspdf?.jsPDF;
+      let exportStage = null;
 
       if (chosenDayKey === currentDayKey) {
         selectedDateTime = chosenDate;
@@ -1285,37 +1355,88 @@
         return;
       }
 
-      const cleanupPrintMode = () => {
-        if (hasCleanedUp) return;
-        hasCleanedUp = true;
-        document.body.classList.remove('printing-pdf');
-        document.title = originalPageTitle;
-        if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
-        restoreUiSnapshot(snapshot);
-        window.removeEventListener('afterprint', cleanupPrintMode);
-        window.removeEventListener('focus', handleWindowFocus);
-      };
-
-      const handleWindowFocus = () => {
-        setTimeout(cleanupPrintMode, 300);
-      };
-
-      document.body.classList.add('printing-pdf');
-      document.title = pdfFileName;
-      if (pageTitleEl) pageTitleEl.textContent = pdfFileName;
-      status.textContent = 'Ouverture de la boîte d’impression...';
-
-      window.addEventListener('afterprint', cleanupPrintMode, { once: true });
-      window.addEventListener('focus', handleWindowFocus, { once: true });
-
       try {
-        void document.body.offsetHeight;
-        window.print();
-        status.textContent = 'Boîte d’impression ouverte.';
+        if (!jsPDF) throw new Error('jsPDF indisponible');
+
+        status.textContent = 'Préparation du PDF...';
+        updateCharts();
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        await new Promise(resolve => setTimeout(resolve, 180));
+
+        exportStage = document.createElement('div');
+        exportStage.className = 'pdf-export-stage';
+
+        const clonedWrap = document.querySelector('main.wrap').cloneNode(true);
+        exportStage.appendChild(clonedWrap);
+        document.body.appendChild(exportStage);
+
+        ['chartActivites', 'chartFatigue', 'chartEmotions', 'chartRessenti'].forEach(id => {
+          const sourceCanvas = document.getElementById(id);
+          const targetCanvas = clonedWrap.querySelector(`#${id}`);
+          if (!sourceCanvas || !targetCanvas) return;
+          const img = document.createElement('img');
+          img.src = sourceCanvas.toDataURL('image/png');
+          img.alt = '';
+          img.className = 'pdf-chart-image';
+          targetCanvas.replaceWith(img);
+        });
+
+        await new Promise(resolve => requestAnimationFrame(resolve));
+
+        const firstPageSource = clonedWrap.querySelector('#captureZone');
+        const chartsPanel = Array.from(clonedWrap.querySelectorAll('section.panel')).find(panel => panel.querySelector('#chartsColumn'));
+
+        if (!firstPageSource || !chartsPanel) throw new Error('Contenu PDF introuvable');
+
+        const canvasOptions = {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: exportStage.scrollWidth,
+          windowHeight: exportStage.scrollHeight
+        };
+
+        const firstCanvas = await html2canvas(firstPageSource, canvasOptions);
+        const secondCanvas = await html2canvas(chartsPanel, canvasOptions);
+
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+        function addCanvasToPdf(doc, canvas, addNewPage = false) {
+          const pageWidth = doc.internal.pageSize.getWidth();
+          const pageHeight = doc.internal.pageSize.getHeight();
+          const marginX = 20;
+          const marginY = 15;
+          const maxWidth = pageWidth - (marginX * 2);
+          const maxHeight = pageHeight - (marginY * 2);
+
+          let renderWidth = maxWidth;
+          let renderHeight = (canvas.height * renderWidth) / canvas.width;
+
+          if (renderHeight > maxHeight) {
+            renderHeight = maxHeight;
+            renderWidth = (canvas.width * renderHeight) / canvas.height;
+          }
+
+          const x = (pageWidth - renderWidth) / 2;
+          const y = marginY;
+
+          if (addNewPage) doc.addPage('a4', 'portrait');
+          doc.addImage(canvas.toDataURL('image/png'), 'PNG', x, y, renderWidth, renderHeight, undefined, 'FAST');
+        }
+
+        addCanvasToPdf(pdf, firstCanvas, false);
+        addCanvasToPdf(pdf, secondCanvas, true);
+        pdf.save(pdfFileName);
+        status.textContent = 'PDF généré.';
       } catch (error) {
-        console.error('Erreur impression:', error);
-        status.textContent = 'Impossible d’ouvrir la boîte d’impression.';
-        cleanupPrintMode();
+        console.error('Erreur PDF:', error);
+        status.textContent = 'Impossible de générer le PDF.';
+      } finally {
+        if (exportStage) exportStage.remove();
+        restoreUiSnapshot(snapshot);
       }
     }
 
@@ -1443,6 +1564,16 @@
     });
     document.getElementById('prevMonthBtn').addEventListener('click', () => setSelectedMonth(selectedMonthIndex - 1));
     document.getElementById('nextMonthBtn').addEventListener('click', () => setSelectedMonth(selectedMonthIndex + 1));
+
+    let chartResizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(chartResizeTimer);
+      chartResizeTimer = setTimeout(() => renderHistory(), 120);
+    });
+    window.addEventListener('orientationchange', () => {
+      clearTimeout(chartResizeTimer);
+      chartResizeTimer = setTimeout(() => renderHistory(), 180);
+    });
 
     document.getElementById('userFirstName').addEventListener('change', (e) => { userFirstName = e.target.value.trim(); saveToLocalStorage(); });
     document.getElementById('userLastName').addEventListener('change', (e) => { userLastName = e.target.value.trim(); saveToLocalStorage(); });
