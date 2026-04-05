@@ -319,6 +319,54 @@
       background: transparent !important;
       box-shadow: none !important;
     }
+    body.printing-pdf #pdfExportPages {
+      display: block !important;
+      position: absolute;
+      left: -200vw;
+      top: 0;
+      width: 210mm;
+      max-width: 210mm;
+      padding: 0 !important;
+      margin: 0 !important;
+      pointer-events: none;
+      z-index: -1;
+    }
+    body.printing-pdf #pdfExportPages .pdf-page {
+      gap: 0.45rem !important;
+      break-after: page;
+      page-break-after: always;
+    }
+    body.printing-pdf #pdfExportPages .pdf-page:last-child {
+      break-after: auto;
+      page-break-after: auto;
+    }
+    body.printing-pdf #pdfExportPages .panel {
+      padding: 0.7rem !important;
+      box-shadow: none !important;
+    }
+    body.printing-pdf #pdfExportPages .section-title {
+      margin-bottom: 0.45rem !important;
+    }
+    body.printing-pdf #pdfExportPages .select-row {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 0.35rem !important;
+    }
+    body.printing-pdf #pdfExportPages .select-group {
+      width: 100% !important;
+      min-width: 0 !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
+    }
+    body.printing-pdf #pdfExportPages .toolbar,
+    body.printing-pdf #pdfExportPages .date-help,
+    body.printing-pdf #pdfExportPages .date-input,
+    body.printing-pdf #pdfExportPages .help-trigger,
+    body.printing-pdf #pdfExportPages .help-popover,
+    body.printing-pdf #pdfExportPages .chart-controls,
+    body.printing-pdf #pdfExportPages .chip-add-btn {
+      display: none !important;
+    }
 
     @media print {
       @page { size: A4; margin: 15mm 20mm 15mm 20mm; }
