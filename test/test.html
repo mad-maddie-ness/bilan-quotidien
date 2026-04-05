@@ -1413,7 +1413,7 @@
       setTimeout(() => e.target.classList.add('hidden'), 120);
     });
     document.getElementById('saveDayBtn').addEventListener('click', saveTodayRecord);
-    document.getElementById('savePdfBtn').addEventListener('click', openPdfExportModal);
+    document.getElementById('savePdfBtn').addEventListener('click', () => exportToPDF(selectedDateTime));
     document.getElementById('cancelPdfExportBtn').addEventListener('click', () => closeModal('pdfExportModal'));
     document.getElementById('confirmPdfExportBtn').addEventListener('click', confirmPdfExport);
     document.getElementById('exportDataBtn').addEventListener('click', exportJsonData);
