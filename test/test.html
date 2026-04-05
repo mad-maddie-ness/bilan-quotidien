@@ -297,33 +297,25 @@
         padding: 0 !important;
         margin: -2mm 0 0 0 !important;
         zoom: 0.8;
-        transform: none !important;
         transform-origin: top center !important;
       }
       @supports not (zoom: 0.8) {
-        html {
-          font-size: 80% !important;
-        }
         body.printing-pdf .wrap {
-          width: 100% !important;
-          margin: -2mm 0 0 0 !important;
-          transform: none !important;
+          width: 125% !important;
+          margin: 0 !important;
+          transform: scale(0.8) !important;
+          transform-origin: top center !important;
         }
       }
-      #captureZone,
       body.printing-pdf #captureZone {
         gap: 0.45rem !important;
         break-after: page;
         page-break-after: always;
       }
-      .panel,
       body.printing-pdf .panel {
         box-shadow: none !important;
-      }
-      body.printing-pdf .panel {
         padding: 0.7rem !important;
       }
-      .section-title,
       body.printing-pdf .section-title {
         margin-bottom: 0.45rem !important;
       }
@@ -334,23 +326,21 @@
         box-shadow: none !important;
         font-weight: 700 !important;
       }
-      .toolbar,
-      .date-help,
-      .date-input,
-      .help-trigger,
-      .help-popover,
-      .chart-controls,
-      .chip-add-btn,
-      .actions-layout,
-      #actionsPanel,
-      #captureStatus,
-      #lastSaveStatus,
-      #dataFileInput,
-      .modal-overlay {
+      body.printing-pdf .toolbar,
+      body.printing-pdf .date-help,
+      body.printing-pdf .date-input,
+      body.printing-pdf .help-trigger,
+      body.printing-pdf .help-popover,
+      body.printing-pdf .chart-controls,
+      body.printing-pdf .chip-add-btn,
+      body.printing-pdf .actions-layout,
+      body.printing-pdf #actionsPanel,
+      body.printing-pdf #captureStatus,
+      body.printing-pdf #lastSaveStatus,
+      body.printing-pdf #dataFileInput,
+      body.printing-pdf .modal-overlay {
         display: none !important;
       }
-      .chart-card,
-      .history-item,
       body.printing-pdf .chart-card,
       body.printing-pdf .history-item {
         break-inside: avoid;
@@ -1271,7 +1261,7 @@
 
     function renderAll() { renderActivities(); renderFatigue(); renderBody(); renderEmotions(); updateSummary(); }
 
-    async function exportToPDF(targetDate = selectedDateTime) {
+    function exportToPDF(targetDate = selectedDateTime) {
       const status = document.getElementById('captureStatus');
       const chosenDate = new Date(targetDate);
       const pdfFileName = `bilan-quotidien du ${formatPdfFileDate(chosenDate)}`;
@@ -1281,7 +1271,7 @@
       const currentDayKey = dayKeyFromISO(selectedDateTime.toISOString());
       const chosenDayKey = dayKeyFromISO(chosenDate.toISOString());
       const savedRecord = getRecordForDay(chosenDate);
-      let fallbackCleanupTimer = null;
+      let hasCleanedUp = false;
 
       if (chosenDayKey === currentDayKey) {
         selectedDateTime = chosenDate;
@@ -1296,30 +1286,29 @@
       }
 
       const cleanupPrintMode = () => {
-        if (fallbackCleanupTimer) {
-          clearTimeout(fallbackCleanupTimer);
-          fallbackCleanupTimer = null;
-        }
+        if (hasCleanedUp) return;
+        hasCleanedUp = true;
         document.body.classList.remove('printing-pdf');
         document.title = originalPageTitle;
         if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
         restoreUiSnapshot(snapshot);
         window.removeEventListener('afterprint', cleanupPrintMode);
+        window.removeEventListener('focus', handleWindowFocus);
+      };
+
+      const handleWindowFocus = () => {
+        setTimeout(cleanupPrintMode, 300);
       };
 
       document.body.classList.add('printing-pdf');
       document.title = pdfFileName;
       if (pageTitleEl) pageTitleEl.textContent = pdfFileName;
-      status.textContent = 'Préparation de l’impression...';
+      status.textContent = 'Ouverture de la boîte d’impression...';
 
       window.addEventListener('afterprint', cleanupPrintMode, { once: true });
-      fallbackCleanupTimer = setTimeout(() => {
-        if (document.body.classList.contains('printing-pdf')) cleanupPrintMode();
-      }, 30000);
+      window.addEventListener('focus', handleWindowFocus, { once: true });
 
       try {
-        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-        await new Promise(resolve => setTimeout(resolve, 150));
         void document.body.offsetHeight;
         window.print();
         status.textContent = 'Boîte d’impression ouverte.';
