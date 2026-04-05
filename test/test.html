@@ -438,7 +438,7 @@
               <button class="help-trigger" type="button" aria-label="Aide pour Enregistrer en PDF">?</button>
               <button class="secondary-btn" type="button" id="savePdfBtn">Enregistrer en PDF</button>
             </div>
-            <div class="help-popover">Crée une version imprimable du bilan et des graphiques.</div>
+            <div class="help-popover">Ouvre la boîte d’impression pour enregistrer ou imprimer le bilan et les graphiques.</div>
           </div>
           <div class="action-item">
             <div class="action-inline">
@@ -989,29 +989,6 @@
       if (graphsClone) pdfContainer.appendChild(graphsClone);
       document.body.appendChild(pdfContainer);
 
-      const isPhoneLike = window.matchMedia('(max-width: 767px)').matches || window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-
-      if (isPhoneLike && typeof html2pdf !== 'undefined') {
-        status.textContent='Préparation du PDF...';
-        try {
-          await html2pdf().set({
-            margin: 10,
-            filename: `${pdfFileName}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 1.6, useCORS: true, backgroundColor: '#ffffff', windowWidth: 1400 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-          }).from(pdfContainer).save();
-          status.textContent='PDF enregistré.';
-        } catch (error) {
-          console.error('Erreur export PDF:', error);
-          status.textContent='La génération du PDF a échoué.';
-        } finally {
-          pdfContainer.remove();
-        }
-        return;
-      }
-
       status.textContent='Préparation de la boîte d’impression...';
       const headStyles = [...document.querySelectorAll('head style, head link[rel="stylesheet"]')]
         .map(el => el.outerHTML)
@@ -1344,3 +1321,4 @@
   </script>
 </body>
 </html>
+
