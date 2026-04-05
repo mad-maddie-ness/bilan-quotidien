@@ -321,13 +321,14 @@
     }
     body.printing-pdf #pdfExportPages {
       display: block !important;
-      position: absolute;
-      left: -200vw;
+      position: fixed;
+      left: 0;
       top: 0;
       width: 210mm;
       max-width: 210mm;
       padding: 0 !important;
       margin: 0 !important;
+      overflow: hidden;
       pointer-events: none;
       z-index: -1;
     }
@@ -386,10 +387,16 @@
       }
       body.printing-pdf #pdfExportPages {
         display: block !important;
+        position: static !important;
+        left: auto !important;
+        top: auto !important;
         max-width: none !important;
         width: 100% !important;
         padding: 0 !important;
         margin: -2mm 0 0 0 !important;
+        overflow: visible !important;
+        pointer-events: auto !important;
+        z-index: auto !important;
         zoom: 0.8;
         transform: none !important;
         transform-origin: top center !important;
@@ -1769,18 +1776,6 @@
         return;
       }
 
-      const handleWindowFocus = () => {
-        setTimeout(() => {
-          if (document.body.classList.contains('printing-pdf')) cleanupPrintMode();
-        }, 400);
-      };
-
-      const handleVisibilityReturn = () => {
-        if (document.visibilityState === 'visible' && document.body.classList.contains('printing-pdf')) {
-          setTimeout(cleanupPrintMode, 400);
-        }
-      };
-
       const cleanupPrintMode = () => {
         if (hasCleanedUp) return;
         hasCleanedUp = true;
@@ -1795,8 +1790,6 @@
         clearPdfPages();
         restoreUiSnapshot(snapshot);
         window.removeEventListener('afterprint', cleanupPrintMode);
-        window.removeEventListener('focus', handleWindowFocus);
-        document.removeEventListener('visibilitychange', handleVisibilityReturn);
       };
 
       preparePdfPages(chosenDate);
@@ -1812,8 +1805,6 @@
       if (typeof window.print === 'function') {
         status.textContent = 'Boîte d’impression ouverte.';
         window.addEventListener('afterprint', cleanupPrintMode, { once: true });
-        window.addEventListener('focus', handleWindowFocus, { once: true });
-        document.addEventListener('visibilitychange', handleVisibilityReturn);
         cleanupTimer = setTimeout(() => {
           if (document.body.classList.contains('printing-pdf')) cleanupPrintMode();
         }, 120000);
