@@ -284,6 +284,90 @@
     .chart-controls .current-month { font-weight: 600; }
     .hidden { display:none; }
 
+    body.printing-pdf {
+      background: #fff !important;
+      color: #000 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    body.printing-pdf .wrap {
+      width: 170mm !important;
+      max-width: 170mm !important;
+      margin: 0 auto !important;
+      padding: 0 !important;
+      gap: 0.45rem !important;
+    }
+    body.printing-pdf .topbar {
+      justify-content: center !important;
+      margin-bottom: 0.35rem !important;
+    }
+    body.printing-pdf .topbar > div {
+      width: 100%;
+      text-align: center;
+    }
+    body.printing-pdf .title {
+      font-size: 1.8rem !important;
+      margin-bottom: 0.25rem !important;
+    }
+    body.printing-pdf .name-fields {
+      display: flex;
+      justify-content: center;
+    }
+    body.printing-pdf .toolbar,
+    body.printing-pdf .date-help,
+    body.printing-pdf .date-input,
+    body.printing-pdf .help-trigger,
+    body.printing-pdf .help-popover,
+    body.printing-pdf .chart-controls,
+    body.printing-pdf .chip-add-btn,
+    body.printing-pdf .actions-layout,
+    body.printing-pdf #actionsPanel,
+    body.printing-pdf #captureStatus,
+    body.printing-pdf #lastSaveStatus,
+    body.printing-pdf #dataFileInput,
+    body.printing-pdf .modal-overlay {
+      display: none !important;
+    }
+    body.printing-pdf #captureZone {
+      min-height: 225mm;
+      gap: 0.45rem !important;
+      align-content: center;
+      break-after: page;
+      page-break-after: always;
+    }
+    body.printing-pdf #captureZone > .panel,
+    body.printing-pdf #captureZone > .date-tools {
+      width: 100%;
+      max-width: 170mm;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    body.printing-pdf #chartsPanel {
+      break-before: page;
+      page-break-before: always;
+      min-height: 225mm;
+    }
+    body.printing-pdf #chartsPanel .section-title {
+      text-align: center;
+      margin-bottom: 0.35rem !important;
+    }
+    body.printing-pdf #chartsPanel .charts-column {
+      width: 100%;
+      max-width: 170mm;
+      margin: 0 auto;
+      gap: 0.3rem !important;
+    }
+    body.printing-pdf #chartsPanel .chart-card {
+      width: 100% !important;
+      max-width: none !important;
+      margin: 0 auto !important;
+      padding: 0.45rem !important;
+      box-shadow: none !important;
+    }
+    body.printing-pdf #chartsPanel .chart-wrap {
+      height: 32mm !important;
+    }
+
     @media print {
       @page { size: A4; margin: 15mm 20mm 15mm 20mm; }
       html, body {
@@ -506,7 +590,7 @@
       </section>
     </section>
 
-    <section class="panel">
+    <section class="panel" id="chartsPanel">
       <div class="section-title" style="margin-bottom:.8rem;">Graphiques</div>
       <div class="chart-controls">
         <button type="button" id="prevMonthBtn">⟵ Mois précédent</button>
@@ -1538,18 +1622,19 @@
       if (typeof window.html2pdf === 'function') {
         const exportRoot = document.querySelector('main.wrap') || document.body;
         return window.html2pdf().set({
-          margin: [8, 8, 10, 8],
+          margin: [15, 20, 15, 20],
           filename: `${pdfFileName}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: {
             scale: 2,
             useCORS: true,
-            backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--color-bg').trim() || '#ffffff',
+            backgroundColor: '#ffffff',
+            scrollX: 0,
             scrollY: 0,
-            windowWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth)
+            windowWidth: 1280
           },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak: { mode: ['css', 'legacy'] }
+          pagebreak: { mode: ['css', 'legacy'], before: '#chartsPanel', avoid: ['.chart-card', '.history-item'] }
         }).from(exportRoot).save().then(() => {
           status.textContent = 'PDF enregistré.';
           cleanupPrintMode();
