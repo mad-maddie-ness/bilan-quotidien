@@ -90,8 +90,9 @@
     .help-popover {
       display: none;
       position: absolute;
-      top: calc(100% + 4px);
-      left: 0;
+      top: 50%;
+      left: calc(100% + 6px);
+      transform: translateY(-50%);
       z-index: 20;
       width: min(220px, calc(100vw - 2rem));
       padding: 0.45rem 0.55rem;
@@ -106,16 +107,23 @@
       word-break: break-word;
     }
     .action-item.help-open .help-popover { display: block; }
+    .actions-secondary .help-popover {
+      top: calc(100% + 4px);
+      left: 0;
+      right: auto;
+      transform: none;
+    }
     @media (hover: hover) and (pointer: fine) {
       .action-item:hover .help-popover,
       .action-item:focus-within .help-popover { display: block; }
     }
     @media (max-width: 767px) {
       .help-popover {
-        top: calc(100% + 4px);
-        left: 0;
+        top: 50%;
+        left: calc(100% + 6px);
         right: auto;
         bottom: auto;
+        transform: translateY(-50%);
         width: min(210px, calc(100vw - 2rem));
         max-width: calc(100vw - 2rem);
       }
@@ -130,7 +138,12 @@
       .actions-secondary { flex: 1 1 auto; min-width: 0; max-width: none; flex-direction: row; gap: 0.25rem; }
       .actions-secondary .action-item { flex: 1 1 0; min-width: 0; }
       .actions-secondary .secondary-btn { width: 100%; }
-      .help-popover { left: 0; right: auto; }
+      .help-popover {
+        left: calc(100% + 6px);
+        right: auto;
+        top: 50%;
+        transform: translateY(-50%);
+      }
     }
 
     .grid-2 { display:grid; grid-template-columns: 1fr; gap: var(--space-5); }
@@ -266,16 +279,52 @@
     .hidden { display:none; }
 
     @media print {
-      @page { size: A4; margin: 12mm; }
+      @page { size: A4; margin: 15mm 20mm 15mm 20mm; }
       html, body {
         background: #fff !important;
         color: #000 !important;
         overflow: visible !important;
       }
+      body.printing-pdf {
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
       body.printing-pdf .wrap {
         max-width: none !important;
         width: 100% !important;
         padding: 0 !important;
+        margin: -2mm 0 0 0 !important;
+        zoom: 0.8;
+        transform: none !important;
+        transform-origin: top center !important;
+      }
+      @supports not (zoom: 0.7) {
+        body.printing-pdf .wrap {
+          width: 100% !important;
+          margin: 0 !important;
+          transform: translateY(-2mm) scale(0.7) !important;
+        }
+      }
+      body.printing-pdf #captureZone {
+        gap: 0.45rem !important;
+        break-after: page;
+        page-break-after: always;
+      }
+      body.printing-pdf .panel {
+        padding: 0.7rem !important;
+        box-shadow: none !important;
+      }
+      body.printing-pdf .section-title {
+        margin-bottom: 0.45rem !important;
+      }
+      body.printing-pdf .chip.active,
+      body.printing-pdf .fatigue-btn.active,
+      body.printing-pdf .pill {
+        border-width: 2px !important;
+        box-shadow: none !important;
+        font-weight: 700 !important;
       }
       body.printing-pdf .toolbar,
       body.printing-pdf .date-help,
@@ -285,13 +334,13 @@
       body.printing-pdf .chart-controls,
       body.printing-pdf .chip-add-btn,
       body.printing-pdf .actions-layout,
+      body.printing-pdf #actionsPanel,
       body.printing-pdf #captureStatus,
       body.printing-pdf #lastSaveStatus,
       body.printing-pdf #dataFileInput,
       body.printing-pdf .modal-overlay {
         display: none !important;
       }
-      body.printing-pdf .panel,
       body.printing-pdf .chart-card,
       body.printing-pdf .history-item {
         break-inside: avoid;
@@ -382,9 +431,14 @@
 
     <section class="capture-zone" id="captureZone">
       <div class="date-tools">
-        <div class="date-help">Si tu as oublié de faire un ou plusieurs bilans quotidiens, tu peux cliquer sur le bouton ci-dessous pour choisir la ou les journées qui te manquent.</div>
         <div class="date-row">
-          <button class="date-badge date-badge-btn" id="dateBadge" type="button" title="Choisir une date pour ce bilan">Date</button>
+          <div class="action-item" style="width:auto;">
+            <div class="action-inline" style="width:auto;">
+              <button class="date-badge date-badge-btn" id="dateBadge" type="button" title="Choisir une date pour ce bilan">Date</button>
+              <button class="help-trigger" type="button" aria-label="Aide pour choisir une date" style="display:inline-flex;">?</button>
+            </div>
+            <div class="help-popover">Si tu as oublié de faire un ou plusieurs bilans quotidiens, tu peux cliquer sur ce bouton pour choisir la ou les journées qui te manquent.</div>
+          </div>
           <input class="date-input hidden" type="date" id="customDateInput">
           <div class="toolbar">
             <button class="theme-btn" type="button" id="themeBtn">🌙 / ☀️</button>
@@ -462,7 +516,7 @@
       <div class="history-list" id="historyList" style="display:none;"></div>
     </section>
 
-    <section class="panel">
+    <section class="panel" id="actionsPanel">
       <div class="actions-layout">
         <div class="actions-main">
           <button class="save-day-btn" type="button" id="saveDayBtn">Enregistrer la journée</button>
@@ -543,6 +597,44 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="privacyNoticeModal">
+    <div class="modal-content">
+      <h3 class="modal-title">Information sur tes données</h3>
+      <p style="margin:0 0 0.8rem 0; line-height:1.5;">Toutes les données et personnalisations effectuées sur cette page sont conservées uniquement sur le navigateur de cet appareil. Il n'y a que toi qui peut y accéder.</p>
+      <p style="margin:0 0 1rem 0; line-height:1.5;"> Tu peux cependant décider de partager un PDF à ton praticien.</p>
+      <label style="display:flex; align-items:flex-start; gap:0.55rem; margin:0 0 1rem 0; line-height:1.4; cursor:pointer;">
+        <input type="checkbox" id="hidePrivacyNoticeCheckbox" style="margin-top:0.15rem;">
+        <span>Ne plus afficher ce message à la prochaine ouverture</span>
+      </label>
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-confirm" type="button" id="privacyNoticeConfirmBtn">J’ai compris</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="deleteConfirmModal">
+    <div class="modal-content">
+      <h3 class="modal-title">Confirmer la suppression</h3>
+      <p id="deleteConfirmText" style="margin:0 0 1rem 0; line-height:1.5;">Es-tu sûr(e) de vouloir supprimer cet élément ?</p>
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" type="button" id="cancelDeleteBtn">Annuler</button>
+        <button class="modal-btn modal-btn-confirm" type="button" id="confirmDeleteBtn">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="pdfExportModal">
+    <div class="modal-content">
+      <h3 class="modal-title">Choisir le jour du PDF</h3>
+      <p style="margin:0 0 0.8rem 0; line-height:1.5;">Choisis la journée que tu veux enregistrer en PDF.</p>
+      <input type="date" class="modal-input" id="pdfExportDateInput">
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-cancel" type="button" id="cancelPdfExportBtn">Annuler</button>
+        <button class="modal-btn modal-btn-confirm" type="button" id="confirmPdfExportBtn">Ouvrir l’impression</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Configuration et données par défaut
     const defaultActivities = ['Me laver','Prendre un petit déjeuner','Déjeuner','Dîner','Cuisiner','Boire','Passer l\'aspirateur'];
@@ -574,6 +666,7 @@
     let monthKeys = [];
     let selectedMonthIndex = 0;
     let selectedDateTime = new Date();
+    let pendingDeleteAction = null;
 
     function sortEmotionValues(values) {
       return values.sort((a, b) => a.localeCompare(b, 'fr', { sensitivity:'base' }));
@@ -625,6 +718,106 @@
       document.getElementById(modalId).classList.remove('active');
     }
 
+    const privacyNoticeStorageKey = 'bilanQuotidienHidePrivacyNotice';
+
+    function closePrivacyNotice() {
+      const checkbox = document.getElementById('hidePrivacyNoticeCheckbox');
+      if (checkbox?.checked) localStorage.setItem(privacyNoticeStorageKey, 'true');
+      else localStorage.removeItem(privacyNoticeStorageKey);
+      closeModal('privacyNoticeModal');
+    }
+
+    function showPrivacyNoticeIfNeeded() {
+      if (localStorage.getItem(privacyNoticeStorageKey) === 'true') return;
+      const checkbox = document.getElementById('hidePrivacyNoticeCheckbox');
+      if (checkbox) checkbox.checked = false;
+      openModal('privacyNoticeModal');
+    }
+
+    function openDeleteConfirmModal(itemLabel, onConfirm) {
+      pendingDeleteAction = onConfirm;
+      document.getElementById('deleteConfirmText').textContent = `Es-tu sûr(e) de vouloir supprimer « ${itemLabel} » ?`;
+      openModal('deleteConfirmModal');
+    }
+
+    function closeDeleteConfirmModal() {
+      pendingDeleteAction = null;
+      closeModal('deleteConfirmModal');
+    }
+
+    function confirmDeleteAction() {
+      if (typeof pendingDeleteAction === 'function') pendingDeleteAction();
+      closeDeleteConfirmModal();
+    }
+
+    function getRecordForDay(targetDate) {
+      const key = dayKeyFromISO(targetDate.toISOString());
+      return historyRecords.find(rec => rec?.date && dayKeyFromISO(rec.date) === key) || null;
+    }
+
+    function createUiSnapshot() {
+      return {
+        selectedDateTime: new Date(selectedDateTime),
+        selectedMonthIndex,
+        state: {
+          activities: new Set(state.activities),
+          fatigue: state.fatigue,
+          negativeEmotions: [...state.negativeEmotions],
+          positiveEmotions: [...state.positiveEmotions],
+          body: new Set(state.body)
+        }
+      };
+    }
+
+    function restoreUiSnapshot(snapshot) {
+      if (!snapshot) return;
+      selectedDateTime = new Date(snapshot.selectedDateTime);
+      selectedMonthIndex = snapshot.selectedMonthIndex;
+      state.activities = new Set(snapshot.state.activities);
+      state.fatigue = snapshot.state.fatigue;
+      state.negativeEmotions = [...snapshot.state.negativeEmotions];
+      state.positiveEmotions = [...snapshot.state.positiveEmotions];
+      state.body = new Set(snapshot.state.body);
+      renderAll();
+      renderHistory();
+      updateDateBadge();
+    }
+
+    function loadRecordIntoUi(record, targetDate) {
+      selectedDateTime = new Date(targetDate);
+      state.activities = new Set((record.activities || []).map(label => activities.indexOf(label)).filter(index => index >= 0));
+      state.fatigue = record.fatigue ?? 0;
+      state.negativeEmotions = [...(record.negativeEmotions || [])];
+      state.positiveEmotions = [...(record.positiveEmotions || [])];
+      state.body = new Set((record.body || []).map(label => bodyFeelings.findIndex(item => item.label === label)).filter(index => index >= 0));
+      renderAll();
+      renderHistory();
+      const monthKey = `${selectedDateTime.getFullYear()}-${String(selectedDateTime.getMonth()+1).padStart(2,'0')}`;
+      const monthIndex = monthKeys.indexOf(monthKey);
+      if (monthIndex >= 0) setSelectedMonth(monthIndex);
+      updateDateBadge();
+    }
+
+    function openPdfExportModal() {
+      const dateInput = document.getElementById('pdfExportDateInput');
+      if (dateInput) {
+        dateInput.max = formatInputDate(new Date());
+        dateInput.value = formatInputDate(selectedDateTime);
+      }
+      openModal('pdfExportModal');
+    }
+
+    function confirmPdfExport() {
+      const dateInput = document.getElementById('pdfExportDateInput');
+      if (!dateInput?.value) {
+        dateInput?.focus();
+        return;
+      }
+      const [year, month, day] = dateInput.value.split('-').map(Number);
+      closeModal('pdfExportModal');
+      exportToPDF(new Date(year, month - 1, day, 12, 0, 0, 0));
+    }
+
     const activitiesEl = document.getElementById('activities');
     const fatigueEl = document.getElementById('fatigueButtons');
     const emotionListEl = document.getElementById('emotionList');
@@ -638,6 +831,7 @@
     function formatPdfFileDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()}`; }
     function formatInputDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
     function dayKeyFromISO(iso) { const d = new Date(iso); const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+    function getRecordSavedTime(rec) { return new Date(rec?.savedAt || rec?.updatedAt || rec?.date || 0).getTime(); }
     function signed(v) { return v>0 ? `+${v}` : String(v); }
     function setScoreColor(el, v) { el.classList.remove('score-positive','score-negative','score-neutral'); if (v>0) el.classList.add('score-positive'); else if (v<0) el.classList.add('score-negative'); else el.classList.add('score-neutral'); }
     function updateDateBadge() {
@@ -677,14 +871,15 @@
         deleteBtn.textContent = '✕';
         deleteBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          activities.splice(i, 1);
-          state.activities.delete(i);
-          // ajuster l'état des indices ; on reconstruit les valeurs sélectionnées
-          const newActivities = new Set();
-          state.activities.forEach(idx => { if (idx < i) newActivities.add(idx); else if (idx > i) newActivities.add(idx-1); });
-          state.activities = newActivities;
-          saveToLocalStorage();
-          renderAll();
+          openDeleteConfirmModal(label, () => {
+            activities.splice(i, 1);
+            state.activities.delete(i);
+            const newActivities = new Set();
+            state.activities.forEach(idx => { if (idx < i) newActivities.add(idx); else if (idx > i) newActivities.add(idx-1); });
+            state.activities = newActivities;
+            saveToLocalStorage();
+            renderAll();
+          });
         });
         btn.appendChild(deleteBtn);
         
@@ -725,13 +920,15 @@
         deleteBtn.textContent = '✕';
         deleteBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          bodyFeelings.splice(i, 1);
-          state.body.delete(i);
-          const newBody = new Set();
-          state.body.forEach(idx => { if (idx < i) newBody.add(idx); else if (idx > i) newBody.add(idx-1); });
-          state.body = newBody;
-          saveToLocalStorage();
-          renderAll();
+          openDeleteConfirmModal(item.label, () => {
+            bodyFeelings.splice(i, 1);
+            state.body.delete(i);
+            const newBody = new Set();
+            state.body.forEach(idx => { if (idx < i) newBody.add(idx); else if (idx > i) newBody.add(idx-1); });
+            state.body = newBody;
+            saveToLocalStorage();
+            renderAll();
+          });
         });
         btn.appendChild(deleteBtn);
 
@@ -802,10 +999,10 @@
       const byDay = new Map();
       const all = [...existing, ...incoming];
       all.forEach(rec => {
-        if (!rec.date) return;
+        if (!rec?.date) return;
         const key = dayKeyFromISO(rec.date);
         const current = byDay.get(key);
-        if (!current || new Date(rec.date) > new Date(current.date)) {
+        if (!current || getRecordSavedTime(rec) >= getRecordSavedTime(current)) {
           byDay.set(key, rec);
         }
       });
@@ -848,6 +1045,8 @@
     function updateCharts() {
       const axisColor = getComputedStyle(document.documentElement).getPropertyValue('--color-text-muted').trim();
       const primary = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
+      const positive = getComputedStyle(document.documentElement).getPropertyValue('--color-positive').trim();
+      const negative = getComputedStyle(document.documentElement).getPropertyValue('--color-negative').trim();
       const filtered = filterBySelectedMonth(historyRecords);
       const labels = filtered.map(r => new Date(r.date).toLocaleDateString('fr-FR', { day:'2-digit' }));
 
@@ -866,13 +1065,90 @@
         total: filtered.map(r => r.total ?? 0)
       };
 
+      function buildZeroSplitSeries(baseData) {
+        const points = [];
+        const helperIndexes = new Set();
+
+        baseData.forEach((value, index) => {
+          if (index === 0) {
+            points.push({ x: index, y: value });
+            return;
+          }
+
+          const previousValue = baseData[index - 1];
+          const crossesZero = (previousValue > 0 && value < 0) || (previousValue < 0 && value > 0);
+
+          if (crossesZero) {
+            const ratio = (0 - previousValue) / (value - previousValue);
+            const zeroX = (index - 1) + ratio;
+            points.push({ x: zeroX, y: 0 });
+            helperIndexes.add(points.length - 1);
+          }
+
+          points.push({ x: index, y: value });
+        });
+
+        return { points, helperIndexes };
+      }
+
       function makeChart(id, data) {
         const ctx = document.getElementById(id).getContext('2d');
+        const splitSeries = buildZeroSplitSeries(data);
         if (charts[id]) charts[id].destroy();
         charts[id] = new Chart(ctx, {
           type:'line',
-          data:{ labels, datasets:[{ data, borderColor:primary, backgroundColor:primary+'33', fill:true, tension:.25, pointRadius:3 }]},
-          options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ ticks:{ color:axisColor }, grid:{ color:axisColor+'22' } }, y:{ min:-5, max:10, ticks:{ color:axisColor }, grid:{ color:axisColor+'22' } } } }
+          data:{
+            datasets:[{
+              data: splitSeries.points,
+              borderColor: primary,
+              backgroundColor: primary + '22',
+              fill: { target: 'origin', above: positive + '22', below: negative + '22' },
+              tension:.25,
+              pointRadius: context => (splitSeries.helperIndexes.has(context.dataIndex) ? 0 : 3),
+              pointHoverRadius: context => (splitSeries.helperIndexes.has(context.dataIndex) ? 0 : 4),
+              pointBackgroundColor: context => (context.raw.y < 0 ? negative : positive),
+              pointBorderColor: context => (context.raw.y < 0 ? negative : positive),
+              pointBorderWidth: 1.5,
+              segment: {
+                borderColor: context => ((context.p0.parsed.y < 0 || context.p1.parsed.y < 0) ? negative : positive)
+              }
+            }]
+          },
+          options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{ legend:{ display:false } },
+            scales:{
+              x:{
+                type: 'linear',
+                min: labels.length ? 0 : undefined,
+                max: labels.length ? labels.length - 1 : undefined,
+                offset: false,
+                ticks:{
+                  stepSize: 1,
+                  color:axisColor,
+                  callback: (value) => {
+                    const index = Number(value);
+                    return Number.isInteger(index) && labels[index] ? labels[index] : '';
+                  }
+                },
+                grid:{ color:axisColor+'22' }
+              },
+              y:{
+                min:-5,
+                max:10,
+                ticks:{
+                  color: context => (context.tick.value < 0 ? negative : axisColor)
+                },
+                grid:{
+                  color: context => {
+                    if (context.tick.value === 0) return axisColor + '55';
+                    return context.tick.value < 0 ? negative + '22' : axisColor + '22';
+                  }
+                }
+              }
+            }
+          }
         });
       }
 
@@ -910,6 +1186,7 @@
     function buildTodayRecord() {
       const scores = computeScores();
       const now = new Date();
+      const savedAt = now.toISOString();
       const selectedDay = new Date(selectedDateTime);
       const recordDate = new Date(
         selectedDay.getFullYear(),
@@ -923,6 +1200,7 @@
       return {
         id: `${Date.now()}-${recordDate.toISOString()}`,
         date: recordDate.toISOString(),
+        savedAt,
         activities:[...state.activities].map(i=>activities[i]),
         fatigue:state.fatigue,
         negativeEmotions:[...state.negativeEmotions],
@@ -933,9 +1211,9 @@
     }
 
     function updateLastSaveText() {
-      const last = historyRecords.slice().sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
+      const last = historyRecords.slice().sort((a,b)=>getRecordSavedTime(b)-getRecordSavedTime(a))[0];
       if (last) {
-        const d = new Date(last.date);
+        const d = new Date(last.savedAt || last.date);
         const pad = n => String(n).padStart(2,'0');
         document.getElementById('lastSaveStatus').textContent = `Dernier enregistrement le ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}`;
       }
@@ -943,11 +1221,14 @@
 
     function saveTodayRecord() {
       const todayRecord = buildTodayRecord();
+      const savedMonthKey = `${new Date(todayRecord.date).getFullYear()}-${String(new Date(todayRecord.date).getMonth()+1).padStart(2,'0')}`;
       historyRecords = mergeRecords(historyRecords, [todayRecord]);
       saveToLocalStorage();
       renderHistory();
+      const monthIndex = monthKeys.indexOf(savedMonthKey);
+      if (monthIndex >= 0) setSelectedMonth(monthIndex);
       updateLastSaveText();
-      document.getElementById('captureStatus').textContent='Journée enregistrée localement.';
+      document.getElementById('captureStatus').textContent='Journée enregistrée localement. Les graphiques ont été mis à jour avec cette dernière version.';
     }
 
     function loadJsonFile(file) {
@@ -980,37 +1261,70 @@
 
     function renderAll() { renderActivities(); renderFatigue(); renderBody(); renderEmotions(); updateSummary(); }
 
-    function exportToPDF() {
+    async function exportToPDF(targetDate = selectedDateTime) {
       const status = document.getElementById('captureStatus');
-      const pdfFileName = `bilan-quotidien du ${formatPdfFileDate(selectedDateTime)}`;
+      const chosenDate = new Date(targetDate);
+      const pdfFileName = `bilan-quotidien du ${formatPdfFileDate(chosenDate)}`;
       const originalPageTitle = document.title;
       const pageTitleEl = document.querySelector('title');
+      const snapshot = createUiSnapshot();
+      const currentDayKey = dayKeyFromISO(selectedDateTime.toISOString());
+      const chosenDayKey = dayKeyFromISO(chosenDate.toISOString());
+      const savedRecord = getRecordForDay(chosenDate);
+      let fallbackCleanupTimer = null;
+
+      if (chosenDayKey === currentDayKey) {
+        selectedDateTime = chosenDate;
+        renderAll();
+        renderHistory();
+        updateDateBadge();
+      } else if (savedRecord) {
+        loadRecordIntoUi(savedRecord, chosenDate);
+      } else {
+        status.textContent = 'Aucun bilan enregistré pour cette date.';
+        return;
+      }
+
+      const handleWindowFocus = () => {
+        setTimeout(() => {
+          if (document.body.classList.contains('printing-pdf')) cleanupPrintMode();
+        }, 300);
+      };
 
       const cleanupPrintMode = () => {
+        if (fallbackCleanupTimer) {
+          clearTimeout(fallbackCleanupTimer);
+          fallbackCleanupTimer = null;
+        }
         document.body.classList.remove('printing-pdf');
         document.title = originalPageTitle;
         if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
+        restoreUiSnapshot(snapshot);
         window.removeEventListener('afterprint', cleanupPrintMode);
+        window.removeEventListener('focus', handleWindowFocus);
       };
 
       document.body.classList.add('printing-pdf');
       document.title = pdfFileName;
       if (pageTitleEl) pageTitleEl.textContent = pdfFileName;
-      status.textContent = 'Ouverture de la boîte d’impression...';
+      status.textContent = 'Préparation de l’impression...';
 
       window.addEventListener('afterprint', cleanupPrintMode, { once: true });
+      window.addEventListener('focus', handleWindowFocus, { once: true });
+      fallbackCleanupTimer = setTimeout(() => {
+        if (document.body.classList.contains('printing-pdf')) cleanupPrintMode();
+      }, 15000);
 
       try {
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        await new Promise(resolve => setTimeout(resolve, 150));
         void document.body.offsetHeight;
         window.print();
         status.textContent = 'Boîte d’impression ouverte.';
       } catch (error) {
         console.error('Erreur impression:', error);
         status.textContent = 'Impossible d’ouvrir la boîte d’impression.';
-      } finally {
-        setTimeout(() => {
-          if (document.body.classList.contains('printing-pdf')) cleanupPrintMode();
-        }, 800);
+        cleanupPrintMode();
       }
     }
 
@@ -1108,11 +1422,20 @@
       setTimeout(() => e.target.classList.add('hidden'), 120);
     });
     document.getElementById('saveDayBtn').addEventListener('click', saveTodayRecord);
-    document.getElementById('savePdfBtn').addEventListener('click', exportToPDF);
+    document.getElementById('savePdfBtn').addEventListener('click', openPdfExportModal);
+    document.getElementById('cancelPdfExportBtn').addEventListener('click', () => closeModal('pdfExportModal'));
+    document.getElementById('confirmPdfExportBtn').addEventListener('click', confirmPdfExport);
     document.getElementById('exportDataBtn').addEventListener('click', exportJsonData);
     document.getElementById('resetConfigBtn').addEventListener('click', resetCustomizations);
     document.getElementById('importDataBtn').addEventListener('click', ()=>document.getElementById('dataFileInput').click());
     document.getElementById('dataFileInput').addEventListener('change', e => { const file=e.target.files[0]; if (file) importJsonData(file); });
+    document.getElementById('privacyNoticeConfirmBtn').addEventListener('click', closePrivacyNotice);
+    document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteConfirmModal);
+    document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDeleteAction);
+    document.getElementById('hidePrivacyNoticeCheckbox').addEventListener('change', (e) => {
+      if (e.target.checked) localStorage.setItem(privacyNoticeStorageKey, 'true');
+      else localStorage.removeItem(privacyNoticeStorageKey);
+    });
     document.querySelectorAll('.help-trigger').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -1232,6 +1555,9 @@
     document.getElementById('emotionInput').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') document.getElementById('confirmEmotionBtn').click();
     });
+    document.getElementById('pdfExportDateInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') document.getElementById('confirmPdfExportBtn').click();
+    });
 
     // Initialisation
     loadFromLocalStorage();
@@ -1242,6 +1568,7 @@
     renderAll();
     renderHistory();
     updateLastSaveText();
+    showPrivacyNoticeIfNeeded();
   </script>
 </body>
 </html>
