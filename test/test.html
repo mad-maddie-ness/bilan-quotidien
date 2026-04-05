@@ -367,6 +367,80 @@
     body.printing-pdf #chartsPanel .chart-wrap {
       height: 32mm !important;
     }
+    body.printing-pdf.mobile-print-layout {
+      --text-xs: 0.52rem;
+      --text-sm: 0.6rem;
+      --text-base: 0.68rem;
+      --text-lg: 0.8rem;
+      --text-xl: 1.1rem;
+      --space-1: 0.08rem; --space-2: 0.16rem; --space-3: 0.24rem; --space-4: 0.34rem; --space-5: 0.45rem; --space-6: 0.58rem; --space-8: 0.72rem;
+    }
+    body.printing-pdf.mobile-print-layout .wrap {
+      gap: 0.22rem !important;
+    }
+    body.printing-pdf.mobile-print-layout .panel {
+      padding: 0.32rem !important;
+      border-radius: 0.65rem !important;
+    }
+    body.printing-pdf.mobile-print-layout .section-title {
+      margin-bottom: 0.18rem !important;
+    }
+    body.printing-pdf.mobile-print-layout .date-row {
+      justify-content: center !important;
+      gap: 0.2rem !important;
+    }
+    body.printing-pdf.mobile-print-layout .select-row {
+      flex-direction: row !important;
+      align-items: flex-start !important;
+      gap: 0.22rem !important;
+    }
+    body.printing-pdf.mobile-print-layout .select-group {
+      width: auto !important;
+      min-width: 0 !important;
+      flex: 1 1 0;
+    }
+    body.printing-pdf.mobile-print-layout .body-containers {
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 0.22rem !important;
+    }
+    body.printing-pdf.mobile-print-layout .chips,
+    body.printing-pdf.mobile-print-layout .selected-list,
+    body.printing-pdf.mobile-print-layout .summary-grid {
+      gap: 0.18rem !important;
+    }
+    body.printing-pdf.mobile-print-layout .chip,
+    body.printing-pdf.mobile-print-layout .pill {
+      min-height: 20px !important;
+      padding: 0.18rem 0.38rem !important;
+      font-size: 0.55rem !important;
+    }
+    body.printing-pdf.mobile-print-layout .fatigue-btn {
+      min-height: 20px !important;
+      padding: 0.08rem 0.24rem !important;
+      font-size: 0.52rem !important;
+    }
+    body.printing-pdf.mobile-print-layout .kpi {
+      min-width: 0 !important;
+      max-width: none !important;
+      padding: 0.16rem 0.2rem !important;
+    }
+    body.printing-pdf.mobile-print-layout #captureZone {
+      min-height: auto !important;
+      gap: 0.22rem !important;
+      align-content: start !important;
+    }
+    body.printing-pdf.mobile-print-layout #chartsPanel {
+      min-height: auto !important;
+    }
+    body.printing-pdf.mobile-print-layout #chartsPanel .charts-column {
+      gap: 0.2rem !important;
+    }
+    body.printing-pdf.mobile-print-layout #chartsPanel .chart-card {
+      padding: 0.3rem !important;
+    }
+    body.printing-pdf.mobile-print-layout #chartsPanel .chart-wrap {
+      height: 26mm !important;
+    }
 
     @media print {
       @page { size: A4; margin: 15mm 20mm 15mm 20mm; }
@@ -436,6 +510,22 @@
         break-inside: avoid;
         page-break-inside: avoid;
         box-shadow: none !important;
+      }
+      body.printing-pdf.mobile-print-layout .wrap {
+        width: 170mm !important;
+        max-width: 170mm !important;
+        margin: 0 auto !important;
+        zoom: 0.84 !important;
+        transform: none !important;
+      }
+      @supports not (zoom: 0.84) {
+        body.printing-pdf.mobile-print-layout .wrap {
+          width: 200mm !important;
+          max-width: 200mm !important;
+          margin: 0 auto !important;
+          transform: scale(0.84) !important;
+          transform-origin: top center !important;
+        }
       }
     }
     
@@ -1170,11 +1260,15 @@
       note.textContent = message;
     }
 
-    function prefersCanvasCharts() {
+    function usesCompactPrintLayout() {
       if (typeof window.matchMedia === 'function') {
-        if (window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(hover: none)').matches) return true;
+        if (window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(hover: none)').matches || window.matchMedia('(max-width: 1024px)').matches) return true;
       }
-      return window.innerWidth <= 767;
+      return window.innerWidth <= 1024;
+    }
+
+    function prefersCanvasCharts() {
+      return usesCompactPrintLayout() && window.innerWidth <= 900;
     }
 
     function drawFallbackLineChart(canvas, data, labels, axisColor, primary, positive, negative) {
@@ -1564,6 +1658,7 @@
       const chosenDayKey = dayKeyFromISO(chosenDate.toISOString());
       const savedRecord = getRecordForDay(chosenDate);
       let cleanupTimer = null;
+      const useCompactPrintLayout = usesCompactPrintLayout();
 
       if (chosenDayKey === currentDayKey) {
         selectedDateTime = chosenDate;
@@ -1583,6 +1678,7 @@
           cleanupTimer = null;
         }
         document.body.classList.remove('printing-pdf');
+        document.body.classList.remove('mobile-print-layout');
         document.title = originalPageTitle;
         if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
         restoreUiSnapshot(snapshot);
@@ -1590,6 +1686,8 @@
       };
 
       document.body.classList.add('printing-pdf');
+      if (useCompactPrintLayout) document.body.classList.add('mobile-print-layout');
+      else document.body.classList.remove('mobile-print-layout');
       document.title = pdfFileName;
       if (pageTitleEl) pageTitleEl.textContent = pdfFileName;
       void document.body.offsetHeight;
