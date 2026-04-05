@@ -290,6 +290,28 @@
     .chart-controls button:hover { background: var(--color-surface-2); }
     .chart-controls .current-month { font-weight: 600; }
     .hidden { display:none; }
+    .pdf-export-pages { display: none; }
+    .pdf-page { display: grid; gap: var(--space-4); }
+    .pdf-export-summary {
+      display: grid;
+      gap: 0.35rem;
+      padding: 0.2rem 0 0.35rem 0;
+      border: 0 !important;
+      box-shadow: none !important;
+      background: transparent !important;
+    }
+    .pdf-export-title {
+      margin: 0;
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+    .pdf-export-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem 1rem;
+      color: var(--color-text-muted);
+      font-size: var(--text-sm);
+    }
 
     @media print {
       @page { size: A4; margin: 15mm 20mm 15mm 20mm; }
@@ -304,6 +326,28 @@
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
+      body.printing-pdf main.wrap {
+        display: none !important;
+      }
+      body.printing-pdf #pdfExportPages {
+        display: block !important;
+        max-width: none !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: -2mm 0 0 0 !important;
+        zoom: 0.8;
+        transform: none !important;
+        transform-origin: top center !important;
+      }
+      body.printing-pdf #pdfExportPages .pdf-page {
+        gap: 0.45rem !important;
+        break-after: page;
+        page-break-after: always;
+      }
+      body.printing-pdf #pdfExportPages .pdf-page:last-child {
+        break-after: auto;
+        page-break-after: auto;
+      }
       body.printing-pdf .wrap {
         max-width: none !important;
         width: 100% !important;
@@ -314,7 +358,8 @@
         transform-origin: top center !important;
       }
       @supports not (zoom: 0.7) {
-        body.printing-pdf .wrap {
+        body.printing-pdf .wrap,
+        body.printing-pdf #pdfExportPages {
           width: 100% !important;
           margin: 0 !important;
           transform: translateY(-2mm) scale(0.7) !important;
@@ -605,6 +650,12 @@
 
     <div class="status" id="captureStatus">Importe les données ou enregistre directement pour commencer un nouveau.</div>
     <div class="last-save" id="lastSaveStatus" style="margin-top:0.5rem;color:var(--color-text-muted);"></div>
+  </main>
+
+  <section class="pdf-export-pages" id="pdfExportPages" aria-hidden="true">
+    <div class="pdf-page" id="pdfPageOne"></div>
+    <div class="pdf-page" id="pdfPageTwo"></div>
+  </section>
 
   <!-- Modales -->
   <div class="modal-overlay" id="addActivityModal">
@@ -1515,28 +1566,119 @@
 
     function renderAll() { renderActivities(); renderFatigue(); renderBody(); renderEmotions(); updateSummary(); }
 
-    function refreshChartsForPrintMode() {
+    function preparePdfClone(root) {
+      if (!root || !root.querySelectorAll) return;
+      root.querySelectorAll('[id]').forEach(el => {
+        if (!el.id) return;
+        el.setAttribute('data-source-id', el.id);
+        el.removeAttribute('id');
+      });
+      root.querySelectorAll('input').forEach(input => {
+        if (typeof input.value === 'string') input.setAttribute('value', input.value);
+      });
+    }
+
+    function copyCanvasToClone(sourceRoot, cloneRoot) {
+      if (!sourceRoot || !cloneRoot || !sourceRoot.querySelectorAll || !cloneRoot.querySelectorAll) return;
+      sourceRoot.querySelectorAll('canvas[id]').forEach(sourceCanvas => {
+        const targetCanvas = cloneRoot.querySelector(`canvas[data-source-id="${sourceCanvas.id}"]`);
+        if (!targetCanvas || !targetCanvas.getContext) return;
+        targetCanvas.width = sourceCanvas.width;
+        targetCanvas.height = sourceCanvas.height;
+        targetCanvas.style.width = sourceCanvas.style.width || `${sourceCanvas.clientWidth}px`;
+        targetCanvas.style.height = sourceCanvas.style.height || `${sourceCanvas.clientHeight}px`;
+        const targetCtx = targetCanvas.getContext('2d');
+        if (!targetCtx) return;
+        targetCtx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+        try {
+          targetCtx.drawImage(sourceCanvas, 0, 0);
+        } catch (error) {
+          console.error('Erreur copie canvas PDF :', error);
+        }
+      });
+    }
+
+    function buildPdfSummaryBlock(chosenDate) {
+      const section = document.createElement('section');
+      section.className = 'panel pdf-export-summary';
+
+      const title = document.createElement('h1');
+      title.className = 'pdf-export-title';
+      title.textContent = 'Bilan quotidien';
+
+      const meta = document.createElement('div');
+      meta.className = 'pdf-export-meta';
+
+      const firstName = document.createElement('span');
+      firstName.textContent = userFirstName || '—';
+
+      const lastName = document.createElement('span');
+      lastName.textContent = userLastName || '—';
+
+      meta.appendChild(firstName);
+      meta.appendChild(lastName);
+      section.appendChild(title);
+      section.appendChild(meta);
+      return section;
+    }
+
+    function clearPdfPages() {
+      const pageOne = document.getElementById('pdfPageOne');
+      const pageTwo = document.getElementById('pdfPageTwo');
+      if (pageOne) pageOne.innerHTML = '';
+      if (pageTwo) pageTwo.innerHTML = '';
+    }
+
+    function preparePdfPages(chosenDate) {
+      const pageOne = document.getElementById('pdfPageOne');
+      const pageTwo = document.getElementById('pdfPageTwo');
+      const captureZone = document.getElementById('captureZone');
+      const chartsPanel = document.getElementById('chartsPanel');
+
+      if (!pageOne || !pageTwo) return;
+
+      clearPdfPages();
+      pageOne.appendChild(buildPdfSummaryBlock(chosenDate));
+
+      if (captureZone) {
+        const captureClone = captureZone.cloneNode(true);
+        preparePdfClone(captureClone);
+        pageOne.appendChild(captureClone);
+      }
+
+      if (chartsPanel) {
+        const chartsClone = chartsPanel.cloneNode(true);
+        preparePdfClone(chartsClone);
+        pageTwo.appendChild(chartsClone);
+        copyCanvasToClone(chartsPanel, chartsClone);
+      }
+    }
+
+    function refreshChartsForPrintMode(onDone) {
+      const finalize = () => {
+        const chartIds = ['chartActivites', 'chartFatigue', 'chartEmotions', 'chartRessenti'];
+        let resized = false;
+
+        chartIds.forEach(id => {
+          const chart = charts[id];
+          if (chart && typeof chart.resize === 'function') {
+            resized = true;
+            chart.resize();
+            if (typeof chart.update === 'function') chart.update('none');
+          }
+        });
+
+        if (!resized) updateCharts();
+        if (typeof onDone === 'function') onDone();
+      };
+
       if (typeof window.requestAnimationFrame !== 'function') {
-        updateCharts();
+        finalize();
         return;
       }
 
       window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-          const chartIds = ['chartActivites', 'chartFatigue', 'chartEmotions', 'chartRessenti'];
-          let resized = false;
-
-          chartIds.forEach(id => {
-            const chart = charts[id];
-            if (chart && typeof chart.resize === 'function') {
-              resized = true;
-              chart.resize();
-              if (typeof chart.update === 'function') chart.update('none');
-            }
-          });
-
-          if (!resized) updateCharts();
-        });
+        window.requestAnimationFrame(finalize);
       });
     }
 
@@ -1588,18 +1730,20 @@
         document.body.classList.remove('mobile-print-layout');
         document.title = originalPageTitle;
         if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
+        clearPdfPages();
         restoreUiSnapshot(snapshot);
         window.removeEventListener('afterprint', cleanupPrintMode);
         window.removeEventListener('focus', handleWindowFocus);
         document.removeEventListener('visibilitychange', handleVisibilityReturn);
       };
 
+      preparePdfPages(chosenDate);
       document.body.classList.add('printing-pdf');
       document.body.classList.remove('mobile-print-layout');
       document.title = pdfFileName;
       if (pageTitleEl) pageTitleEl.textContent = pdfFileName;
       void document.body.offsetHeight;
-      refreshChartsForPrintMode();
+      refreshChartsForPrintMode(() => preparePdfPages(chosenDate));
 
       status.textContent = 'Préparation de l’impression...';
 
@@ -1615,8 +1759,10 @@
         try {
           setTimeout(() => {
             try {
-              refreshChartsForPrintMode();
-              window.print();
+              refreshChartsForPrintMode(() => {
+                preparePdfPages(chosenDate);
+                window.print();
+              });
             } catch (error) {
               console.error('Erreur impression:', error);
               status.textContent = 'Impossible d’ouvrir la boîte d’impression sur ce navigateur.';
@@ -1632,7 +1778,7 @@
       }
 
       if (typeof window.html2pdf === 'function') {
-        const exportRoot = document.querySelector('main.wrap') || document.body;
+        const exportRoot = document.getElementById('pdfExportPages') || document.querySelector('main.wrap') || document.body;
         return window.html2pdf().set({
           margin: [15, 20, 15, 20],
           filename: `${pdfFileName}.pdf`,
@@ -1646,7 +1792,7 @@
             windowWidth: 1280
           },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak: { mode: ['css', 'legacy'], before: '#chartsPanel', avoid: ['.chart-card', '.history-item'] }
+          pagebreak: { mode: ['css', 'legacy'], before: '#pdfPageTwo', avoid: ['.chart-card', '.history-item'] }
         }).from(exportRoot).save().then(() => {
           status.textContent = 'PDF enregistré.';
           cleanupPrintMode();
