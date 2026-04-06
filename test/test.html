@@ -149,14 +149,6 @@
       .grid-2 { grid-template-columns: 1.2fr .8fr; }
       .body-containers { grid-template-columns: repeat(2, 1fr); }
     }
-    @media (min-width: 1100px) {
-      .wrap {
-        width: min(calc(100vw - 120mm), 1400px);
-        max-width: none;
-        margin-left: auto;
-        margin-right: auto;
-      }
-    }
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center; }
     .modal-overlay.active { display: flex; }
     .modal-content { background: var(--color-surface); border-radius: var(--radius-xl); padding: var(--space-5); max-width: 500px; width: 90%; box-shadow: var(--shadow); }
@@ -258,10 +250,10 @@
     .status { margin-top:.8rem; font-size: var(--text-sm); color: var(--color-text-muted); }
     #chartsPanel {
       width: 100%;
-      max-width: 820px;
-      margin: 0 auto;
+      max-width: none;
+      margin: 0;
       --charts-card-gap: 0.75rem;
-      --chart-card-width: min(100%, 760px);
+      --chart-card-width: 100%;
       --chart-card-radius: 18px;
       --chart-card-padding: 10px 10px 12px;
       --chart-wrap-aspect: 3 / 1.1;
@@ -327,8 +319,8 @@
 
       #chartsPanel {
         width: 100% !important;
-        max-width: 820px !important;
-        margin: 0 auto !important;
+        max-width: none !important;
+        margin: 0 !important;
         break-before: page !important;
         page-break-before: always !important;
       }
