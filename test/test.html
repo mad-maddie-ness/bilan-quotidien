@@ -1101,10 +1101,18 @@
       return Array.from(keys).sort();
     }
 
+    function formatMonthLabel(monthKey) {
+      if (!monthKey) return 'Mois';
+      const [year, month] = monthKey.split('-');
+      const date = new Date(Number(year), Number(month) - 1, 1);
+      const label = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+      return label.charAt(0).toUpperCase() + label.slice(1);
+    }
+
     function setSelectedMonth(index) {
       if (!monthKeys.length) return;
       selectedMonthIndex = Math.max(0, Math.min(index, monthKeys.length - 1));
-      document.getElementById('currentMonthLabel').textContent = monthKeys[selectedMonthIndex] ? `${monthKeys[selectedMonthIndex].slice(5,7)}/${monthKeys[selectedMonthIndex].slice(0,4)}` : 'Mois';
+      document.getElementById('currentMonthLabel').textContent = formatMonthLabel(monthKeys[selectedMonthIndex]);
       const prevBtn = document.getElementById('prevMonthBtn');
       const nextBtn = document.getElementById('nextMonthBtn');
       prevBtn.disabled = selectedMonthIndex === 0;
