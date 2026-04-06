@@ -1910,6 +1910,14 @@
           exportRoot.style.removeProperty('width');
           exportRoot.style.removeProperty('max-width');
           exportRoot.style.removeProperty('margin');
+          exportRoot.style.removeProperty('position');
+          exportRoot.style.removeProperty('left');
+          exportRoot.style.removeProperty('top');
+          exportRoot.style.removeProperty('overflow');
+          exportRoot.style.removeProperty('transform');
+          exportRoot.style.removeProperty('transform-origin');
+          exportRoot.style.removeProperty('visibility');
+          exportRoot.style.removeProperty('opacity');
         }
         document.title = originalPageTitle;
         if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
@@ -1942,22 +1950,31 @@
             const pdf = new JsPdf({ unit: 'mm', format: 'a4', orientation: 'portrait' });
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
-            const marginX = 15;
-            const marginY = 12;
-            const scaleRatio = 0.58;
+            const marginX = 12;
+            const marginY = 10;
+            const scaleRatio = 0.48;
             const maxWidth = (pageWidth - (marginX * 2)) * scaleRatio;
             const maxHeight = (pageHeight - (marginY * 2)) * scaleRatio;
-            const captureScale = usesCompactPrintLayout() ? 1.35 : 1.8;
+            const captureScale = usesCompactPrintLayout() ? 1.2 : 1.6;
             let chain = Promise.resolve();
 
             pageElements.forEach((pageEl, index) => {
               chain = chain.then(() => {
-                const pageCaptureWidth = Math.max(pageEl.scrollWidth, pageEl.offsetWidth, 794);
-                const pageCaptureHeight = Math.max(pageEl.scrollHeight, pageEl.offsetHeight, 1123);
+                const pageCaptureWidth = Math.max(Math.ceil(pageEl.scrollWidth), Math.ceil(pageEl.offsetWidth), 794);
+                const pageCaptureHeight = Math.max(Math.ceil(pageEl.scrollHeight), Math.ceil(pageEl.offsetHeight), 1123);
 
+                exportRoot.style.setProperty('position', 'fixed', 'important');
+                exportRoot.style.setProperty('left', '0', 'important');
+                exportRoot.style.setProperty('top', '0', 'important');
                 exportRoot.style.setProperty('width', `${pageCaptureWidth}px`, 'important');
                 exportRoot.style.setProperty('max-width', `${pageCaptureWidth}px`, 'important');
                 exportRoot.style.setProperty('margin', '0', 'important');
+                exportRoot.style.setProperty('overflow', 'visible', 'important');
+                exportRoot.style.setProperty('transform', 'none', 'important');
+                exportRoot.style.setProperty('transform-origin', 'top left', 'important');
+                exportRoot.style.setProperty('visibility', 'visible', 'important');
+                exportRoot.style.setProperty('opacity', '1', 'important');
+                void exportRoot.offsetWidth;
 
                 return window.html2canvas(pageEl, {
                   scale: captureScale,
@@ -1965,8 +1982,6 @@
                   backgroundColor: '#ffffff',
                   scrollX: 0,
                   scrollY: 0,
-                  x: 0,
-                  y: 0,
                   width: pageCaptureWidth,
                   height: pageCaptureHeight,
                   windowWidth: pageCaptureWidth,
