@@ -291,6 +291,13 @@
     .print-page-break { display:none; }
 
     @media print {
+      html,
+      body,
+      .wrap,
+      .stack {
+        background: #fff !important;
+      }
+
       .stack,
       .capture-zone {
         display: block !important;
@@ -300,14 +307,7 @@
       .chart-card {
         break-inside: avoid;
         page-break-inside: avoid;
-        background: transparent !important;
         box-shadow: none !important;
-      }
-
-      .kpi,
-      #bodyPositiveContainer,
-      #bodyNegativeContainer {
-        background: transparent !important;
       }
 
       .print-page-break {
