@@ -445,7 +445,7 @@
         width: 100% !important;
         max-width: none !important;
         margin: 0 !important;
-        --chart-wrap-height: 230px !important;
+        --chart-wrap-height: var(--pdf-chart-wrap-height, 230px) !important;
         break-before: page !important;
         page-break-before: always !important;
       }
@@ -526,7 +526,9 @@
 
       .chart-wrap,
       .chart-wrap canvas {
-        background: transparent !important;
+        background: var(--pdf-chart-bg, var(--color-surface-2)) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
 
       .chart-wrap {
@@ -591,7 +593,7 @@
 
     @media print and (min-width: 768px) {
       #chartsPanel {
-        --chart-wrap-height: 280px !important;
+        --chart-wrap-height: var(--pdf-chart-wrap-height, 300px) !important;
       }
     }
 
@@ -1781,6 +1783,9 @@
       const status = document.getElementById('captureStatus');
       const chosenDate = new Date(targetDate);
       const snapshot = createUiSnapshot();
+      const root = document.documentElement;
+      const previousPdfChartHeight = root.style.getPropertyValue('--pdf-chart-wrap-height');
+      const previousPdfChartBg = root.style.getPropertyValue('--pdf-chart-bg');
       const currentDayKey = dayKeyFromISO(selectedDateTime.toISOString());
       const chosenDayKey = dayKeyFromISO(chosenDate.toISOString());
       const savedRecord = getRecordForDay(chosenDate);
@@ -1798,6 +1803,12 @@
       }
 
       const cleanupExport = () => {
+        if (previousPdfChartHeight) root.style.setProperty('--pdf-chart-wrap-height', previousPdfChartHeight);
+        else root.style.removeProperty('--pdf-chart-wrap-height');
+
+        if (previousPdfChartBg) root.style.setProperty('--pdf-chart-bg', previousPdfChartBg);
+        else root.style.removeProperty('--pdf-chart-bg');
+
         restoreUiSnapshot(snapshot);
       };
 
@@ -1808,6 +1819,8 @@
       }
 
       updatePrintNameDisplay();
+      root.style.setProperty('--pdf-chart-wrap-height', window.innerWidth >= 768 ? '300px' : '230px');
+      root.style.setProperty('--pdf-chart-bg', getComputedStyle(root).getPropertyValue('--color-surface-2').trim() || '#f0eee8');
       status.textContent = 'Ouverture de l’impression...';
       window.addEventListener('afterprint', cleanupExport, { once: true });
 
