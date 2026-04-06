@@ -1166,8 +1166,10 @@
         ctx.lineTo(width - padding.right, y);
         ctx.strokeStyle = tick === 0 ? axisColor + '70' : (tick < 0 ? negative + '25' : axisColor + '22');
         ctx.stroke();
-        ctx.fillStyle = tick < 0 ? negative : axisColor;
-        ctx.fillText(String(tick), 4, y + 4);
+        if (tick % 5 === 0) {
+          ctx.fillStyle = tick < 0 ? negative : axisColor;
+          ctx.fillText(String(tick), 4, y + 4);
+        }
       });
 
       ctx.beginPath();
@@ -1370,7 +1372,7 @@
                     autoSkip: false,
                     padding: 6,
                     font: { size: 9 },
-                    callback: value => Number.isInteger(value) ? String(value) : '',
+                    callback: value => (Number.isInteger(value) && value % 5 === 0 ? String(value) : ''),
                     color: context => (context.tick.value < 0 ? negative : axisColor)
                   },
                   grid:{
