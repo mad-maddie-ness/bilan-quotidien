@@ -310,24 +310,16 @@
         transform: none !important;
         transform-origin: initial !important;
         width: 100% !important;
-        max-width: 1180px !important;
-        margin: 0 auto !important;
-        padding: clamp(0.75rem, 2.4vw, 1.5rem) !important;
-        zoom: 1 !important;
+        zoom: 0.8;
       }
 
-      .stack {
-        display: grid !important;
-        gap: var(--space-5) !important;
-      }
-
-      .capture-zone {
-        display: grid !important;
-        gap: var(--space-5) !important;
+      .stack,
+      .capture-zone,
+      #chartsPanel {
+        display: block !important;
       }
 
       #chartsPanel {
-        display: block !important;
         break-before: page !important;
         page-break-before: always !important;
       }
@@ -351,7 +343,7 @@
       }
 
       .title {
-        font-size: 3.6rem !important;
+        font-size: 50pt !important;
       }
 
       .chart-wrap {
