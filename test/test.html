@@ -301,17 +301,25 @@
 
       body {
         zoom: 1 !important;
+        overflow: visible !important;
       }
 
       .wrap {
-        transform: scale(0.8);
-        transform-origin: top center;
-        width: 125%;
+        transform: none !important;
+        transform-origin: initial !important;
+        width: 100% !important;
+        zoom: 0.8;
       }
 
       .stack,
-      .capture-zone {
+      .capture-zone,
+      #chartsPanel {
         display: block !important;
+      }
+
+      #chartsPanel {
+        break-before: page !important;
+        page-break-before: always !important;
       }
 
       .name-fields,
