@@ -1437,16 +1437,33 @@
       };
       const yForValue = value => padding.top + ((maxY - value) / (maxY - minY)) * innerHeight;
       const zeroY = yForValue(0);
+      const points = Array.isArray(data)
+        ? data.map((value, index) => ({ x: xForIndex(index, data.length), y: yForValue(value) }))
+        : [];
 
-      ctx.fillStyle = positive + '12';
-      ctx.fillRect(padding.left, padding.top, innerWidth, Math.max(0, zeroY - padding.top));
-      ctx.fillStyle = negative + '12';
-      ctx.fillRect(padding.left, zeroY, innerWidth, Math.max(0, height - padding.bottom - zeroY));
+      const fillAreaToZero = (fillStyle, clipTop, clipHeight) => {
+        if (!points.length || clipHeight <= 0) return;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(padding.left, clipTop, innerWidth, clipHeight);
+        ctx.clip();
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, zeroY);
+        points.forEach(point => ctx.lineTo(point.x, point.y));
+        ctx.lineTo(points[points.length - 1].x, zeroY);
+        ctx.closePath();
+        ctx.fillStyle = fillStyle;
+        ctx.fill();
+        ctx.restore();
+      };
+
+      fillAreaToZero(positive + '14', padding.top, Math.max(0, zeroY - padding.top));
+      fillAreaToZero(negative + '14', zeroY, Math.max(0, height - padding.bottom - zeroY));
 
       ctx.lineWidth = 1;
       ctx.strokeStyle = axisColor + '35';
       ctx.fillStyle = axisColor;
-      ctx.font = '8px sans-serif';
+      ctx.font = '9px Satoshi, sans-serif';
       ctx.textAlign = 'right';
 
       yTicks.forEach(tick => {
@@ -1538,6 +1555,7 @@
       const primary = rootStyles.getPropertyValue('--color-primary').trim();
       const positive = rootStyles.getPropertyValue('--color-positive').trim();
       const negative = rootStyles.getPropertyValue('--color-negative').trim();
+      const fontFamily = rootStyles.getPropertyValue('--font-body').trim() || 'Satoshi, sans-serif';
       const chartSurface = rootStyles.getPropertyValue('--color-surface-2').trim() || '#f0eee8';
       const filtered = filterBySelectedMonth(historyRecords);
       const labels = filtered.map(r => String(new Date(r.date).getDate()).padStart(2, '0'));
@@ -1630,14 +1648,15 @@
               datasets:[{
                 data: splitSeries.points,
                 borderColor: primary,
-                backgroundColor: primary + '22',
-                fill: { target: 'origin', above: positive + '22', below: negative + '22' },
-                tension:.25,
-                pointRadius: context => (splitSeries.helperIndexes.has(context.dataIndex) ? 0 : 3),
-                pointHoverRadius: context => (splitSeries.helperIndexes.has(context.dataIndex) ? 0 : 4),
+                backgroundColor: 'transparent',
+                fill: { target: 'origin', above: positive + '14', below: negative + '14' },
+                tension:.22,
+                borderWidth: 2.5,
+                pointRadius: context => (splitSeries.helperIndexes.has(context.dataIndex) ? 0 : 3.2),
+                pointHoverRadius: context => (splitSeries.helperIndexes.has(context.dataIndex) ? 0 : 4.2),
                 pointBackgroundColor: context => (context.raw.y < 0 ? negative : positive),
                 pointBorderColor: context => (context.raw.y < 0 ? negative : positive),
-                pointBorderWidth: 1.5,
+                pointBorderWidth: 0,
                 segment: {
                   borderColor: context => ((context.p0.parsed.y < 0 || context.p1.parsed.y < 0) ? negative : positive)
                 }
@@ -1656,6 +1675,7 @@
                   ticks:{
                     stepSize: 1,
                     color:axisColor,
+                    font: { size: 10, family: fontFamily, weight: '500' },
                     callback: (value) => {
                       const index = Number(value);
                       return Number.isInteger(index) && labels[index] ? labels[index] : '';
@@ -1676,7 +1696,7 @@
                     precision: 0,
                     autoSkip: false,
                     padding: 1,
-                    font: { size: 9 },
+                    font: { size: 10, family: fontFamily, weight: '500' },
                     callback: value => (Number.isInteger(value) && value % 5 === 0 ? String(value) : ''),
                     color: context => (context.tick.value < 0 ? negative : axisColor)
                   },
