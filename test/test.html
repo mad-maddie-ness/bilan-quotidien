@@ -222,8 +222,29 @@
     .select-group { display:flex; gap: 0.4rem; align-items:center; min-width: 180px; }
     .select-box { min-height: clamp(28px, 3.5vw, 34px); padding: clamp(0.15rem, 0.85vw, 0.28rem) clamp(0.3rem, 0.9vw, 0.55rem); font-size: clamp(0.76rem, 1.75vw, 0.92rem); }
     @media (max-width: 700px) {
-      .select-row { flex-direction: column; align-items: stretch; }
-      .select-group { width:100%; }
+      .select-row {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: flex-start;
+        gap: 0.35rem;
+      }
+      .select-group {
+        width: 50%;
+        min-width: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.2rem;
+      }
+      .select-group label {
+        font-size: 0.66rem;
+        line-height: 1.2;
+      }
+      .select-box {
+        width: 100%;
+        min-width: 0;
+        padding: 0.12rem 1.5rem 0.12rem 0.35rem;
+        font-size: 0.74rem;
+      }
     }
 
     .ghost-note { font-size: var(--text-sm); color: var(--color-text-muted); }
@@ -371,6 +392,27 @@
         height: var(--chart-wrap-height) !important;
       }
 
+      .select-row {
+        flex-wrap: nowrap !important;
+        align-items: flex-start !important;
+        gap: 0.35rem !important;
+      }
+
+      .select-group {
+        width: 50% !important;
+        min-width: 0 !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.15rem !important;
+      }
+
+      .select-box {
+        width: 100% !important;
+        min-width: 0 !important;
+        font-size: 0.7rem !important;
+        padding: 0.1rem 1.35rem 0.1rem 0.3rem !important;
+      }
+
       .panel,
       .chart-card {
         break-inside: avoid;
@@ -448,9 +490,23 @@
       }
       
       .summary-grid { grid-template-columns: repeat(3,minmax(80px,1fr)); gap: var(--space-2); }
-      .select-row { gap: var(--space-1); flex-direction: column; align-items: stretch; }
-      .select-row label { font-size: var(--text-xs); }
-      .select-box { width: 100%; }
+      .select-row {
+        gap: 0.3rem;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: flex-start;
+      }
+      .select-row label { font-size: 0.62rem; }
+      .select-group {
+        width: 50%;
+        min-width: 0;
+      }
+      .select-box {
+        width: 100%;
+        min-width: 0;
+        padding: 0.1rem 1.35rem 0.1rem 0.3rem;
+        font-size: 0.68rem;
+      }
       .section-title { margin-bottom: 0.5rem; font-size: var(--text-lg); }
       .selected-list { gap: 0.35rem; margin-top: 0.5rem; }
       #chartsPanel { --chart-wrap-height: 165px; }
