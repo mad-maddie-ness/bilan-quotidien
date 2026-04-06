@@ -256,11 +256,11 @@
     .date-input { min-height: 34px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding: 0.35rem 0.7rem; }
     .date-help { max-width: 180px; margin-left: 1.5rem; margin-bottom: 0.15rem; font-size: 10px; line-height: 1.35; color: var(--color-text-muted); margin-top: 0; text-align: justify; }
     .status { margin-top:.8rem; font-size: var(--text-sm); color: var(--color-text-muted); }
-    .charts-column { display:flex; flex-direction:column; gap: var(--space-4); align-items:center; }
-    .chart-card { background: var(--color-surface-2); border-radius: var(--radius-xl); border:1px solid var(--color-border); padding: var(--space-4); box-sizing:border-box; width: 92%; max-width: 100%; margin: 0 auto; overflow: visible; }
-    .chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.75rem; }
+    .charts-column { display:flex; flex-direction:column; gap: var(--space-3); align-items:center; }
+    .chart-card { background: var(--color-surface-2); border-radius: var(--radius-xl); border:1px solid var(--color-border); padding: var(--space-3); box-sizing:border-box; width: 92%; max-width: 100%; margin: 0 auto; overflow: visible; }
+    .chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.45rem; }
     .chart-title { font-size: var(--text-sm); font-weight:600; }
-    .chart-wrap { position: relative; height: 220px; width: 100%; overflow: visible; }
+    .chart-wrap { position: relative; height: 185px; width: 100%; overflow: visible; }
     .chart-wrap canvas {
       position: absolute;
       inset: 0;
@@ -347,7 +347,7 @@
       }
 
       .chart-wrap {
-        height: 300px !important;
+        height: 220px !important;
       }
 
       .panel,
@@ -355,6 +355,10 @@
         break-inside: avoid;
         page-break-inside: avoid;
         box-shadow: none !important;
+      }
+
+      .chart-card {
+        padding: 0.7rem !important;
       }
 
       .chart-card,
@@ -427,8 +431,8 @@
       .select-box { width: 100%; }
       .section-title { margin-bottom: 0.5rem; font-size: var(--text-lg); }
       .selected-list { gap: 0.35rem; margin-top: 0.5rem; }
-      .chart-wrap { height: 220px; }
-      .chart-card { padding: var(--space-2); }
+      .chart-wrap { height: 170px; }
+      .chart-card { padding: 0.45rem; }
       .history-item { padding: 0.65rem 0.75rem; flex-direction: column; gap: 0.35rem; }
       .history-meta { font-size: 0.65rem; }
       .date-badge { padding: 0.35rem 0.6rem; font-size: 0.65rem; }
