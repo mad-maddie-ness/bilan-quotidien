@@ -337,6 +337,10 @@
     .print-name-display { display:none; }
 
     @media print {
+      @page {
+        margin: 8mm 8mm 4mm 8mm;
+      }
+
       html,
       body,
       .wrap,
@@ -447,9 +451,7 @@
       }
 
       .print-page-break {
-        display: block !important;
-        break-before: page;
-        page-break-before: always;
+        display: none !important;
         height: 0;
         margin: 0;
         border: 0;
