@@ -1858,11 +1858,14 @@
       updatePrintNameDisplay();
       root.style.setProperty('--pdf-chart-wrap-height', window.innerWidth >= 768 ? '255px' : '230px');
       root.style.setProperty('--pdf-chart-bg', getComputedStyle(root).getPropertyValue('--color-surface-2').trim() || '#f0eee8');
+      renderHistory();
+      updateCharts();
       status.textContent = 'Ouverture de l’impression...';
       window.addEventListener('afterprint', cleanupExport, { once: true });
 
       setTimeout(() => {
         try {
+          updateCharts();
           window.print();
         } catch (error) {
           console.error('Erreur impression:', error);
