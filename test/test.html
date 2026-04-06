@@ -8,7 +8,6 @@
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     :root, [data-theme="light"] {
       --text-xs: clamp(0.75rem, 0.72rem + 0.18vw, 0.875rem);
@@ -470,7 +469,7 @@
               <button class="help-trigger" type="button" aria-label="Aide pour Enregistrer en PDF">?</button>
               <button class="secondary-btn" type="button" id="savePdfBtn">Enregistrer en PDF</button>
             </div>
-            <div class="help-popover">Génère simplement le PDF sur la même page, sans réglage spécial.</div>
+            <div class="help-popover">Ouvre simplement l’impression sur la même page, sans réglage spécial.</div>
           </div>
           <div class="action-item">
             <div class="action-inline">
@@ -1467,33 +1466,28 @@
         return;
       }
 
-      const sourceRoot = document.querySelector('main.wrap');
       const cleanupExport = () => {
         restoreUiSnapshot(snapshot);
       };
 
-      if (!sourceRoot) {
-        status.textContent = 'Impossible de préparer cette page pour le PDF.';
+      if (typeof window.print !== 'function') {
+        status.textContent = 'L’impression n’est pas disponible sur ce navigateur.';
         cleanupExport();
         return;
       }
 
-      if (typeof window.html2pdf !== 'function') {
-        status.textContent = 'Le générateur PDF n’est pas disponible sur ce navigateur.';
-        cleanupExport();
-        return;
-      }
+      status.textContent = 'Ouverture de l’impression...';
+      window.addEventListener('afterprint', cleanupExport, { once: true });
 
-      status.textContent = 'Génération du PDF...';
-
-      window.html2pdf().from(sourceRoot).save().then(() => {
-        status.textContent = 'PDF généré.';
-        cleanupExport();
-      }).catch(error => {
-        console.error('Erreur export PDF:', error);
-        status.textContent = 'Impossible de générer le PDF sur ce navigateur.';
-        cleanupExport();
-      });
+      setTimeout(() => {
+        try {
+          window.print();
+        } catch (error) {
+          console.error('Erreur impression:', error);
+          status.textContent = 'Impossible d’ouvrir l’impression sur ce navigateur.';
+          cleanupExport();
+        }
+      }, 120);
     }
 
     function exportJsonData() {
