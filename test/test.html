@@ -1138,7 +1138,7 @@
       const padding = { top: 16, right: 12, bottom: 30, left: 38 };
       const innerWidth = Math.max(10, width - padding.left - padding.right);
       const innerHeight = Math.max(10, height - padding.top - padding.bottom);
-      const minY = -5;
+      const minY = -10;
       const maxY = 10;
       const yTicks = Array.from({ length: maxY - minY + 1 }, (_, index) => maxY - index);
 
@@ -1360,16 +1360,16 @@
                   grid:{ color:axisColor+'22' }
                 },
                 y:{
-                  min:-5,
+                  min:-10,
                   max:10,
                   ticks:{
                     stepSize: 1,
-                    count: 16,
-                    maxTicksLimit: 16,
+                    count: 21,
+                    maxTicksLimit: 21,
                     precision: 0,
                     autoSkip: false,
                     padding: 6,
-                    font: { size: 10 },
+                    font: { size: 9 },
                     callback: value => Number.isInteger(value) ? String(value) : '',
                     color: context => (context.tick.value < 0 ? negative : axisColor)
                   },
