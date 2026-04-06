@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>bilan-quotidien</title>
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root, [data-theme="light"] {
@@ -1023,25 +1022,6 @@
       note.textContent = message;
     }
 
-    function usesCompactPrintLayout() {
-      if (typeof window.matchMedia === 'function') {
-        if (window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(hover: none)').matches || window.matchMedia('(max-width: 1024px)').matches) return true;
-      }
-      return window.innerWidth <= 1024;
-    }
-
-    function shouldUseDirectPdfDownload() {
-      const ua = (navigator && navigator.userAgent) ? navigator.userAgent : '';
-      const isMobileUa = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(ua);
-      const hasTouchScreen = typeof navigator.maxTouchPoints === 'number' && navigator.maxTouchPoints > 1;
-      if (isMobileUa) return true;
-      return hasTouchScreen && Math.min(window.innerWidth, window.innerHeight) <= 1024;
-    }
-
-    function prefersCanvasCharts() {
-      return usesCompactPrintLayout() && window.innerWidth <= 900;
-    }
-
     function drawFallbackLineChart(canvas, data, labels, axisColor, primary, positive, negative) {
       const ctx = canvas && canvas.getContext ? canvas.getContext('2d') : null;
       if (!ctx) return false;
@@ -1194,7 +1174,7 @@
         total: filtered.map(r => coalesce(r.total, 0))
       };
 
-      if (prefersCanvasCharts() || typeof window.Chart !== 'function') {
+      if (typeof window.Chart !== 'function') {
         drawFallbackLineChart(document.getElementById('chartActivites'), series.activites, labels, axisColor, primary, positive, negative);
         drawFallbackLineChart(document.getElementById('chartFatigue'), series.fatigue, labels, axisColor, primary, positive, negative);
         drawFallbackLineChart(document.getElementById('chartEmotions'), series.emotions, labels, axisColor, primary, positive, negative);
@@ -1400,51 +1380,7 @@
       reader.readAsText(file, 'utf-8');
     }
 
-    function captureAsImage() {
-      const status=document.getElementById('captureStatus'); status.textContent='Création de la capture…';
-      const zone=document.getElementById('captureZone');
-      html2canvas(zone, { backgroundColor:getComputedStyle(document.documentElement).getPropertyValue('--color-bg').trim(), scale:2, useCORS:true })
-        .then(canvas => {
-          canvas.toBlob(blob => {
-            if (!blob) { status.textContent='Impossible de générer l’image.'; return; }
-            const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`bilan-quotidien-${formatFileDate()}.png`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href); status.textContent='Capture téléchargée.';
-          }, 'image/png');
-        })
-        .catch(error => {
-          console.error('Erreur capture:', error);
-          status.textContent='La capture a échoué dans ce navigateur.';
-        });
-    }
-
     function renderAll() { renderActivities(); renderFatigue(); renderBody(); renderEmotions(); updateSummary(); }
-
-    function refreshChartsForPrintMode(onDone) {
-      const finalize = () => {
-        const chartIds = ['chartActivites', 'chartFatigue', 'chartEmotions', 'chartRessenti'];
-        let resized = false;
-
-        chartIds.forEach(id => {
-          const chart = charts[id];
-          if (chart && typeof chart.resize === 'function') {
-            resized = true;
-            chart.resize();
-            if (typeof chart.update === 'function') chart.update('none');
-          }
-        });
-
-        if (!resized) updateCharts();
-        if (typeof onDone === 'function') onDone();
-      };
-
-      if (typeof window.requestAnimationFrame !== 'function') {
-        finalize();
-        return;
-      }
-
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(finalize);
-      });
-    }
 
     function exportToPDF(targetDate = selectedDateTime) {
       const status = document.getElementById('captureStatus');
