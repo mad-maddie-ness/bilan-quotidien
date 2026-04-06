@@ -288,11 +288,27 @@
     .chart-controls button:hover { background: var(--color-surface-2); }
     .chart-controls .current-month { font-weight: 600; }
     .hidden { display:none; }
+    .print-page-break { display:none; }
 
     @media print {
-      #captureZone {
-        break-after: page;
-        page-break-after: always;
+      .stack,
+      .capture-zone {
+        display: block !important;
+      }
+
+      .panel,
+      .chart-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .print-page-break {
+        display: block !important;
+        break-before: page;
+        page-break-before: always;
+        height: 0;
+        margin: 0;
+        border: 0;
       }
     }
 
@@ -446,6 +462,8 @@
         <p class="footer-note" id="summaryText">Commence par cocher ce qui correspond à aujourd’hui.</p>
       </section>
     </section>
+
+    <div class="print-page-break" aria-hidden="true"></div>
 
     <section class="panel" id="chartsPanel">
       <div class="section-title" style="margin-bottom:.8rem;">Graphiques</div>
