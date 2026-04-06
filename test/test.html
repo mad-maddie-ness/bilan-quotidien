@@ -432,9 +432,9 @@
       .select-box { width: 100%; }
       .section-title { margin-bottom: 0.5rem; font-size: var(--text-lg); }
       .selected-list { gap: 0.35rem; margin-top: 0.5rem; }
-      .chart-wrap { height: 175px; }
-      .chart-card { padding: 8mm 8mm 8mm; }
-      .history-item { padding: 0.15rem 0.20rem; flex-direction: column; gap: 0.35rem; }
+      .chart-wrap { height: 198px; }
+      .chart-card { padding: 10px 10px 12px; }
+      .history-item { padding: 8mm 8mm; flex-direction: column; gap: 8mm; }
       .history-meta { font-size: 0.65rem; }
       .date-badge { padding: 0.35rem 0.6rem; font-size: 0.65rem; }
       .status { font-size: 0.65rem; }
@@ -1279,9 +1279,7 @@
         total: filtered.map(r => coalesce(r.total, 0))
       };
 
-      const isPrinting = typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('print').matches;
-      const isSmallScreen = typeof window !== 'undefined' && window.innerWidth <= 767;
-      const useFallbackCharts = typeof window.Chart !== 'function' || isPrinting || isSmallScreen;
+      const useFallbackCharts = typeof window.Chart !== 'function';
       if (useFallbackCharts) {
         drawFallbackLineChart(document.getElementById('chartActivites'), series.activites, labels, axisColor, primary, positive, negative);
         drawFallbackLineChart(document.getElementById('chartFatigue'), series.fatigue, labels, axisColor, primary, positive, negative);
