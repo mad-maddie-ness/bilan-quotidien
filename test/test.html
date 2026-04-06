@@ -286,6 +286,15 @@
     .chart-controls button { min-height: 32px; padding: 0.2rem 0.65rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); cursor: pointer; }
     .chart-controls button:hover { background: var(--color-surface-2); }
     .chart-controls .current-month { font-weight: 600; }
+    @media (hover: none), (pointer: coarse) {
+      #prevMonthBtn,
+      #nextMonthBtn {
+        min-height: 28px;
+        padding-top: 0.08rem;
+        padding-bottom: 0.08rem;
+        line-height: 1.1;
+      }
+    }
     .hidden { display:none; }
     .print-page-break { display:none; }
     .print-name-display { display:none; }
