@@ -41,13 +41,13 @@
     .muted { color: var(--color-text-muted); }
     .panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); box-shadow: var(--shadow); padding: clamp(var(--space-3), 3vw, var(--space-5)); width: 100%; box-sizing: border-box; min-width: 0; }
     .panel-compact {
-      padding-top: clamp(0.55rem, 1.6vw, 0.85rem);
-      padding-bottom: clamp(0.55rem, 1.6vw, 0.85rem);
+      padding-top: clamp(0.45rem, 1.35vw, 0.72rem);
+      padding-bottom: clamp(0.45rem, 1.35vw, 0.72rem);
     }
-    .panel-compact .section-title { margin-bottom: 0.35rem; }
+    .panel-compact .section-title { margin-bottom: 0.3rem; }
     .panel-compact .fatigue-grid { padding-top: 0.34rem; padding-bottom: 0.32rem; }
-    .panel-bilan .summary-grid { gap: clamp(0.15rem, 0.6vw, 0.3rem); }
-    .panel-bilan .footer-note { margin-top: 0.2rem; }
+    .panel-bilan .summary-grid { gap: clamp(0.12rem, 0.45vw, 0.24rem); }
+    .panel-bilan .footer-note { margin-top: 0.1rem; }
     #summaryText:empty { display: none; }
     .stack { display:grid; gap: var(--space-5); }
     .section-title { margin:0 0 .8rem 0; font-size: var(--text-lg); font-weight: 700; }
@@ -232,11 +232,11 @@
     .select-box { min-height: clamp(28px, 3.5vw, 34px); padding: clamp(0.15rem, 0.85vw, 0.28rem) clamp(0.3rem, 0.9vw, 0.55rem); font-size: clamp(0.76rem, 1.75vw, 0.92rem); }
     @media (max-width: 700px) {
       .panel-compact {
-        padding-top: 0.5rem;
-        padding-bottom: 0.5rem;
+        padding-top: 0.4rem;
+        padding-bottom: 0.4rem;
       }
-      .panel-compact .section-title { margin-bottom: 0.25rem; }
-      .panel-bilan .summary-grid { gap: 0.2rem; }
+      .panel-compact .section-title { margin-bottom: 0.18rem; }
+      .panel-bilan .summary-grid { gap: 0.15rem; }
       .select-row {
         flex-direction: row;
         flex-wrap: nowrap;
@@ -416,12 +416,12 @@
       }
 
       .panel-compact {
-        padding-top: 0.45rem !important;
-        padding-bottom: 0.45rem !important;
+        padding-top: 0.36rem !important;
+        padding-bottom: 0.36rem !important;
       }
 
       .panel-compact .section-title {
-        margin-bottom: 0.2rem !important;
+        margin-bottom: 0.14rem !important;
       }
 
       .panel-compact .fatigue-grid {
@@ -430,11 +430,11 @@
       }
 
       .panel-bilan .summary-grid {
-        gap: 0.2rem !important;
+        gap: 0.14rem !important;
       }
 
       .panel-bilan .footer-note {
-        margin-top: 0.1rem !important;
+        margin-top: 0.04rem !important;
       }
 
       .pill {
