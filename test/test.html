@@ -252,12 +252,12 @@
       width: 100%;
       max-width: none;
       margin: 0;
-      padding-top: 0.4rem;
-      padding-bottom: 0.4rem;
-      --charts-card-gap: 0.08rem;
+      padding-top: 0.25rem;
+      padding-bottom: 0.25rem;
+      --charts-card-gap: 0.06rem;
       --chart-card-width: 100%;
       --chart-card-radius: 18px;
-      --chart-card-padding: 2px 4px 2px;
+      --chart-card-padding: 1px 2px 1px;
       --chart-wrap-height: clamp(132px, 14vw, 165px);
       --chart-header-gap: 0;
     }
@@ -276,10 +276,7 @@
       max-height: 100% !important;
     }
     .chart-empty-note {
-      margin-top: 0.55rem;
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-      text-align: center;
+      display: none !important;
     }
     .history-list { display:grid; gap:.75rem; margin-top:1rem; }
     .history-item { display:flex; justify-content:space-between; gap:1rem; border:1px solid var(--color-border); background: var(--color-surface-2); border-radius: var(--radius-lg); padding: .9rem 1rem; }
@@ -437,7 +434,7 @@
       .section-title { margin-bottom: 0.5rem; font-size: var(--text-lg); }
       .selected-list { gap: 0.35rem; margin-top: 0.5rem; }
       .chart-wrap { height: 150px; }
-      .chart-card { padding: 4px 6px 4px; }
+      .chart-card { padding: 2px 4px 2px; }
       .history-item { padding: 8mm 8mm; flex-direction: column; gap: 8mm; }
       .history-meta { font-size: 0.65rem; }
       .date-badge { padding: 0.35rem 0.6rem; font-size: 0.65rem; }
@@ -1289,7 +1286,7 @@
         drawFallbackLineChart(document.getElementById('chartFatigue'), series.fatigue, labels, axisColor, primary, positive, negative);
         drawFallbackLineChart(document.getElementById('chartEmotions'), series.emotions, labels, axisColor, primary, positive, negative);
         drawFallbackLineChart(document.getElementById('chartRessenti'), series.ressenti, labels, axisColor, primary, positive, negative);
-        chartIds.forEach(id => setChartNote(id, filtered.length ? '' : 'Aucune journée enregistrée pour ce mois sur ce navigateur.'));
+        chartIds.forEach(id => setChartNote(id, ''));
         return;
       }
 
@@ -1397,11 +1394,11 @@
               }
             }
           });
-          setChartNote(id, data.length ? '' : 'Aucune journée enregistrée pour ce mois sur ce navigateur.');
+          setChartNote(id, '');
         } catch (error) {
           console.error('Erreur graphique:', error);
           drawFallbackLineChart(canvas, data, labels, axisColor, primary, positive, negative);
-          setChartNote(id, data.length ? '' : 'Aucune journée enregistrée pour ce mois sur ce navigateur.');
+          setChartNote(id, '');
         }
       }
 
