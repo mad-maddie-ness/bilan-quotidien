@@ -551,7 +551,7 @@
               <button class="help-trigger" type="button" aria-label="Aide pour Enregistrer en PDF">?</button>
               <button class="secondary-btn" type="button" id="savePdfBtn">Enregistrer en PDF</button>
             </div>
-            <div class="help-popover">Sur ordinateur, ouvre l’impression. Sur téléphone ou tablette, ouvre directement un PDF de la page.</div>
+            <div class="help-popover">Sur ordinateur, ouvre l’impression. Sur téléphone ou tablette, génère directement le fichier PDF sans changer de page.</div>
           </div>
           <div class="action-item">
             <div class="action-inline">
@@ -655,7 +655,7 @@
       <input type="date" class="modal-input" id="pdfExportDateInput">
       <div class="modal-buttons">
         <button class="modal-btn modal-btn-cancel" type="button" id="cancelPdfExportBtn">Annuler</button>
-        <button class="modal-btn modal-btn-confirm" type="button" id="confirmPdfExportBtn">Ouvrir le PDF</button>
+        <button class="modal-btn modal-btn-confirm" type="button" id="confirmPdfExportBtn">Générer le PDF</button>
       </div>
     </div>
   </div>
@@ -1586,12 +1586,6 @@
           return;
         }
 
-        const previewWindow = window.open('', '_blank');
-        if (previewWindow && previewWindow.document) {
-          previewWindow.document.write('<p style="font-family:sans-serif;padding:1rem;">Préparation du PDF…</p>');
-          previewWindow.document.close();
-        }
-
         const desktopCaptureWidth = 1180;
 
         sourceRoot.style.margin = '0 auto';
@@ -1603,7 +1597,7 @@
 
         document.title = pdfFileName;
         if (pageTitleEl) pageTitleEl.textContent = pdfFileName;
-        status.textContent = 'Ouverture du PDF...';
+        status.textContent = 'Génération du PDF...';
 
         refreshChartsForPrintMode(() => {
           setTimeout(() => {
@@ -1630,20 +1624,12 @@
                 }
               },
               jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(sourceRoot).toPdf().get('pdf').then(pdf => {
-              const pdfUrl = pdf.output('bloburl');
-              if (previewWindow) {
-                previewWindow.location.href = pdfUrl;
-                if (typeof previewWindow.focus === 'function') previewWindow.focus();
-              } else {
-                window.location.href = pdfUrl;
-              }
-              status.textContent = 'PDF ouvert.';
+            }).from(sourceRoot).save().then(() => {
+              status.textContent = 'PDF généré.';
               cleanupExport();
             }).catch(error => {
               console.error('Erreur export PDF:', error);
-              if (previewWindow && !previewWindow.closed) previewWindow.close();
-              status.textContent = 'Impossible d’ouvrir le PDF sur ce navigateur.';
+              status.textContent = 'Impossible de générer le PDF sur ce navigateur.';
               cleanupExport();
             });
           }, 120);
