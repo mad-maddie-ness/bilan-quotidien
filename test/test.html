@@ -173,8 +173,8 @@
     .chip-add-btn:hover { background: var(--color-primary-hover); }
     .chip-delete { margin-left: auto; cursor: pointer; opacity: 0.7; font-size: 0.9em; padding: 0 .25rem; }
     .chip-delete:hover { opacity: 1; }
-    .toggle-btns { display:flex; gap: 0.5rem; margin-bottom: var(--space-3); }
-    .toggle-btn { border:1px solid var(--color-border); border-radius: var(--radius-lg); padding:.45rem .75rem; cursor:pointer; background: var(--color-surface); color: var(--color-text); }
+    .toggle-btns { display:flex; flex-wrap:wrap; gap: 0.5rem; margin-bottom: var(--space-3); }
+    .toggle-btn { flex: 1 1 140px; text-align:center; border:1px solid var(--color-border); border-radius: var(--radius-lg); padding:.45rem .75rem; cursor:pointer; background: var(--color-surface); color: var(--color-text); }
     .toggle-btn.selected { border-color: var(--color-primary); background: var(--color-primary-soft); }
     .toggle-btn--positive { color: var(--color-positive); border-color: var(--color-positive); }
     .toggle-btn--negative { color: var(--color-negative); border-color: var(--color-negative); }
@@ -641,8 +641,13 @@
 
   <div class="modal-overlay" id="addEmotionModal">
     <div class="modal-content">
-      <h3 class="modal-title" id="emotionModalTitle">Ajouter une émotion</h3>
+      <h3 class="modal-title" id="emotionModalTitle">Ajouter une émotion positive</h3>
       <input type="text" class="modal-input" id="emotionInput" placeholder="Nom de l'émotion">
+      <p style="margin:0.6rem 0 0.4rem 0;">Quel type d’émotion veux-tu ajouter ?</p>
+      <div class="toggle-btns" id="emotionToggleBtns">
+        <button type="button" class="toggle-btn toggle-btn--positive selected" id="emotionPositiveBtn" aria-pressed="true">Positive</button>
+        <button type="button" class="toggle-btn toggle-btn--negative" id="emotionNegativeBtn" aria-pressed="false">Négative</button>
+      </div>
       <div class="modal-buttons">
         <button class="modal-btn modal-btn-cancel" type="button" id="cancelEmotionBtn">Annuler</button>
         <button class="modal-btn modal-btn-confirm" type="button" id="confirmEmotionBtn">Ajouter</button>
@@ -715,7 +720,7 @@
     const state = { activities:new Set(), fatigue:0, negativeEmotions:[], positiveEmotions:[], body:new Set() };
     let historyRecords = [];
     const charts = {};
-    let currentEmotionType = null;
+    let currentEmotionType = 'positiveEmotions';
     let monthKeys = [];
     let selectedMonthIndex = 0;
     let selectedDateTime = new Date();
@@ -1065,7 +1070,7 @@
         const value=select.value;
         if(!value) { select.value=''; return; }
         if (value === '__add__') {
-          currentEmotionType = bucket;
+          updateEmotionToggle(bucket);
           openModal('addEmotionModal');
           select.value='';
         } else {
@@ -1760,6 +1765,22 @@
     });
 
     // Gestion des modales pour les émotions
+    const emotionPositiveBtn = document.getElementById('emotionPositiveBtn');
+    const emotionNegativeBtn = document.getElementById('emotionNegativeBtn');
+
+    function updateEmotionToggle(bucket) {
+      currentEmotionType = bucket === 'negativeEmotions' ? 'negativeEmotions' : 'positiveEmotions';
+      const isNegative = currentEmotionType === 'negativeEmotions';
+      emotionPositiveBtn.classList.toggle('selected', !isNegative);
+      emotionNegativeBtn.classList.toggle('selected', isNegative);
+      emotionPositiveBtn.setAttribute('aria-pressed', String(!isNegative));
+      emotionNegativeBtn.setAttribute('aria-pressed', String(isNegative));
+      document.getElementById('emotionModalTitle').textContent = `Ajouter une émotion ${isNegative ? 'négative' : 'positive'}`;
+    }
+
+    emotionPositiveBtn.addEventListener('click', () => updateEmotionToggle('positiveEmotions'));
+    emotionNegativeBtn.addEventListener('click', () => updateEmotionToggle('negativeEmotions'));
+
     document.getElementById('cancelEmotionBtn').addEventListener('click', () => {
       closeModal('addEmotionModal');
       document.getElementById('emotionInput').value = '';
@@ -1783,6 +1804,8 @@
         currentEmotionType = null;
       }
     });
+
+    updateEmotionToggle(currentEmotionType);
 
     // Fermer les modales en cliquant en dehors
     document.querySelectorAll('.modal-overlay').forEach(modal => {
