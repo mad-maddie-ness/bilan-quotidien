@@ -306,8 +306,6 @@
     }
     body.pdf-export-mode #captureZone {
       gap: 0.45rem !important;
-      break-after: page;
-      page-break-after: always;
     }
     body.pdf-export-mode #chartsPanel {
       break-before: page;
@@ -1666,15 +1664,16 @@
         return;
       }
 
-      const pdfViewportWidth = 1280;
+      const pdfPageWidth = 794;
+      const pdfContentWidth = 642;
 
       document.body.classList.add('pdf-export-mode');
       sourceRoot.style.margin = '0';
-      sourceRoot.style.maxWidth = 'none';
-      sourceRoot.style.width = '100%';
+      sourceRoot.style.maxWidth = `${pdfContentWidth}px`;
+      sourceRoot.style.width = `${pdfContentWidth}px`;
       sourceRoot.style.padding = '0';
 
-      const captureWidth = Math.max(pdfViewportWidth, sourceRoot.scrollWidth || 0, sourceRoot.clientWidth || 0);
+      const captureWidth = pdfContentWidth;
       const captureHeight = Math.max(sourceRoot.scrollHeight || 0, sourceRoot.clientHeight || 0, 1400);
 
       document.title = pdfFileName;
@@ -1696,15 +1695,15 @@
               scrollY: 0,
               width: captureWidth,
               height: captureHeight,
-              windowWidth: pdfViewportWidth,
+              windowWidth: pdfPageWidth,
               windowHeight: captureHeight,
               onclone: clonedDoc => {
                 clonedDoc.body.classList.add('pdf-export-mode');
                 const clonedRoot = clonedDoc.querySelector('main.wrap');
                 if (!clonedRoot) return;
                 clonedRoot.style.margin = '0';
-                clonedRoot.style.maxWidth = 'none';
-                clonedRoot.style.width = '100%';
+                clonedRoot.style.maxWidth = `${pdfContentWidth}px`;
+                clonedRoot.style.width = `${pdfContentWidth}px`;
                 clonedRoot.style.padding = '0';
               }
             },
