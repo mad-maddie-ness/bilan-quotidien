@@ -45,7 +45,7 @@
       padding-bottom: clamp(0.55rem, 1.6vw, 0.85rem);
     }
     .panel-compact .section-title { margin-bottom: 0.35rem; }
-    .panel-compact .fatigue-grid { padding-top: 0.3rem; padding-bottom: 0.28rem; }
+    .panel-compact .fatigue-grid { padding-top: 0.34rem; padding-bottom: 0.32rem; }
     .panel-bilan .summary-grid { gap: clamp(0.15rem, 0.6vw, 0.3rem); }
     .panel-bilan .footer-note { margin-top: 0.2rem; }
     #summaryText:empty { display: none; }
@@ -425,8 +425,8 @@
       }
 
       .panel-compact .fatigue-grid {
-        padding-top: 0.22rem !important;
-        padding-bottom: 0.18rem !important;
+        padding-top: 0.26rem !important;
+        padding-bottom: 0.22rem !important;
       }
 
       .panel-bilan .summary-grid {
@@ -542,13 +542,37 @@
       .wrap { padding: var(--space-3); width: 100%; box-sizing: border-box; }
       .topbar { flex-direction: column; gap: var(--space-2); align-items: stretch; }
       .title { font-size: var(--text-lg); margin-bottom: var(--space-2); }
-      .toolbar { gap: var(--space-1); }
+      .toolbar { gap: 0.15rem; }
+      .date-row {
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 0.25rem;
+      }
+      .date-row .action-item {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+      .date-row .toolbar {
+        margin-left: auto;
+        flex: 0 0 auto;
+        flex-wrap: nowrap;
+      }
       .name-fields input { width: clamp(60px, 25vw, 70px); padding: 0.2rem 0.3rem !important; height: 22px; font-size: 0.7rem; }
       
       .panel { padding: var(--space-3); border-radius: var(--radius-lg); }
       .stack { gap: var(--space-4); }
       
-      .theme-btn, .reset-btn, .capture-btn, .save-day-btn, .download-data-btn, .load-data-btn {
+      .theme-btn,
+      .reset-btn {
+        min-height: 26px;
+        padding: 0.12rem 0.42rem;
+        font-size: 0.62rem;
+        border-radius: var(--radius-full);
+        flex: 0 0 auto;
+        min-width: auto;
+      }
+
+      .capture-btn, .save-day-btn, .download-data-btn, .load-data-btn {
         min-height: 40px;
         padding: 0.6rem 0.8rem;
         font-size: var(--text-xs);
@@ -591,7 +615,11 @@
       .chart-card { padding: 2px 4px 2px; }
       .history-item { padding: 8mm 8mm; flex-direction: column; gap: 8mm; }
       .history-meta { font-size: 0.65rem; }
-      .date-badge { padding: 0.35rem 0.6rem; font-size: 0.65rem; }
+      .date-badge {
+        padding: 0.26rem 0.45rem;
+        font-size: 0.6rem;
+        white-space: nowrap;
+      }
       .status { font-size: 0.65rem; }
       .footer-note { font-size: 0.65rem; margin-top: var(--space-2); }
       .ghost-note { font-size: 0.65rem; }
