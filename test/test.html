@@ -1556,12 +1556,23 @@
       const cleanupExport = () => {
         if (hasCleanedUp) return;
         hasCleanedUp = true;
+        if (sourceRoot && sourceRootInlineStyles) {
+          sourceRoot.style.margin = sourceRootInlineStyles.margin;
+          sourceRoot.style.maxWidth = sourceRootInlineStyles.maxWidth;
+          sourceRoot.style.width = sourceRootInlineStyles.width;
+        }
         document.title = originalPageTitle;
         if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
         restoreUiSnapshot(snapshot);
       };
 
       const sourceRoot = document.querySelector('main.wrap');
+      const sourceRootInlineStyles = sourceRoot ? {
+        margin: sourceRoot.style.margin,
+        maxWidth: sourceRoot.style.maxWidth,
+        width: sourceRoot.style.width
+      } : null;
+
       if (!sourceRoot) {
         status.textContent = 'Impossible de préparer cette page pour le PDF.';
         cleanupExport();
@@ -1581,6 +1592,15 @@
           previewWindow.document.close();
         }
 
+        const desktopCaptureWidth = 1180;
+
+        sourceRoot.style.margin = '0 auto';
+        sourceRoot.style.maxWidth = `${desktopCaptureWidth}px`;
+        sourceRoot.style.width = `${desktopCaptureWidth}px`;
+
+        const captureWidth = desktopCaptureWidth;
+        const captureHeight = Math.max(sourceRoot.scrollHeight || 0, sourceRoot.clientHeight || 0, 1400);
+
         document.title = pdfFileName;
         if (pageTitleEl) pageTitleEl.textContent = pdfFileName;
         status.textContent = 'Ouverture du PDF...';
@@ -1588,7 +1608,7 @@
         refreshChartsForPrintMode(() => {
           setTimeout(() => {
             window.html2pdf().set({
-              margin: [10, 10, 10, 10],
+              margin: [5, 5, 5, 5],
               filename: `${pdfFileName}.pdf`,
               image: { type: 'jpeg', quality: 0.98 },
               html2canvas: {
@@ -1597,8 +1617,17 @@
                 backgroundColor: '#ffffff',
                 scrollX: 0,
                 scrollY: 0,
-                windowWidth: Math.max(sourceRoot.scrollWidth || 0, 960),
-                windowHeight: Math.max(sourceRoot.scrollHeight || 0, 1400)
+                width: captureWidth,
+                height: captureHeight,
+                windowWidth: 1280,
+                windowHeight: captureHeight,
+                onclone: clonedDoc => {
+                  const clonedRoot = clonedDoc.querySelector('main.wrap');
+                  if (!clonedRoot) return;
+                  clonedRoot.style.margin = '0 auto';
+                  clonedRoot.style.maxWidth = `${desktopCaptureWidth}px`;
+                  clonedRoot.style.width = `${desktopCaptureWidth}px`;
+                }
               },
               jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             }).from(sourceRoot).toPdf().get('pdf').then(pdf => {
