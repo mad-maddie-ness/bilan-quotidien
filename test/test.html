@@ -343,6 +343,7 @@
       --chart-card-radius: 18px;
       --chart-card-padding: 8px 8px 6px;
       --chart-wrap-height: clamp(132px, 14vw, 165px);
+      --chart-canvas-scale: 0.7;
       --chart-header-gap: 0.3rem;
       --chart-header-offset-top: 0.3rem;
     }
@@ -369,11 +370,12 @@
     .chart-wrap canvas {
       position: absolute;
       inset: 0;
+      margin: auto;
       display: block;
-      width: 100% !important;
-      max-width: 100% !important;
-      height: 100% !important;
-      max-height: 100% !important;
+      width: calc(100% * var(--chart-canvas-scale)) !important;
+      max-width: calc(100% * var(--chart-canvas-scale)) !important;
+      height: calc(100% * var(--chart-canvas-scale)) !important;
+      max-height: calc(100% * var(--chart-canvas-scale)) !important;
     }
     .chart-empty-note {
       display: none !important;
