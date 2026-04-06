@@ -1834,7 +1834,7 @@
       }
 
       updatePrintNameDisplay();
-      root.style.setProperty('--pdf-chart-wrap-height', window.innerWidth >= 768 ? '270px' : '230px');
+      root.style.setProperty('--pdf-chart-wrap-height', window.innerWidth >= 768 ? '255px' : '230px');
       root.style.setProperty('--pdf-chart-bg', getComputedStyle(root).getPropertyValue('--color-surface-2').trim() || '#f0eee8');
       status.textContent = 'Ouverture de l’impression...';
       window.addEventListener('afterprint', cleanupExport, { once: true });
