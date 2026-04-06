@@ -291,7 +291,8 @@
     .chart-controls .current-month { font-weight: 600; }
     .hidden { display:none; }
     .pdf-export-pages { display: none; }
-    .pdf-page { display: grid; gap: var(--space-4); }
+    .pdf-page { display: block; width: 100%; }
+    .pdf-page > * + * { margin-top: var(--space-4); }
     .pdf-export-summary {
       display: grid;
       gap: 0.35rem;
@@ -333,13 +334,18 @@
       z-index: -1;
     }
     body.printing-pdf #pdfExportPages .pdf-page {
-      gap: 0.45rem !important;
-      break-after: page;
-      page-break-after: always;
+      display: block !important;
+      width: 100% !important;
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
     }
-    body.printing-pdf #pdfExportPages .pdf-page:last-child {
-      break-after: auto;
-      page-break-after: auto;
+    body.printing-pdf #pdfPageOne {
+      break-after: page !important;
+      page-break-after: always !important;
+    }
+    body.printing-pdf #pdfPageTwo {
+      break-before: page !important;
+      page-break-before: always !important;
     }
     body.printing-pdf #pdfExportPages .panel {
       padding: 0.7rem !important;
@@ -402,13 +408,18 @@
         transform-origin: top center !important;
       }
       body.printing-pdf #pdfExportPages .pdf-page {
-        gap: 0.45rem !important;
-        break-after: page;
-        page-break-after: always;
+        display: block !important;
+        width: 100% !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
       }
-      body.printing-pdf #pdfExportPages .pdf-page:last-child {
-        break-after: auto;
-        page-break-after: auto;
+      body.printing-pdf #pdfPageOne {
+        break-after: page !important;
+        page-break-after: always !important;
+      }
+      body.printing-pdf #pdfPageTwo {
+        break-before: page !important;
+        page-break-before: always !important;
       }
       body.printing-pdf .wrap {
         max-width: none !important;
@@ -1800,6 +1811,42 @@
       void document.body.offsetHeight;
       refreshChartsForPrintMode(() => preparePdfPages(chosenDate));
 
+      function generatePdfFile() {
+        if (typeof window.html2pdf !== 'function') return false;
+        const exportRoot = document.getElementById('pdfExportPages') || document.querySelector('main.wrap') || document.body;
+        status.textContent = 'Génération du PDF...';
+        window.html2pdf().set({
+          margin: [15, 20, 15, 20],
+          filename: `${pdfFileName}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            scrollX: 0,
+            scrollY: 0,
+            windowWidth: Math.max(1280, exportRoot.scrollWidth || 1280)
+          },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: {
+            mode: ['css', 'legacy'],
+            before: ['#pdfPageTwo'],
+            after: ['#pdfPageOne'],
+            avoid: ['.chart-card', '.history-item']
+          }
+        }).from(exportRoot).save().then(() => {
+          status.textContent = 'PDF enregistré.';
+          cleanupPrintMode();
+        }).catch(error => {
+          console.error('Erreur export PDF:', error);
+          status.textContent = 'Impossible d’enregistrer le PDF sur ce navigateur.';
+          cleanupPrintMode();
+        });
+        return true;
+      }
+
+      if (usesCompactPrintLayout() && generatePdfFile()) return;
+
       status.textContent = 'Préparation de l’impression...';
 
       if (typeof window.print === 'function') {
@@ -1818,43 +1865,23 @@
               });
             } catch (error) {
               console.error('Erreur impression:', error);
-              status.textContent = 'Impossible d’ouvrir la boîte d’impression sur ce navigateur.';
-              cleanupPrintMode();
+              if (!generatePdfFile()) {
+                status.textContent = 'Impossible d’ouvrir la boîte d’impression sur ce navigateur.';
+                cleanupPrintMode();
+              }
             }
           }, 120);
         } catch (error) {
           console.error('Erreur impression:', error);
-          status.textContent = 'Impossible d’ouvrir la boîte d’impression sur ce navigateur.';
-          cleanupPrintMode();
+          if (!generatePdfFile()) {
+            status.textContent = 'Impossible d’ouvrir la boîte d’impression sur ce navigateur.';
+            cleanupPrintMode();
+          }
         }
         return;
       }
 
-      if (typeof window.html2pdf === 'function') {
-        const exportRoot = document.getElementById('pdfExportPages') || document.querySelector('main.wrap') || document.body;
-        return window.html2pdf().set({
-          margin: [15, 20, 15, 20],
-          filename: `${pdfFileName}.pdf`,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            scrollX: 0,
-            scrollY: 0,
-            windowWidth: 1280
-          },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak: { mode: ['css', 'legacy'], before: '#pdfPageTwo', avoid: ['.chart-card', '.history-item'] }
-        }).from(exportRoot).save().then(() => {
-          status.textContent = 'PDF enregistré.';
-          cleanupPrintMode();
-        }).catch(error => {
-          console.error('Erreur export PDF:', error);
-          status.textContent = 'Impossible d’enregistrer le PDF sur ce navigateur.';
-          cleanupPrintMode();
-        });
-      }
+      if (generatePdfFile()) return;
 
       status.textContent = 'Impossible d’enregistrer le PDF sur ce navigateur.';
       cleanupPrintMode();
