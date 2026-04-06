@@ -156,7 +156,7 @@
       .help-trigger { display: inline-flex; }
     }
     @media (min-width: 768px) {
-      .actions-layout { flex-direction:row; align-items:center; justify-content:center; gap: 0.45rem; }
+      .actions-layout { flex-direction:row; align-items:center; justify-content:flex-start; gap: 0.45rem; }
       .actions-main { width: auto; max-width: none; flex: 0 0 auto; }
       .actions-main .save-day-btn { width: auto; min-width: 220px; }
       .actions-secondary {
@@ -164,11 +164,13 @@
         min-width: 0;
         max-width: none;
         flex-direction: row;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 0.35rem;
-        justify-content: center;
+        justify-content: flex-start;
+        align-items: center;
       }
-      .actions-secondary .action-item { flex: 0 1 auto; min-width: 0; }
+      .actions-secondary .action-item { flex: 0 1 auto; min-width: 0; justify-content:flex-start; }
+      .actions-secondary .action-inline { justify-content:flex-start; }
       .actions-secondary .secondary-btn { width: auto; }
       .help-popover {
         left: calc(100% + 6px);
