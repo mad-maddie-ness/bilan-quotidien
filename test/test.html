@@ -341,16 +341,16 @@
       --charts-card-gap: 0.75rem;
       --chart-card-width: 100%;
       --chart-card-radius: 18px;
-      --chart-card-padding: 4px 6px 4px;
+      --chart-card-padding: 8px 8px 6px;
       --chart-wrap-height: clamp(132px, 14vw, 165px);
-      --chart-header-gap: 0.18rem;
-      --chart-header-offset-top: 0.18rem;
+      --chart-header-gap: 0.3rem;
+      --chart-header-offset-top: 0.3rem;
     }
     .charts-column { display:flex; flex-direction:column; gap: var(--charts-card-gap); align-items:center; }
     .chart-card { background: var(--color-surface-2); border-radius: var(--chart-card-radius); border:1px solid var(--color-border); padding: var(--chart-card-padding); box-sizing:border-box; width: var(--chart-card-width); max-width: 100%; margin: 0 auto; overflow: visible; }
     .charts-column .chart-card:last-child { margin-bottom: 0.75rem; }
-    .chart-header { display:flex; justify-content:space-between; align-items:center; margin-top: var(--chart-header-offset-top); margin-bottom:var(--chart-header-gap); }
-    .chart-title { font-size: var(--text-sm); font-weight:600; line-height: 1.1; margin-left: 1mm; }
+    .chart-header { position: relative; z-index: 2; display:flex; justify-content:space-between; align-items:center; min-height: 1.3rem; margin-top: var(--chart-header-offset-top); margin-bottom:var(--chart-header-gap); }
+    .chart-title { position: relative; z-index: 3; display:block; font-size: var(--text-sm); font-weight:600; line-height: 1.25; margin: 0 0 0 1mm; padding: 0.05rem 0; }
     @media screen and (min-width: 768px) {
       .topbar,
       .capture-zone > .date-tools,
@@ -365,7 +365,7 @@
       .chart-month { display: none; }
       .chart-header { justify-content: flex-start; }
     }
-    .chart-wrap { position: relative; width: 100%; height: var(--chart-wrap-height); min-height: 0; aspect-ratio: auto; overflow: visible; }
+    .chart-wrap { position: relative; z-index: 1; width: 100%; height: var(--chart-wrap-height); min-height: 0; aspect-ratio: auto; overflow: visible; }
     .chart-wrap canvas {
       position: absolute;
       inset: 0;
