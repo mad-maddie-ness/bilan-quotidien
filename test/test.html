@@ -259,12 +259,13 @@
       --chart-wrap-aspect: 3 / 1.1;
       --chart-wrap-min-height: 198px;
       --chart-header-gap: 0.25rem;
+      --chart-inner-inset: 3px;
     }
     .charts-column { display:flex; flex-direction:column; gap: var(--charts-card-gap); align-items:center; }
-    .chart-card { background: var(--color-surface-2); border-radius: var(--chart-card-radius); border:1px solid var(--color-border); padding: var(--chart-card-padding); box-sizing:border-box; width: var(--chart-card-width); max-width: 100%; margin: 0 auto; overflow: visible; }
+    .chart-card { background: var(--color-surface-2); border-radius: var(--chart-card-radius); border:1px solid var(--color-border); padding: var(--chart-card-padding); box-sizing:border-box; width: var(--chart-card-width); max-width: 100%; margin: 0 auto; overflow: hidden; }
     .chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--chart-header-gap); }
     .chart-title { font-size: var(--text-sm); font-weight:600; }
-    .chart-wrap { position: relative; width: 100%; aspect-ratio: var(--chart-wrap-aspect); min-height: var(--chart-wrap-min-height); height: auto; overflow: visible; }
+    .chart-wrap { position: relative; width: calc(100% - (var(--chart-inner-inset) * 2)); margin: 0 auto; aspect-ratio: var(--chart-wrap-aspect); min-height: calc(var(--chart-wrap-min-height) - 6px); height: auto; border-radius: calc(var(--chart-card-radius) - 6px); overflow: hidden; background: var(--color-surface); }
     .chart-wrap canvas {
       position: absolute;
       inset: 0;
@@ -308,7 +309,7 @@
         transform: none !important;
         transform-origin: top left !important;
         width: 100% !important;
-        zoom: 0.7 !important;
+        zoom: 0.70 !important;
       }
 
       .stack,
@@ -320,7 +321,9 @@
       #chartsPanel {
         width: 100% !important;
         max-width: none !important;
-        margin: 0 !important;
+        margin: 0 auto !important;
+        transform: scale(0.5) !important;
+        transform-origin: top center !important;
         break-before: page !important;
         page-break-before: always !important;
       }
@@ -365,9 +368,12 @@
         border-radius: var(--chart-card-radius) !important;
       }
 
-      .chart-card,
+      .chart-card {
+        overflow: hidden !important;
+      }
+
       .chart-wrap {
-        overflow: visible !important;
+        overflow: hidden !important;
       }
 
       .print-page-break {
