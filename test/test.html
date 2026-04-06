@@ -420,9 +420,16 @@
         display: none !important;
       }
 
+      .topbar > div:first-child {
+        display: flex !important;
+        align-items: baseline !important;
+        flex-wrap: wrap !important;
+        gap: 0.35rem !important;
+      }
+
       .print-name-display {
-        display: block !important;
-        margin-top: 0.35rem;
+        display: inline-block !important;
+        margin-top: 0 !important;
         font-size: var(--text-base);
         font-weight: 600;
       }
