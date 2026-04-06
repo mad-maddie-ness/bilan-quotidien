@@ -256,11 +256,11 @@
     .date-input { min-height: 34px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); padding: 0.35rem 0.7rem; }
     .date-help { max-width: 180px; margin-left: 1.5rem; margin-bottom: 0.15rem; font-size: 10px; line-height: 1.35; color: var(--color-text-muted); margin-top: 0; text-align: justify; }
     .status { margin-top:.8rem; font-size: var(--text-sm); color: var(--color-text-muted); }
-    .charts-column { display:flex; flex-direction:column; gap: var(--space-3); align-items:center; }
-    .chart-card { background: var(--color-surface-2); border-radius: var(--radius-xl); border:1px solid var(--color-border); padding: 5mm; box-sizing:border-box; width: 92%; max-width: 100%; margin: 0 auto; overflow: visible; }
-    .chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2mm; }
+    .charts-column { display:flex; flex-direction:column; gap: 0.85rem; align-items:center; }
+    .chart-card { background: var(--color-surface-2); border-radius: 20px; border:1px solid var(--color-border); padding: 14px 16px 16px; box-sizing:border-box; width: min(100%, 760px); max-width: 100%; margin: 0 auto; overflow: visible; }
+    .chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.45rem; }
     .chart-title { font-size: var(--text-sm); font-weight:600; }
-    .chart-wrap { position: relative; height: 185px; width: 100%; overflow: visible; }
+    .chart-wrap { position: relative; height: 205px; width: 100%; overflow: visible; }
     .chart-wrap canvas {
       position: absolute;
       inset: 0;
@@ -278,8 +278,8 @@
     }
     @media (min-width: 768px) {
       .chart-card {
-        width: calc(100% - 30mm);
-        max-width: 680px;
+        width: min(calc(100% - 16px), 760px);
+        max-width: 760px;
       }
     }
     .history-list { display:grid; gap:.75rem; margin-top:1rem; }
@@ -347,7 +347,7 @@
       }
 
       .chart-wrap {
-        height: 220px !important;
+        height: 205px !important;
       }
 
       .panel,
@@ -358,7 +358,8 @@
       }
 
       .chart-card {
-        padding: 5mm !important;
+        padding: 14px 16px 16px !important;
+        border-radius: 20px !important;
       }
 
       .chart-card,
@@ -431,8 +432,8 @@
       .select-box { width: 100%; }
       .section-title { margin-bottom: 0.5rem; font-size: var(--text-lg); }
       .selected-list { gap: 0.35rem; margin-top: 0.5rem; }
-      .chart-wrap { height: 170px; }
-      .chart-card { padding: 5mm; }
+      .chart-wrap { height: 185px; }
+      .chart-card { padding: 12px; }
       .history-item { padding: 0.65rem 0.75rem; flex-direction: column; gap: 0.35rem; }
       .history-meta { font-size: 0.65rem; }
       .date-badge { padding: 0.35rem 0.6rem; font-size: 0.65rem; }
