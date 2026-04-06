@@ -293,6 +293,66 @@
     .pdf-export-pages { display: none; }
     .pdf-page { display: block; width: 100%; }
     .pdf-page > * + * { margin-top: var(--space-4); }
+    .pdf-export-pages.export-active {
+      display: block !important;
+      position: relative !important;
+      width: 210mm !important;
+      max-width: 210mm !important;
+      padding: 0 !important;
+      margin: 0 auto !important;
+      overflow: visible !important;
+      pointer-events: none !important;
+      z-index: auto !important;
+      background: #fff !important;
+      color: #000 !important;
+    }
+    .pdf-export-pages.export-active .pdf-page {
+      display: block !important;
+      width: 100% !important;
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+    .pdf-export-pages.export-active #pdfPageOne {
+      break-after: page !important;
+      page-break-after: always !important;
+    }
+    .pdf-export-pages.export-active #pdfPageTwo {
+      break-before: page !important;
+      page-break-before: always !important;
+    }
+    .pdf-export-pages.export-active .panel {
+      padding: 0.7rem !important;
+      box-shadow: none !important;
+    }
+    .pdf-export-pages.export-active .section-title {
+      margin-bottom: 0.45rem !important;
+    }
+    .pdf-export-pages.export-active .select-row {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 0.35rem !important;
+    }
+    .pdf-export-pages.export-active .select-group {
+      width: 100% !important;
+      min-width: 0 !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
+    }
+    .pdf-export-pages.export-active .toolbar,
+    .pdf-export-pages.export-active .date-help,
+    .pdf-export-pages.export-active .date-input,
+    .pdf-export-pages.export-active .help-trigger,
+    .pdf-export-pages.export-active .help-popover,
+    .pdf-export-pages.export-active .chart-controls,
+    .pdf-export-pages.export-active .chip-add-btn,
+    .pdf-export-pages.export-active .actions-layout,
+    .pdf-export-pages.export-active #actionsPanel,
+    .pdf-export-pages.export-active #captureStatus,
+    .pdf-export-pages.export-active #lastSaveStatus,
+    .pdf-export-pages.export-active #dataFileInput,
+    .pdf-export-pages.export-active .modal-overlay {
+      display: none !important;
+    }
     .pdf-export-summary {
       display: grid;
       gap: 0.35rem;
@@ -342,7 +402,8 @@
       margin: 0 auto !important;
       overflow: visible !important;
       z-index: auto !important;
-      opacity: 0.01 !important;
+      opacity: 1 !important;
+      visibility: visible !important;
       background: #fff !important;
     }
     body.printing-pdf #pdfExportPages .pdf-page {
@@ -1721,6 +1782,13 @@
       if (pageTwo) pageTwo.innerHTML = '';
     }
 
+    function setPdfExportActive(isActive) {
+      const exportRoot = document.getElementById('pdfExportPages');
+      if (!exportRoot) return;
+      exportRoot.classList.toggle('export-active', !!isActive);
+      exportRoot.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+    }
+
     function preparePdfPages(chosenDate) {
       const pageOne = document.getElementById('pdfPageOne');
       const pageTwo = document.getElementById('pdfPageTwo');
@@ -1808,6 +1876,7 @@
         }
         document.body.classList.remove('printing-pdf');
         document.body.classList.remove('mobile-print-layout');
+        setPdfExportActive(false);
         document.title = originalPageTitle;
         if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
         clearPdfPages();
@@ -1816,6 +1885,7 @@
       };
 
       preparePdfPages(chosenDate);
+      setPdfExportActive(true);
       document.body.classList.add('printing-pdf');
       document.body.classList.remove('mobile-print-layout');
       document.title = pdfFileName;
@@ -1826,7 +1896,6 @@
       function generatePdfFile() {
         if (typeof window.html2pdf !== 'function') return false;
         const exportRoot = document.getElementById('pdfExportPages') || document.querySelector('main.wrap') || document.body;
-        document.body.classList.add('mobile-print-layout');
         status.textContent = 'Génération du PDF...';
 
         const startExport = () => {
@@ -1842,21 +1911,8 @@
               scrollY: 0,
               windowWidth: Math.max(1280, exportRoot.scrollWidth || 1280),
               onclone: clonedDoc => {
-                clonedDoc.body.classList.add('printing-pdf', 'mobile-print-layout');
                 const clonedRoot = clonedDoc.getElementById('pdfExportPages');
-                if (!clonedRoot) return;
-                clonedRoot.style.display = 'block';
-                clonedRoot.style.position = 'static';
-                clonedRoot.style.left = 'auto';
-                clonedRoot.style.top = 'auto';
-                clonedRoot.style.width = '210mm';
-                clonedRoot.style.maxWidth = '210mm';
-                clonedRoot.style.margin = '0 auto';
-                clonedRoot.style.overflow = 'visible';
-                clonedRoot.style.opacity = '1';
-                clonedRoot.style.zIndex = 'auto';
-                clonedRoot.style.pointerEvents = 'none';
-                clonedRoot.style.background = '#fff';
+                if (clonedRoot) clonedRoot.classList.add('export-active');
               }
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -1878,6 +1934,7 @@
 
         refreshChartsForPrintMode(() => {
           preparePdfPages(chosenDate);
+          setPdfExportActive(true);
           if (typeof window.requestAnimationFrame === 'function') {
             window.requestAnimationFrame(() => {
               window.requestAnimationFrame(startExport);
