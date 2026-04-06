@@ -40,6 +40,15 @@
     body { font-size: 0.88rem; overflow-x: auto; }
     .muted { color: var(--color-text-muted); }
     .panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); box-shadow: var(--shadow); padding: clamp(var(--space-3), 3vw, var(--space-5)); width: 100%; box-sizing: border-box; min-width: 0; }
+    .panel-compact {
+      padding-top: clamp(0.7rem, 2vw, 1rem);
+      padding-bottom: clamp(0.7rem, 2vw, 1rem);
+    }
+    .panel-compact .section-title { margin-bottom: 0.45rem; }
+    .panel-compact .fatigue-grid { padding-top: 0.15rem; padding-bottom: 0.1rem; }
+    .panel-bilan .summary-grid { gap: clamp(0.2rem, 0.7vw, 0.35rem); }
+    .panel-bilan .footer-note { margin-top: 0.3rem; }
+    #summaryText:empty { display: none; }
     .stack { display:grid; gap: var(--space-5); }
     .section-title { margin:0 0 .8rem 0; font-size: var(--text-lg); }
     .topbar { display:flex; justify-content: space-between; align-items:flex-start; flex-wrap:wrap; }
@@ -577,7 +586,7 @@
         <button class="chip chip-add-btn" id="addActivityBtn" style="margin-top: var(--space-3);">+ Ajouter une activité</button>
       </section>
 
-      <section class="panel">
+      <section class="panel panel-compact">
         <h2 class="section-title">Fatigue</h2>
         <div class="fatigue-grid" id="fatigueButtons"></div>
       </section>
@@ -612,7 +621,7 @@
         <button class="chip chip-add-btn" id="addBodyBtn" style="margin-top: var(--space-3);">+ Ajouter un ressenti</button>
       </section>
 
-      <section class="panel">
+      <section class="panel panel-compact panel-bilan">
         <h2 class="section-title">Bilan</h2>
         <div class="summary-grid">
           <div class="kpi"><div class="kpi-label">Activités</div><div class="kpi-value score-neutral" id="activityScore">0</div></div>
