@@ -324,6 +324,22 @@
       padding: 0.7rem !important;
       box-shadow: none !important;
     }
+    .pdf-export-pages.export-active .chart-card,
+    .pdf-export-pages.export-active .history-item {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+      box-shadow: none !important;
+    }
+    .pdf-export-pages.export-active .chart-wrap {
+      overflow: hidden !important;
+    }
+    .pdf-export-pages.export-active .chart-wrap canvas {
+      display: block !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      height: 100% !important;
+      max-height: 100% !important;
+    }
     .pdf-export-pages.export-active .section-title {
       margin-bottom: 0.45rem !important;
     }
@@ -1894,35 +1910,62 @@
       refreshChartsForPrintMode(() => preparePdfPages(chosenDate));
 
       function generatePdfFile() {
-        if (typeof window.html2pdf !== 'function') return false;
-        const exportRoot = document.getElementById('pdfExportPages') || document.querySelector('main.wrap') || document.body;
+        const exportRoot = document.getElementById('pdfExportPages');
+        const pageElements = [document.getElementById('pdfPageOne'), document.getElementById('pdfPageTwo')].filter(el => el && el.childElementCount);
+        const JsPdf = window.jspdf && window.jspdf.jsPDF;
+
+        if (!exportRoot || !pageElements.length || typeof window.html2canvas !== 'function' || typeof JsPdf !== 'function') {
+          return false;
+        }
+
         status.textContent = 'Génération du PDF...';
 
         const startExport = () => {
-          window.html2pdf().set({
-            margin: [15, 20, 15, 20],
-            filename: `${pdfFileName}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: {
-              scale: 2,
+          const pdf = new JsPdf({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+          const marginX = 20;
+          const marginY = 15;
+          const maxWidth = pageWidth - (marginX * 2);
+          const maxHeight = pageHeight - (marginY * 2);
+          const captureScale = usesCompactPrintLayout() ? 1.35 : 2;
+          let chain = Promise.resolve();
+
+          pageElements.forEach((pageEl, index) => {
+            chain = chain.then(() => window.html2canvas(pageEl, {
+              scale: captureScale,
               useCORS: true,
               backgroundColor: '#ffffff',
               scrollX: 0,
               scrollY: 0,
+              width: Math.max(pageEl.scrollWidth, pageEl.offsetWidth, 794),
+              height: Math.max(pageEl.scrollHeight, pageEl.offsetHeight, 1123),
               windowWidth: Math.max(1280, exportRoot.scrollWidth || 1280),
-              onclone: clonedDoc => {
-                const clonedRoot = clonedDoc.getElementById('pdfExportPages');
-                if (clonedRoot) clonedRoot.classList.add('export-active');
+              windowHeight: Math.max(pageEl.scrollHeight, pageEl.offsetHeight, 1123)
+            }).then(canvas => {
+              if (!canvas || !canvas.width || !canvas.height) {
+                throw new Error('Canvas PDF vide.');
               }
-            },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: {
-              mode: ['css', 'legacy'],
-              before: ['#pdfPageTwo'],
-              after: ['#pdfPageOne'],
-              avoid: ['.chart-card', '.history-item']
-            }
-          }).from(exportRoot).save().then(() => {
+
+              if (index > 0) pdf.addPage('a4', 'portrait');
+
+              const imageData = canvas.toDataURL('image/jpeg', 0.98);
+              let renderWidth = maxWidth;
+              let renderHeight = renderWidth * (canvas.height / canvas.width);
+
+              if (renderHeight > maxHeight) {
+                renderHeight = maxHeight;
+                renderWidth = renderHeight * (canvas.width / canvas.height);
+              }
+
+              const offsetX = (pageWidth - renderWidth) / 2;
+              const offsetY = marginY + ((maxHeight - renderHeight) / 2);
+              pdf.addImage(imageData, 'JPEG', offsetX, offsetY, renderWidth, renderHeight, undefined, 'FAST');
+            }));
+          });
+
+          chain.then(() => {
+            pdf.save(`${pdfFileName}.pdf`);
             status.textContent = 'PDF enregistré.';
             cleanupPrintMode();
           }).catch(error => {
@@ -1940,7 +1983,7 @@
               window.requestAnimationFrame(startExport);
             });
           } else {
-            setTimeout(startExport, 160);
+            setTimeout(startExport, 180);
           }
         });
         return true;
