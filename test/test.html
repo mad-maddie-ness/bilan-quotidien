@@ -1905,6 +1905,12 @@
         document.body.classList.remove('printing-pdf');
         document.body.classList.remove('mobile-print-layout');
         setPdfExportActive(false);
+        const exportRoot = document.getElementById('pdfExportPages');
+        if (exportRoot && exportRoot.style) {
+          exportRoot.style.removeProperty('width');
+          exportRoot.style.removeProperty('max-width');
+          exportRoot.style.removeProperty('margin');
+        }
         document.title = originalPageTitle;
         if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
         clearPdfPages();
@@ -1936,44 +1942,55 @@
             const pdf = new JsPdf({ unit: 'mm', format: 'a4', orientation: 'portrait' });
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
-            const marginX = 20;
-            const marginY = 15;
-            const scaleRatio = 0.8;
+            const marginX = 15;
+            const marginY = 12;
+            const scaleRatio = 0.58;
             const maxWidth = (pageWidth - (marginX * 2)) * scaleRatio;
             const maxHeight = (pageHeight - (marginY * 2)) * scaleRatio;
-            const captureScale = usesCompactPrintLayout() ? 1.5 : 2;
+            const captureScale = usesCompactPrintLayout() ? 1.35 : 1.8;
             let chain = Promise.resolve();
 
             pageElements.forEach((pageEl, index) => {
-              chain = chain.then(() => window.html2canvas(pageEl, {
-                scale: captureScale,
-                useCORS: true,
-                backgroundColor: '#ffffff',
-                scrollX: 0,
-                scrollY: 0,
-                width: Math.max(pageEl.scrollWidth, pageEl.offsetWidth, 794),
-                height: Math.max(pageEl.scrollHeight, pageEl.offsetHeight, 1123),
-                windowWidth: Math.max(1280, exportRoot.scrollWidth || 1280),
-                windowHeight: Math.max(pageEl.scrollHeight, pageEl.offsetHeight, 1123)
-              }).then(canvas => {
-                if (!canvas || !canvas.width || !canvas.height) throw new Error('Canvas PDF vide.');
-                if (index > 0) pdf.addPage('a4', 'portrait');
+              chain = chain.then(() => {
+                const pageCaptureWidth = Math.max(pageEl.scrollWidth, pageEl.offsetWidth, 794);
+                const pageCaptureHeight = Math.max(pageEl.scrollHeight, pageEl.offsetHeight, 1123);
 
-                const imageData = canvas.toDataURL('image/jpeg', 0.98);
-                let renderWidth = maxWidth;
-                let renderHeight = renderWidth * (canvas.height / canvas.width);
+                exportRoot.style.setProperty('width', `${pageCaptureWidth}px`, 'important');
+                exportRoot.style.setProperty('max-width', `${pageCaptureWidth}px`, 'important');
+                exportRoot.style.setProperty('margin', '0', 'important');
 
-                if (renderHeight > maxHeight) {
-                  renderHeight = maxHeight;
-                  renderWidth = renderHeight * (canvas.width / canvas.height);
-                }
+                return window.html2canvas(pageEl, {
+                  scale: captureScale,
+                  useCORS: true,
+                  backgroundColor: '#ffffff',
+                  scrollX: 0,
+                  scrollY: 0,
+                  x: 0,
+                  y: 0,
+                  width: pageCaptureWidth,
+                  height: pageCaptureHeight,
+                  windowWidth: pageCaptureWidth,
+                  windowHeight: pageCaptureHeight
+                }).then(canvas => {
+                  if (!canvas || !canvas.width || !canvas.height) throw new Error('Canvas PDF vide.');
+                  if (index > 0) pdf.addPage('a4', 'portrait');
 
-                const availableWidth = pageWidth - (marginX * 2);
-                const availableHeight = pageHeight - (marginY * 2);
-                const offsetX = marginX + ((availableWidth - renderWidth) / 2);
-                const offsetY = marginY + ((availableHeight - renderHeight) / 2);
-                pdf.addImage(imageData, 'JPEG', offsetX, offsetY, renderWidth, renderHeight, undefined, 'FAST');
-              }));
+                  const imageData = canvas.toDataURL('image/jpeg', 0.98);
+                  let renderWidth = maxWidth;
+                  let renderHeight = renderWidth * (canvas.height / canvas.width);
+
+                  if (renderHeight > maxHeight) {
+                    renderHeight = maxHeight;
+                    renderWidth = renderHeight * (canvas.width / canvas.height);
+                  }
+
+                  const availableWidth = pageWidth - (marginX * 2);
+                  const availableHeight = pageHeight - (marginY * 2);
+                  const offsetX = marginX + ((availableWidth - renderWidth) / 2);
+                  const offsetY = marginY + ((availableHeight - renderHeight) / 2);
+                  pdf.addImage(imageData, 'JPEG', offsetX, offsetY, renderWidth, renderHeight, undefined, 'FAST');
+                });
+              });
             });
 
             chain.then(() => {
