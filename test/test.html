@@ -1870,6 +1870,62 @@
       });
     }
 
+    function trimCanvasWhitespace(sourceCanvas) {
+      const ctx = sourceCanvas && sourceCanvas.getContext ? sourceCanvas.getContext('2d') : null;
+      if (!ctx || !sourceCanvas.width || !sourceCanvas.height) return sourceCanvas;
+
+      const width = sourceCanvas.width;
+      const height = sourceCanvas.height;
+      const pixels = ctx.getImageData(0, 0, width, height).data;
+      const whiteThreshold = 245;
+      let left = width;
+      let right = -1;
+      let top = height;
+      let bottom = -1;
+
+      for (let y = 0; y < height; y += 1) {
+        for (let x = 0; x < width; x += 1) {
+          const index = ((y * width) + x) * 4;
+          const alpha = pixels[index + 3];
+          if (alpha === 0) continue;
+
+          const red = pixels[index];
+          const green = pixels[index + 1];
+          const blue = pixels[index + 2];
+          const isNearWhite = red >= whiteThreshold && green >= whiteThreshold && blue >= whiteThreshold;
+          if (isNearWhite) continue;
+
+          if (x < left) left = x;
+          if (x > right) right = x;
+          if (y < top) top = y;
+          if (y > bottom) bottom = y;
+        }
+      }
+
+      if (right < left || bottom < top) return sourceCanvas;
+
+      const padding = 16;
+      const cropLeft = Math.max(0, left - padding);
+      const cropTop = Math.max(0, top - padding);
+      const cropRight = Math.min(width, right + padding + 1);
+      const cropBottom = Math.min(height, bottom + padding + 1);
+      const croppedWidth = Math.max(1, cropRight - cropLeft);
+      const croppedHeight = Math.max(1, cropBottom - cropTop);
+
+      if (croppedWidth === width && croppedHeight === height) return sourceCanvas;
+
+      const croppedCanvas = document.createElement('canvas');
+      croppedCanvas.width = croppedWidth;
+      croppedCanvas.height = croppedHeight;
+      const croppedCtx = croppedCanvas.getContext('2d');
+      if (!croppedCtx) return sourceCanvas;
+
+      croppedCtx.fillStyle = '#ffffff';
+      croppedCtx.fillRect(0, 0, croppedWidth, croppedHeight);
+      croppedCtx.drawImage(sourceCanvas, cropLeft, cropTop, croppedWidth, croppedHeight, 0, 0, croppedWidth, croppedHeight);
+      return croppedCanvas;
+    }
+
     function exportToPDF(targetDate = selectedDateTime) {
       const status = document.getElementById('captureStatus');
       const chosenDate = new Date(targetDate);
@@ -1952,7 +2008,7 @@
             const pageHeight = pdf.internal.pageSize.getHeight();
             const marginX = 12;
             const marginY = 10;
-            const scaleRatio = 0.48;
+            const scaleRatio = 0.68;
             const maxWidth = (pageWidth - (marginX * 2)) * scaleRatio;
             const maxHeight = (pageHeight - (marginY * 2)) * scaleRatio;
             const captureScale = usesCompactPrintLayout() ? 1.2 : 1.6;
@@ -1990,19 +2046,18 @@
                   if (!canvas || !canvas.width || !canvas.height) throw new Error('Canvas PDF vide.');
                   if (index > 0) pdf.addPage('a4', 'portrait');
 
-                  const imageData = canvas.toDataURL('image/jpeg', 0.98);
+                  const trimmedCanvas = trimCanvasWhitespace(canvas);
+                  const imageData = trimmedCanvas.toDataURL('image/jpeg', 0.98);
                   let renderWidth = maxWidth;
-                  let renderHeight = renderWidth * (canvas.height / canvas.width);
+                  let renderHeight = renderWidth * (trimmedCanvas.height / trimmedCanvas.width);
 
                   if (renderHeight > maxHeight) {
                     renderHeight = maxHeight;
-                    renderWidth = renderHeight * (canvas.width / canvas.height);
+                    renderWidth = renderHeight * (trimmedCanvas.width / trimmedCanvas.height);
                   }
 
-                  const availableWidth = pageWidth - (marginX * 2);
-                  const availableHeight = pageHeight - (marginY * 2);
-                  const offsetX = marginX + ((availableWidth - renderWidth) / 2);
-                  const offsetY = marginY + ((availableHeight - renderHeight) / 2);
+                  const offsetX = marginX;
+                  const offsetY = marginY;
                   pdf.addImage(imageData, 'JPEG', offsetX, offsetY, renderWidth, renderHeight, undefined, 'FAST');
                 });
               });
