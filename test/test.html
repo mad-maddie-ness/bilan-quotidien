@@ -257,11 +257,13 @@
     .date-help { max-width: 180px; margin-left: 1.5rem; margin-bottom: 0.15rem; font-size: 10px; line-height: 1.35; color: var(--color-text-muted); margin-top: 0; text-align: justify; }
     .status { margin-top:.8rem; font-size: var(--text-sm); color: var(--color-text-muted); }
     .charts-column { display:flex; flex-direction:column; gap: var(--space-4); align-items:center; }
-    .chart-card { background: var(--color-surface-2); border-radius: var(--radius-xl); border:1px solid var(--color-border); padding: var(--space-4); box-sizing:border-box; width: 92%; max-width: 100%; margin: 0 auto; overflow: hidden; }
+    .chart-card { background: var(--color-surface-2); border-radius: var(--radius-xl); border:1px solid var(--color-border); padding: var(--space-4); box-sizing:border-box; width: 92%; max-width: 100%; margin: 0 auto; overflow: visible; }
     .chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.75rem; }
     .chart-title { font-size: var(--text-sm); font-weight:600; }
-    .chart-wrap { position: relative; height: 220px; width: 100%; overflow: hidden; }
+    .chart-wrap { position: relative; height: 220px; width: 100%; overflow: visible; }
     .chart-wrap canvas {
+      position: absolute;
+      inset: 0;
       display: block;
       width: 100% !important;
       max-width: 100% !important;
@@ -344,6 +346,10 @@
         font-size: 50pt !important;
       }
 
+      .chart-wrap {
+        height: 300px !important;
+      }
+
       .panel,
       .chart-card {
         break-inside: avoid;
@@ -421,7 +427,7 @@
       .select-box { width: 100%; }
       .section-title { margin-bottom: 0.5rem; font-size: var(--text-lg); }
       .selected-list { gap: 0.35rem; margin-top: 0.5rem; }
-      .chart-wrap { height: 150px; }
+      .chart-wrap { height: 220px; }
       .chart-card { padding: var(--space-2); }
       .history-item { padding: 0.65rem 0.75rem; flex-direction: column; gap: 0.35rem; }
       .history-meta { font-size: 0.65rem; }
@@ -1117,13 +1123,14 @@
 
       const ratio = window.devicePixelRatio || 1;
       const parent = canvas.parentElement;
-      const width = Math.max(260, Math.round((parent && parent.clientWidth) || canvas.clientWidth || 300));
-      const height = Math.max(160, Math.round((parent && parent.clientHeight) || canvas.clientHeight || 220));
+      const bounds = parent && typeof parent.getBoundingClientRect === 'function' ? parent.getBoundingClientRect() : null;
+      const width = Math.max(260, Math.round((bounds && bounds.width) || (parent && parent.clientWidth) || canvas.clientWidth || 300));
+      const height = Math.max(220, Math.round((bounds && bounds.height) || (parent && parent.clientHeight) || canvas.clientHeight || 220));
 
-      canvas.width = width * ratio;
-      canvas.height = height * ratio;
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
+      canvas.width = Math.max(1, Math.round(width * ratio));
+      canvas.height = Math.max(1, Math.round(height * ratio));
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
 
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       ctx.clearRect(0, 0, width, height);
@@ -1263,7 +1270,10 @@
         total: filtered.map(r => coalesce(r.total, 0))
       };
 
-      if (typeof window.Chart !== 'function') {
+      const isPrinting = typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('print').matches;
+      const isSmallScreen = typeof window !== 'undefined' && window.innerWidth <= 767;
+      const useFallbackCharts = typeof window.Chart !== 'function' || isPrinting || isSmallScreen;
+      if (useFallbackCharts) {
         drawFallbackLineChart(document.getElementById('chartActivites'), series.activites, labels, axisColor, primary, positive, negative);
         drawFallbackLineChart(document.getElementById('chartFatigue'), series.fatigue, labels, axisColor, primary, positive, negative);
         drawFallbackLineChart(document.getElementById('chartEmotions'), series.emotions, labels, axisColor, primary, positive, negative);
@@ -1354,9 +1364,13 @@
                   max:10,
                   ticks:{
                     stepSize: 1,
+                    count: 16,
+                    maxTicksLimit: 16,
+                    precision: 0,
                     autoSkip: false,
                     padding: 6,
-                    callback: value => String(value),
+                    font: { size: 10 },
+                    callback: value => Number.isInteger(value) ? String(value) : '',
                     color: context => (context.tick.value < 0 ? negative : axisColor)
                   },
                   grid:{
@@ -1759,7 +1773,23 @@
     document.getElementById('userFirstName').value = userFirstName;
     document.getElementById('userLastName').value = userLastName;
     updatePrintNameDisplay();
-    if (typeof window !== 'undefined') window.addEventListener('beforeprint', updatePrintNameDisplay);
+    if (typeof window !== 'undefined') {
+      let chartResizeTimeout = null;
+      window.addEventListener('beforeprint', () => {
+        updatePrintNameDisplay();
+        updateCharts();
+        window.setTimeout(updateCharts, 80);
+      });
+      window.addEventListener('afterprint', () => {
+        window.setTimeout(updateCharts, 80);
+      });
+      window.addEventListener('resize', () => {
+        window.clearTimeout(chartResizeTimeout);
+        chartResizeTimeout = window.setTimeout(() => {
+          updateCharts();
+        }, 120);
+      });
+    }
     populateSelect('negativeSelect', negativeEmotions, 'negativeEmotions');
     populateSelect('positiveSelect', positiveEmotions, 'positiveEmotions');
     showPrivacyNoticeIfNeeded();
