@@ -774,7 +774,7 @@
               <button class="help-trigger" type="button" aria-label="Aide pour Enregistrer en PDF">?</button>
               <button class="secondary-btn" type="button" id="savePdfBtn">Enregistrer en PDF</button>
             </div>
-            <div class="help-popover">Ouvre la boîte d’impression pour enregistrer ou imprimer le bilan et les graphiques.</div>
+            <div class="help-popover">Sur ordinateur, ouvre l’impression. Sur téléphone ou tablette, ouvre directement un PDF de la page.</div>
           </div>
           <div class="action-item">
             <div class="action-inline">
@@ -883,7 +883,7 @@
       <input type="date" class="modal-input" id="pdfExportDateInput">
       <div class="modal-buttons">
         <button class="modal-btn modal-btn-cancel" type="button" id="cancelPdfExportBtn">Annuler</button>
-        <button class="modal-btn modal-btn-confirm" type="button" id="confirmPdfExportBtn">Ouvrir l’impression</button>
+        <button class="modal-btn modal-btn-confirm" type="button" id="confirmPdfExportBtn">Ouvrir le PDF</button>
       </div>
     </div>
   </div>
@@ -1868,6 +1868,7 @@
       const currentDayKey = dayKeyFromISO(selectedDateTime.toISOString());
       const chosenDayKey = dayKeyFromISO(chosenDate.toISOString());
       const savedRecord = getRecordForDay(chosenDate);
+      const isDirectPdfDevice = shouldUseDirectPdfDownload();
       let cleanupTimer = null;
       let hasCleanedUp = false;
 
@@ -1913,6 +1914,54 @@
         restoreUiSnapshot(snapshot);
         window.removeEventListener('afterprint', cleanupPrintMode);
       };
+
+      function openDirectPdfPage() {
+        const sourceRoot = document.querySelector('main.wrap');
+        if (!sourceRoot || typeof window.html2pdf !== 'function') return false;
+
+        document.title = pdfFileName;
+        if (pageTitleEl) pageTitleEl.textContent = pdfFileName;
+        status.textContent = 'Ouverture du PDF...';
+
+        refreshChartsForPrintMode(() => {
+          setTimeout(() => {
+            window.html2pdf().set({
+              margin: [10, 10, 10, 10],
+              filename: `${pdfFileName}.pdf`,
+              image: { type: 'jpeg', quality: 0.98 },
+              html2canvas: {
+                scale: 1,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                scrollX: 0,
+                scrollY: 0,
+                windowWidth: Math.max(document.documentElement.scrollWidth || 0, 960),
+                windowHeight: Math.max(document.documentElement.scrollHeight || 0, 1400)
+              },
+              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(sourceRoot).toPdf().get('pdf').then(pdf => {
+              const pdfUrl = pdf.output('bloburl');
+              const openedWindow = window.open(pdfUrl, '_blank');
+              if (!openedWindow) window.location.href = pdfUrl;
+              status.textContent = 'PDF ouvert.';
+              cleanupPrintMode();
+            }).catch(error => {
+              console.error('Erreur export PDF:', error);
+              status.textContent = 'Impossible d’ouvrir le PDF sur ce navigateur.';
+              cleanupPrintMode();
+            });
+          }, 120);
+        });
+
+        return true;
+      }
+
+      if (isDirectPdfDevice) {
+        if (openDirectPdfPage()) return;
+        status.textContent = 'Le PDF direct n’est pas disponible sur cet appareil.';
+        cleanupPrintMode();
+        return;
+      }
 
       preparePdfPages(chosenDate);
       setPdfExportActive(true);
