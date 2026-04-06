@@ -333,6 +333,18 @@
       pointer-events: none;
       z-index: -1;
     }
+    body.printing-pdf.mobile-print-layout #pdfExportPages {
+      position: static !important;
+      left: auto !important;
+      top: auto !important;
+      width: 210mm !important;
+      max-width: 210mm !important;
+      margin: 0 auto !important;
+      overflow: visible !important;
+      z-index: auto !important;
+      opacity: 0.01 !important;
+      background: #fff !important;
+    }
     body.printing-pdf #pdfExportPages .pdf-page {
       display: block !important;
       width: 100% !important;
@@ -1814,33 +1826,65 @@
       function generatePdfFile() {
         if (typeof window.html2pdf !== 'function') return false;
         const exportRoot = document.getElementById('pdfExportPages') || document.querySelector('main.wrap') || document.body;
+        document.body.classList.add('mobile-print-layout');
         status.textContent = 'Génération du PDF...';
-        window.html2pdf().set({
-          margin: [15, 20, 15, 20],
-          filename: `${pdfFileName}.pdf`,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            scrollX: 0,
-            scrollY: 0,
-            windowWidth: Math.max(1280, exportRoot.scrollWidth || 1280)
-          },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak: {
-            mode: ['css', 'legacy'],
-            before: ['#pdfPageTwo'],
-            after: ['#pdfPageOne'],
-            avoid: ['.chart-card', '.history-item']
+
+        const startExport = () => {
+          window.html2pdf().set({
+            margin: [15, 20, 15, 20],
+            filename: `${pdfFileName}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+              scale: 2,
+              useCORS: true,
+              backgroundColor: '#ffffff',
+              scrollX: 0,
+              scrollY: 0,
+              windowWidth: Math.max(1280, exportRoot.scrollWidth || 1280),
+              onclone: clonedDoc => {
+                clonedDoc.body.classList.add('printing-pdf', 'mobile-print-layout');
+                const clonedRoot = clonedDoc.getElementById('pdfExportPages');
+                if (!clonedRoot) return;
+                clonedRoot.style.display = 'block';
+                clonedRoot.style.position = 'static';
+                clonedRoot.style.left = 'auto';
+                clonedRoot.style.top = 'auto';
+                clonedRoot.style.width = '210mm';
+                clonedRoot.style.maxWidth = '210mm';
+                clonedRoot.style.margin = '0 auto';
+                clonedRoot.style.overflow = 'visible';
+                clonedRoot.style.opacity = '1';
+                clonedRoot.style.zIndex = 'auto';
+                clonedRoot.style.pointerEvents = 'none';
+                clonedRoot.style.background = '#fff';
+              }
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: {
+              mode: ['css', 'legacy'],
+              before: ['#pdfPageTwo'],
+              after: ['#pdfPageOne'],
+              avoid: ['.chart-card', '.history-item']
+            }
+          }).from(exportRoot).save().then(() => {
+            status.textContent = 'PDF enregistré.';
+            cleanupPrintMode();
+          }).catch(error => {
+            console.error('Erreur export PDF:', error);
+            status.textContent = 'Impossible d’enregistrer le PDF sur ce navigateur.';
+            cleanupPrintMode();
+          });
+        };
+
+        refreshChartsForPrintMode(() => {
+          preparePdfPages(chosenDate);
+          if (typeof window.requestAnimationFrame === 'function') {
+            window.requestAnimationFrame(() => {
+              window.requestAnimationFrame(startExport);
+            });
+          } else {
+            setTimeout(startExport, 160);
           }
-        }).from(exportRoot).save().then(() => {
-          status.textContent = 'PDF enregistré.';
-          cleanupPrintMode();
-        }).catch(error => {
-          console.error('Erreur export PDF:', error);
-          status.textContent = 'Impossible d’enregistrer le PDF sur ce navigateur.';
-          cleanupPrintMode();
         });
         return true;
       }
