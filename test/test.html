@@ -252,19 +252,20 @@
       width: 100%;
       max-width: none;
       margin: 0;
+      padding-top: 0.4rem;
+      padding-bottom: 0.4rem;
       --charts-card-gap: 0.08rem;
       --chart-card-width: 100%;
       --chart-card-radius: 18px;
-      --chart-card-padding: 1px 3px 1px;
-      --chart-wrap-aspect: 3 / 1.1;
-      --chart-wrap-min-height: 198px;
+      --chart-card-padding: 2px 4px 2px;
+      --chart-wrap-height: clamp(132px, 14vw, 165px);
       --chart-header-gap: 0;
     }
     .charts-column { display:flex; flex-direction:column; gap: var(--charts-card-gap); align-items:center; }
     .chart-card { background: var(--color-surface-2); border-radius: var(--chart-card-radius); border:1px solid var(--color-border); padding: var(--chart-card-padding); box-sizing:border-box; width: var(--chart-card-width); max-width: 100%; margin: 0 auto; overflow: visible; }
     .chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--chart-header-gap); }
     .chart-title { font-size: var(--text-sm); font-weight:600; line-height: 0.95; }
-    .chart-wrap { position: relative; width: 100%; aspect-ratio: var(--chart-wrap-aspect); min-height: var(--chart-wrap-min-height); height: auto; overflow: visible; }
+    .chart-wrap { position: relative; width: 100%; height: var(--chart-wrap-height); min-height: 0; aspect-ratio: auto; overflow: visible; }
     .chart-wrap canvas {
       position: absolute;
       inset: 0;
@@ -283,8 +284,8 @@
     .history-list { display:grid; gap:.75rem; margin-top:1rem; }
     .history-item { display:flex; justify-content:space-between; gap:1rem; border:1px solid var(--color-border); background: var(--color-surface-2); border-radius: var(--radius-lg); padding: .9rem 1rem; }
     .history-meta { color: var(--color-text-muted); font-size: var(--text-sm); }
-    .chart-controls { display:flex; justify-content: space-between; align-items:center; margin-bottom: var(--space-3); }
-    .chart-controls button { min-height: 38px; padding: 0.35rem 0.8rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); cursor: pointer; }
+    .chart-controls { display:flex; justify-content: space-between; align-items:center; gap: 0.4rem; margin-bottom: 0.35rem; }
+    .chart-controls button { min-height: 32px; padding: 0.2rem 0.65rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); cursor: pointer; }
     .chart-controls button:hover { background: var(--color-surface-2); }
     .chart-controls .current-month { font-weight: 600; }
     .hidden { display:none; }
@@ -348,9 +349,9 @@
       }
 
       .chart-wrap {
-        aspect-ratio: var(--chart-wrap-aspect) !important;
-        min-height: var(--chart-wrap-min-height) !important;
-        height: auto !important;
+        aspect-ratio: auto !important;
+        min-height: 0 !important;
+        height: var(--chart-wrap-height) !important;
       }
 
       .panel,
@@ -435,8 +436,8 @@
       .select-box { width: 100%; }
       .section-title { margin-bottom: 0.5rem; font-size: var(--text-lg); }
       .selected-list { gap: 0.35rem; margin-top: 0.5rem; }
-      .chart-wrap { height: 198px; }
-      .chart-card { padding: 10px 10px 12px; }
+      .chart-wrap { height: 150px; }
+      .chart-card { padding: 4px 6px 4px; }
       .history-item { padding: 8mm 8mm; flex-direction: column; gap: 8mm; }
       .history-meta { font-size: 0.65rem; }
       .date-badge { padding: 0.35rem 0.6rem; font-size: 0.65rem; }
@@ -535,7 +536,7 @@
     <div class="print-page-break" aria-hidden="true"></div>
 
     <section class="panel" id="chartsPanel">
-      <div class="section-title" style="margin-bottom:.8rem;">Graphiques</div>
+      <div class="section-title" style="margin-bottom:.3rem;">Graphiques</div>
       <div class="chart-controls">
         <button type="button" id="prevMonthBtn">⟵ Mois précédent</button>
         <div class="current-month" id="currentMonthLabel">Mois</div>
