@@ -1128,12 +1128,12 @@
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       ctx.clearRect(0, 0, width, height);
 
-      const padding = { top: 16, right: 12, bottom: 30, left: 30 };
+      const padding = { top: 16, right: 12, bottom: 30, left: 38 };
       const innerWidth = Math.max(10, width - padding.left - padding.right);
       const innerHeight = Math.max(10, height - padding.top - padding.bottom);
       const minY = -5;
       const maxY = 10;
-      const yTicks = [-5, 0, 5, 10];
+      const yTicks = Array.from({ length: maxY - minY + 1 }, (_, index) => maxY - index);
 
       const xForIndex = (index, count) => {
         if (count <= 1) return padding.left + innerWidth / 2;
@@ -1150,7 +1150,7 @@
       ctx.lineWidth = 1;
       ctx.strokeStyle = axisColor + '35';
       ctx.fillStyle = axisColor;
-      ctx.font = '11px sans-serif';
+      ctx.font = '8px sans-serif';
 
       yTicks.forEach(tick => {
         const y = yForValue(tick);
