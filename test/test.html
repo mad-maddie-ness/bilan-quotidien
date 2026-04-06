@@ -283,15 +283,24 @@
     .history-item { display:flex; justify-content:space-between; gap:1rem; border:1px solid var(--color-border); background: var(--color-surface-2); border-radius: var(--radius-lg); padding: .9rem 1rem; }
     .history-meta { color: var(--color-text-muted); font-size: var(--text-sm); }
     .chart-controls { display:flex; justify-content: space-between; align-items:center; gap: 0.4rem; margin-bottom: 0.35rem; }
-    .chart-controls button { min-height: 32px; padding: 0.2rem 0.65rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); cursor: pointer; }
+    .chart-controls button {
+      min-height: 26px;
+      padding: 0.08rem 0.65rem;
+      line-height: 1.1;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      color: var(--color-text);
+      cursor: pointer;
+    }
     .chart-controls button:hover { background: var(--color-surface-2); }
     .chart-controls .current-month { font-weight: 600; }
     @media (hover: none), (pointer: coarse) {
       #prevMonthBtn,
       #nextMonthBtn {
-        min-height: 28px;
-        padding-top: 0.08rem;
-        padding-bottom: 0.08rem;
+        min-height: 24px;
+        padding-top: 0.04rem;
+        padding-bottom: 0.04rem;
         line-height: 1.1;
       }
     }
