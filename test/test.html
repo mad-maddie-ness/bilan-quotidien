@@ -351,6 +351,11 @@
         box-shadow: none !important;
       }
 
+      .chart-card,
+      .chart-wrap {
+        overflow: visible !important;
+      }
+
       .print-page-break {
         display: block !important;
         break-before: page;
@@ -1348,6 +1353,10 @@
                   min:-5,
                   max:10,
                   ticks:{
+                    stepSize: 1,
+                    autoSkip: false,
+                    padding: 6,
+                    callback: value => String(value),
                     color: context => (context.tick.value < 0 ? negative : axisColor)
                   },
                   grid:{
