@@ -340,6 +340,65 @@
         font-weight: 600;
       }
 
+      .select-row {
+        flex-direction: row !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        gap: 0.4rem !important;
+      }
+
+      .select-group {
+        width: auto !important;
+        min-width: 0 !important;
+        flex: 1 1 0 !important;
+      }
+
+      .select-box {
+        min-height: 26px !important;
+        padding: 0.12rem 0.45rem !important;
+        font-size: 0.75rem !important;
+      }
+
+      #summaryPanel {
+        padding-top: 0.45rem !important;
+        padding-bottom: 0.45rem !important;
+      }
+
+      #summaryPanel .section-title,
+      #fatiguePanel .section-title {
+        margin-bottom: 0.35rem !important;
+      }
+
+      #summaryPanel .summary-grid {
+        gap: 0.2rem !important;
+      }
+
+      #summaryPanel .kpi {
+        padding: 0.08rem 0.22rem !important;
+        min-width: 62px !important;
+      }
+
+      #summaryText {
+        display: none !important;
+      }
+
+      #fatiguePanel {
+        padding-top: 0.45rem !important;
+        padding-bottom: 0.45rem !important;
+      }
+
+      #fatiguePanel .fatigue-grid {
+        padding-top: 0.1rem !important;
+        padding-bottom: 0.1rem !important;
+        gap: 0.2rem !important;
+      }
+
+      #captureZone .chip {
+        min-height: auto !important;
+        padding: 0.22rem 0.5rem !important;
+        font-size: 0.72rem !important;
+      }
+
       .title {
         font-size: 40pt !important;
       }
@@ -466,7 +525,7 @@
         <button class="chip chip-add-btn" id="addActivityBtn" style="margin-top: var(--space-3);">+ Ajouter une activité</button>
       </section>
 
-      <section class="panel">
+      <section class="panel" id="fatiguePanel">
         <h2 class="section-title">Fatigue</h2>
         <div class="fatigue-grid" id="fatigueButtons"></div>
       </section>
@@ -501,7 +560,7 @@
         <button class="chip chip-add-btn" id="addBodyBtn" style="margin-top: var(--space-3);">+ Ajouter un ressenti</button>
       </section>
 
-      <section class="panel">
+      <section class="panel" id="summaryPanel">
         <h2 class="section-title">Bilan</h2>
         <div class="summary-grid">
           <div class="kpi"><div class="kpi-label">Activités</div><div class="kpi-value score-neutral" id="activityScore">0</div></div>
@@ -1128,7 +1187,7 @@
       const innerHeight = Math.max(10, height - padding.top - padding.bottom);
       const minY = -5;
       const maxY = 10;
-      const yTicks = [-5, 0, 5, 10];
+      const yTicks = Array.from({ length: maxY - minY + 1 }, (_, index) => minY + index);
 
       const xForIndex = (index, count) => {
         if (count <= 1) return padding.left + innerWidth / 2;
@@ -1145,7 +1204,7 @@
       ctx.lineWidth = 1;
       ctx.strokeStyle = axisColor + '35';
       ctx.fillStyle = axisColor;
-      ctx.font = '11px sans-serif';
+      ctx.font = '9px sans-serif';
 
       yTicks.forEach(tick => {
         const y = yForValue(tick);
@@ -1348,6 +1407,9 @@
                   min:-5,
                   max:10,
                   ticks:{
+                    stepSize: 1,
+                    autoSkip: false,
+                    callback: value => (Number.isInteger(value) ? value : ''),
                     color: context => (context.tick.value < 0 ? negative : axisColor)
                   },
                   grid:{
