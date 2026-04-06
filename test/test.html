@@ -291,164 +291,6 @@
     .chart-controls .current-month { font-weight: 600; }
     .hidden { display:none; }
 
-    body.pdf-export-mode {
-      background: #fff !important;
-      color: #000 !important;
-      overflow: visible !important;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-    body.pdf-export-mode .wrap {
-      max-width: none !important;
-      width: 100% !important;
-      padding: 0 !important;
-      margin: 0 !important;
-    }
-    body.pdf-export-mode #captureZone {
-      gap: 0.45rem !important;
-    }
-    body.pdf-export-mode #chartsPanel {
-      break-before: page;
-      page-break-before: always;
-    }
-    body.pdf-export-mode #actionsPanel,
-    body.pdf-export-mode .toolbar,
-    body.pdf-export-mode .date-help,
-    body.pdf-export-mode .date-input,
-    body.pdf-export-mode .help-trigger,
-    body.pdf-export-mode .help-popover,
-    body.pdf-export-mode .chart-controls,
-    body.pdf-export-mode .chip-add-btn,
-    body.pdf-export-mode #captureStatus,
-    body.pdf-export-mode #lastSaveStatus,
-    body.pdf-export-mode #dataFileInput,
-    body.pdf-export-mode .modal-overlay {
-      display: none !important;
-    }
-    body.pdf-export-mode .panel {
-      padding: 0.7rem !important;
-      box-shadow: none !important;
-    }
-    body.pdf-export-mode .section-title {
-      margin-bottom: 0.45rem !important;
-    }
-    body.pdf-export-mode .select-row {
-      flex-direction: column !important;
-      align-items: stretch !important;
-      gap: 0.35rem !important;
-    }
-    body.pdf-export-mode .select-group {
-      width: 100% !important;
-      min-width: 0 !important;
-      flex-direction: column !important;
-      align-items: stretch !important;
-    }
-    body.pdf-export-mode .chip.active,
-    body.pdf-export-mode .fatigue-btn.active,
-    body.pdf-export-mode .pill {
-      border-width: 2px !important;
-      box-shadow: none !important;
-      font-weight: 700 !important;
-    }
-    body.pdf-export-mode .chart-card,
-    body.pdf-export-mode .history-item {
-      break-inside: avoid;
-      page-break-inside: avoid;
-      box-shadow: none !important;
-    }
-    body.pdf-export-mode .chart-card,
-    body.pdf-export-mode .chart-wrap {
-      overflow: hidden !important;
-    }
-    body.pdf-export-mode .chart-wrap canvas {
-      display: block !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      height: 100% !important;
-      max-height: 100% !important;
-    }
-
-    @media print {
-      @page { size: A4; margin: 15mm 20mm 15mm 20mm; }
-      html, body {
-        background: #fff !important;
-        color: #000 !important;
-        overflow: visible !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      .wrap {
-        max-width: none !important;
-        width: 100% !important;
-        padding: 0 !important;
-        margin: 0 !important;
-      }
-      #captureZone {
-        gap: 0.45rem !important;
-        break-after: page;
-        page-break-after: always;
-      }
-      #chartsPanel {
-        break-before: page;
-        page-break-before: always;
-      }
-      #actionsPanel,
-      .toolbar,
-      .date-help,
-      .date-input,
-      .help-trigger,
-      .help-popover,
-      .chart-controls,
-      .chip-add-btn,
-      #captureStatus,
-      #lastSaveStatus,
-      #dataFileInput,
-      .modal-overlay {
-        display: none !important;
-      }
-      .panel {
-        padding: 0.7rem !important;
-        box-shadow: none !important;
-      }
-      .section-title {
-        margin-bottom: 0.45rem !important;
-      }
-      .select-row {
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 0.35rem !important;
-      }
-      .select-group {
-        width: 100% !important;
-        min-width: 0 !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
-      }
-      .chip.active,
-      .fatigue-btn.active,
-      .pill {
-        border-width: 2px !important;
-        box-shadow: none !important;
-        font-weight: 700 !important;
-      }
-      .chart-card,
-      .history-item {
-        break-inside: avoid;
-        page-break-inside: avoid;
-        box-shadow: none !important;
-      }
-      .chart-card,
-      .chart-wrap {
-        overflow: hidden !important;
-      }
-      .chart-wrap canvas {
-        display: block !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        height: 100% !important;
-        max-height: 100% !important;
-      }
-    }
     
     /* Tablette et petits écrans */
     @media (max-width: 767px) {
@@ -628,7 +470,7 @@
               <button class="help-trigger" type="button" aria-label="Aide pour Enregistrer en PDF">?</button>
               <button class="secondary-btn" type="button" id="savePdfBtn">Enregistrer en PDF</button>
             </div>
-            <div class="help-popover">Génère le même PDF A4 sur ordinateur, téléphone et tablette, avec la même mise en page.</div>
+            <div class="help-popover">Génère simplement le PDF sur la même page, sans réglage spécial.</div>
           </div>
           <div class="action-item">
             <div class="action-inline">
@@ -1608,14 +1450,10 @@
     function exportToPDF(targetDate = selectedDateTime) {
       const status = document.getElementById('captureStatus');
       const chosenDate = new Date(targetDate);
-      const pdfFileName = `bilan-quotidien du ${formatPdfFileDate(chosenDate)}`;
-      const originalPageTitle = document.title;
-      const pageTitleEl = document.querySelector('title');
       const snapshot = createUiSnapshot();
       const currentDayKey = dayKeyFromISO(selectedDateTime.toISOString());
       const chosenDayKey = dayKeyFromISO(chosenDate.toISOString());
       const savedRecord = getRecordForDay(chosenDate);
-      let hasCleanedUp = false;
 
       if (chosenDayKey === currentDayKey) {
         selectedDateTime = chosenDate;
@@ -1630,25 +1468,7 @@
       }
 
       const sourceRoot = document.querySelector('main.wrap');
-      const sourceRootInlineStyles = sourceRoot ? {
-        margin: sourceRoot.style.margin,
-        maxWidth: sourceRoot.style.maxWidth,
-        width: sourceRoot.style.width,
-        padding: sourceRoot.style.padding
-      } : null;
-
       const cleanupExport = () => {
-        if (hasCleanedUp) return;
-        hasCleanedUp = true;
-        document.body.classList.remove('pdf-export-mode');
-        if (sourceRoot && sourceRootInlineStyles) {
-          sourceRoot.style.margin = sourceRootInlineStyles.margin;
-          sourceRoot.style.maxWidth = sourceRootInlineStyles.maxWidth;
-          sourceRoot.style.width = sourceRootInlineStyles.width;
-          sourceRoot.style.padding = sourceRootInlineStyles.padding;
-        }
-        document.title = originalPageTitle;
-        if (pageTitleEl) pageTitleEl.textContent = originalPageTitle;
         restoreUiSnapshot(snapshot);
       };
 
@@ -1664,59 +1484,15 @@
         return;
       }
 
-      const pdfPageWidth = 794;
-      const pdfContentWidth = 642;
-
-      document.body.classList.add('pdf-export-mode');
-      sourceRoot.style.margin = '0';
-      sourceRoot.style.maxWidth = `${pdfContentWidth}px`;
-      sourceRoot.style.width = `${pdfContentWidth}px`;
-      sourceRoot.style.padding = '0';
-
-      const captureWidth = pdfContentWidth;
-      const captureHeight = Math.max(sourceRoot.scrollHeight || 0, sourceRoot.clientHeight || 0, 1400);
-
-      document.title = pdfFileName;
-      if (pageTitleEl) pageTitleEl.textContent = pdfFileName;
       status.textContent = 'Génération du PDF...';
 
-      refreshChartsForPrintMode(() => {
-        setTimeout(() => {
-          window.html2pdf().set({
-            margin: [15, 20, 15, 20],
-            filename: `${pdfFileName}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            pagebreak: { mode: ['css', 'legacy'] },
-            html2canvas: {
-              scale: 1,
-              useCORS: true,
-              backgroundColor: '#ffffff',
-              scrollX: 0,
-              scrollY: 0,
-              width: captureWidth,
-              height: captureHeight,
-              windowWidth: pdfPageWidth,
-              windowHeight: captureHeight,
-              onclone: clonedDoc => {
-                clonedDoc.body.classList.add('pdf-export-mode');
-                const clonedRoot = clonedDoc.querySelector('main.wrap');
-                if (!clonedRoot) return;
-                clonedRoot.style.margin = '0';
-                clonedRoot.style.maxWidth = `${pdfContentWidth}px`;
-                clonedRoot.style.width = `${pdfContentWidth}px`;
-                clonedRoot.style.padding = '0';
-              }
-            },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-          }).from(sourceRoot).save().then(() => {
-            status.textContent = 'PDF généré.';
-            cleanupExport();
-          }).catch(error => {
-            console.error('Erreur export PDF:', error);
-            status.textContent = 'Impossible de générer le PDF sur ce navigateur.';
-            cleanupExport();
-          });
-        }, 120);
+      window.html2pdf().from(sourceRoot).save().then(() => {
+        status.textContent = 'PDF généré.';
+        cleanupExport();
+      }).catch(error => {
+        console.error('Erreur export PDF:', error);
+        status.textContent = 'Impossible de générer le PDF sur ce navigateur.';
+        cleanupExport();
       });
     }
 
