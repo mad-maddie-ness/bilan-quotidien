@@ -1402,7 +1402,7 @@
       note.textContent = message;
     }
 
-    function drawFallbackLineChart(canvas, data, labels, axisColor, primary, positive, negative) {
+    function drawFallbackLineChart(canvas, data, labels, axisColor, primary, positive, negative, surface = '#f0eee8') {
       const ctx = canvas && canvas.getContext ? canvas.getContext('2d') : null;
       if (!ctx) return false;
 
@@ -1419,6 +1419,8 @@
 
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = surface;
+      ctx.fillRect(0, 0, width, height);
 
       const padding = { top: 14, right: 10, bottom: 28, left: 28 };
       const innerWidth = Math.max(10, width - padding.left - padding.right);
@@ -1534,6 +1536,7 @@
       const primary = rootStyles.getPropertyValue('--color-primary').trim();
       const positive = rootStyles.getPropertyValue('--color-positive').trim();
       const negative = rootStyles.getPropertyValue('--color-negative').trim();
+      const chartSurface = rootStyles.getPropertyValue('--color-surface-2').trim() || '#f0eee8';
       const filtered = filterBySelectedMonth(historyRecords);
       const labels = filtered.map(r => String(new Date(r.date).getDate()).padStart(2, '0'));
 
@@ -1561,10 +1564,10 @@
 
       const useFallbackCharts = typeof window.Chart !== 'function';
       if (useFallbackCharts) {
-        drawFallbackLineChart(document.getElementById('chartActivites'), series.activites, labels, axisColor, primary, positive, negative);
-        drawFallbackLineChart(document.getElementById('chartFatigue'), series.fatigue, labels, axisColor, primary, positive, negative);
-        drawFallbackLineChart(document.getElementById('chartEmotions'), series.emotions, labels, axisColor, primary, positive, negative);
-        drawFallbackLineChart(document.getElementById('chartRessenti'), series.ressenti, labels, axisColor, primary, positive, negative);
+        drawFallbackLineChart(document.getElementById('chartActivites'), series.activites, labels, axisColor, primary, positive, negative, chartSurface);
+        drawFallbackLineChart(document.getElementById('chartFatigue'), series.fatigue, labels, axisColor, primary, positive, negative, chartSurface);
+        drawFallbackLineChart(document.getElementById('chartEmotions'), series.emotions, labels, axisColor, primary, positive, negative, chartSurface);
+        drawFallbackLineChart(document.getElementById('chartRessenti'), series.ressenti, labels, axisColor, primary, positive, negative, chartSurface);
         chartIds.forEach(id => setChartNote(id, ''));
         return;
       }
@@ -1598,6 +1601,7 @@
       function makeChart(id, data) {
         const canvas = document.getElementById(id);
         if (!canvas) return;
+        canvas.style.background = chartSurface;
         const ctx = canvas.getContext('2d');
         if (!ctx) {
           setChartNote(id, 'Le navigateur ne permet pas d’afficher ce graphique.');
@@ -1609,6 +1613,17 @@
         try {
           charts[id] = new Chart(ctx, {
             type:'line',
+            plugins:[{
+              id: 'surfaceBackground',
+              beforeDraw(chart) {
+                const { ctx, width, height } = chart;
+                ctx.save();
+                ctx.globalCompositeOperation = 'destination-over';
+                ctx.fillStyle = chartSurface;
+                ctx.fillRect(0, 0, width, height);
+                ctx.restore();
+              }
+            }],
             data:{
               datasets:[{
                 data: splitSeries.points,
@@ -1676,7 +1691,7 @@
           setChartNote(id, '');
         } catch (error) {
           console.error('Erreur graphique:', error);
-          drawFallbackLineChart(canvas, data, labels, axisColor, primary, positive, negative);
+          drawFallbackLineChart(canvas, data, labels, axisColor, primary, positive, negative, chartSurface);
           setChartNote(id, '');
         }
       }
