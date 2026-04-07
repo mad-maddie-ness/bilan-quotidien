@@ -1581,8 +1581,9 @@
       ctx.lineWidth = 1;
       ctx.strokeStyle = axisColor + '35';
       ctx.fillStyle = axisColor;
-      ctx.font = isPdfMobile ? '7px Satoshi, sans-serif' : '9px Satoshi, sans-serif';
+      ctx.font = isPdfMobile ? '7px Arial, sans-serif' : '9px Satoshi, sans-serif';
       ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
 
       yTicks.forEach(tick => {
         const y = yForValue(tick);
@@ -1677,6 +1678,8 @@
       const chartSurface = rootStyles.getPropertyValue('--color-surface-2').trim() || '#f0eee8';
       const isPdfMobile = document.documentElement.classList.contains('pdf-mobile');
       const axisFontSize = isPdfMobile ? 8 : 10;
+      const axisFontFamily = isPdfMobile ? 'Arial, Helvetica, sans-serif' : fontFamily;
+      const axisFontWeight = isPdfMobile ? '400' : '500';
       const axisWidth = isPdfMobile ? 26 : 30;
       const lineWidth = isPdfMobile ? 2 : 2.5;
       const pointRadius = isPdfMobile ? 2.4 : 3.2;
@@ -1789,6 +1792,7 @@
             options:{
               responsive:true,
               maintainAspectRatio:false,
+              animation: false,
               plugins:{ legend:{ display:false } },
               scales:{
                 x:{
@@ -1796,10 +1800,11 @@
                   min: labels.length ? 0 : undefined,
                   max: labels.length ? labels.length - 1 : undefined,
                   offset: false,
+                  alignToPixels: true,
                   ticks:{
                     stepSize: 1,
                     color:axisColor,
-                    font: { size: axisFontSize, family: fontFamily, weight: '500' },
+                    font: { size: axisFontSize, family: axisFontFamily, weight: axisFontWeight },
                     callback: (value) => {
                       const index = Number(value);
                       return Number.isInteger(index) && labels[index] ? labels[index] : '';
@@ -1810,6 +1815,7 @@
                 y:{
                   min:-10,
                   max:10,
+                  alignToPixels: true,
                   afterFit: scale => {
                     scale.width = axisWidth;
                   },
@@ -1820,7 +1826,7 @@
                     precision: 0,
                     autoSkip: false,
                     padding: 1,
-                    font: { size: axisFontSize, family: fontFamily, weight: '500' },
+                    font: { size: axisFontSize, family: axisFontFamily, weight: axisFontWeight },
                     callback: value => (Number.isInteger(value) && value % 5 === 0 ? String(value) : ''),
                     color: context => (context.tick.value < 0 ? negative : axisColor)
                   },
