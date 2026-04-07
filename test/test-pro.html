@@ -515,8 +515,8 @@
     .chart-controls .current-month { font-weight: 600; }
     .patient-picker {
       display: flex;
-      flex-wrap: wrap;
-      align-items: center;
+      flex-direction: column;
+      align-items: flex-start;
       gap: 0.6rem;
       margin: 0 auto 0.9rem;
       width: min(100%, var(--layout-max-width));
@@ -1005,13 +1005,6 @@
         <div class="print-name-display" id="printNameDisplay"></div>
       </div>
       <div class="practitioner-toolbar">
-        <div class="action-item">
-          <div class="action-inline">
-            <button class="help-trigger" type="button" aria-label="Aide pour charger le fichier JSON">?</button>
-            <button class="load-data-btn" type="button" id="importDataHeaderBtn">Charger le fichier JSON</button>
-          </div>
-          <div class="help-popover">Chargez le fichier JSON d’un patient pour consulter ses graphiques et le détail de ses journées.</div>
-        </div>
         <button class="theme-btn" type="button" id="themeBtnHeader">🌙 / ☀️</button>
       </div>
     </header>
@@ -1090,6 +1083,13 @@
     <div class="print-page-break" aria-hidden="true"></div>
 
     <div class="patient-picker">
+      <div class="action-item">
+        <div class="action-inline">
+          <button class="help-trigger" type="button" aria-label="Aide pour charger le fichier JSON">?</button>
+          <button class="load-data-btn" type="button" id="importDataHeaderBtn">Charger le fichier</button>
+        </div>
+        <div class="help-popover">Chargez le fichier JSON d’un patient pour consulter ses graphiques et le détail de ses journées.</div>
+      </div>
       <label for="patientSelect" class="ghost-note">Patient</label>
       <select id="patientSelect" class="select-box">
         <option value="">Choisir un patient mémorisé…</option>
