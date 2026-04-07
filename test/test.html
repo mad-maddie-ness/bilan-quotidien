@@ -332,6 +332,7 @@
     .score-neutral { color: var(--color-neutral); }
     .selected-list { display:flex; flex-wrap:wrap; gap: .5rem; margin-top: .85rem; }
     .pill { padding: .45rem .8rem; border-radius: var(--radius-full); font-size: var(--text-sm); border: 1px solid var(--color-border); background: var(--color-surface-2); }
+    .pill.activity-selected { background: var(--color-primary); border-color: var(--color-primary); color: white; }
     .pill.positive { background: var(--color-positive-soft); border-color: var(--color-positive); }
     .pill.negative { background: var(--color-negative-soft); border-color: var(--color-negative); }
     .footer-note { margin-top: var(--space-4); color: var(--color-text-muted); }
@@ -1522,7 +1523,7 @@
         `;
       }
 
-      renderDetailPills(chartDayActivitiesEl, record.activities || [], '', 'Aucune activité');
+      renderDetailPills(chartDayActivitiesEl, record.activities || [], 'activity-selected', 'Aucune activité');
       renderFatigueDetail(chartDayFatigueEl, scores.fatigueScore);
       renderDetailPills(chartDayPositiveEmotionsEl, record.positiveEmotions || [], 'positive', 'Aucune émotion positive');
       renderDetailPills(chartDayNegativeEmotionsEl, record.negativeEmotions || [], 'negative', 'Aucune émotion négative');
