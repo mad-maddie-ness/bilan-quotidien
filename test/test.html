@@ -2330,6 +2330,15 @@
       }
     }
 
+    function resetCurrentSelections() {
+      state.activities.clear();
+      state.fatigue = 0;
+      state.negativeEmotions = [];
+      state.positiveEmotions = [];
+      state.body.clear();
+      renderAll();
+    }
+
     function saveTodayRecord() {
       const todayRecord = buildTodayRecord();
       const savedMonthKey = `${new Date(todayRecord.date).getFullYear()}-${String(new Date(todayRecord.date).getMonth()+1).padStart(2,'0')}`;
@@ -2339,7 +2348,8 @@
       const monthIndex = monthKeys.indexOf(savedMonthKey);
       if (monthIndex >= 0) setSelectedMonth(monthIndex);
       updateLastSaveText();
-      document.getElementById('captureStatus').textContent='Journée enregistrée localement. Les graphiques ont été mis à jour avec cette dernière version.';
+      resetCurrentSelections();
+      document.getElementById('captureStatus').textContent='Journée enregistrée localement. Les sélections ont été réinitialisées pour une nouvelle saisie.';
     }
 
     function loadJsonFile(file) {
@@ -2496,7 +2506,7 @@
     }
 
     // Événements principaux
-    document.getElementById('resetBtn').addEventListener('click', ()=>{ state.activities.clear(); state.fatigue=0; state.negativeEmotions=[]; state.positiveEmotions=[]; state.body.clear(); renderAll(); });
+    document.getElementById('resetBtn').addEventListener('click', resetCurrentSelections);
     document.getElementById('themeBtn').addEventListener('click', ()=>{ const root=document.documentElement; root.setAttribute('data-theme', root.getAttribute('data-theme')==='dark'?'light':'dark'); setTimeout(renderHistory, 40); });
     document.getElementById('dateBadge').addEventListener('click', () => {
       const dateInput = document.getElementById('customDateInput');
