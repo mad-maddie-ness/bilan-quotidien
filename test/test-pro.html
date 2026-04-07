@@ -513,6 +513,17 @@
     }
     .chart-controls button:hover { background: var(--color-surface-2); }
     .chart-controls .current-month { font-weight: 600; }
+    .patient-picker {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.9rem;
+    }
+    .patient-picker .select-box {
+      min-width: min(100%, 20rem);
+      flex: 0 1 22rem;
+    }
     @media (hover: none), (pointer: coarse) {
       #prevMonthBtn,
       #nextMonthBtn {
@@ -1065,6 +1076,12 @@
 
     <section class="panel" id="chartsPanel">
       <div class="section-title" style="margin-bottom:.3rem;">Graphiques</div>
+      <div class="patient-picker">
+        <label for="patientSelect" class="ghost-note">Patient</label>
+        <select id="patientSelect" class="select-box">
+          <option value="">Choisir un patient mémorisé…</option>
+        </select>
+      </div>
       <div class="chart-controls">
         <button type="button" id="prevMonthBtn">⟵ Mois précédent</button>
         <div class="current-month" id="currentMonthLabel">Mois</div>
@@ -1168,7 +1185,7 @@
       <input class="hidden" type="file" id="dataFileInput" accept="application/json,.json">
     </section>
 
-    <div class="status" id="captureStatus">Importe les données ou enregistre directement pour commencer un nouveau.</div>
+    <div class="status" id="captureStatus">Chargez le fichier JSON d’un patient ou choisissez un patient mémorisé.</div>
     <div class="last-save" id="lastSaveStatus" style="margin-top:0.5rem;color:var(--color-text-muted);"></div>
   </main>
 
@@ -1283,6 +1300,10 @@
     let pendingDeleteAction = null;
     let selectedChartRecord = null;
     let currentChartRecords = [];
+    let patientLibrary = {};
+    let selectedPatientId = '';
+    const practitionerPatientsStorageKey = 'bilanQuotidienPractitionerPatients';
+    const practitionerSelectedPatientStorageKey = 'bilanQuotidienPractitionerSelectedPatient';
 
     function sortEmotionValues(values) {
       return values.sort((a, b) => a.localeCompare(b, 'fr', { sensitivity:'base' }));
@@ -1303,36 +1324,204 @@
       printNameEl.textContent = [firstName, lastName].filter(Boolean).join(' ');
     }
 
-    // Chargement des données depuis localStorage
-    function loadFromLocalStorage() {
-      const saved = localStorage.getItem('bilanQuotidienConfig');
-      if (saved) {
-        try {
-          const config = JSON.parse(saved);
-          if (config.activities) activities = config.activities;
-          if (config.bodyFeelings) bodyFeelings = config.bodyFeelings;
-          if (config.negativeEmotions) negativeEmotions = config.negativeEmotions;
-          if (config.positiveEmotions) positiveEmotions = config.positiveEmotions;
-          if (config.userFirstName) userFirstName = config.userFirstName;
-          if (config.userLastName) userLastName = config.userLastName;
-          sortEmotionLists();
-        } catch (e) { console.error('Erreur dans le chargement localStorage:', e); }
+    function toTitleCase(value = '') {
+      return String(value)
+        .split(/[\s_-]+/)
+        .filter(Boolean)
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+    }
+
+    function slugify(value = '') {
+      return String(value)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+
+    function buildPatientConfig(config = {}) {
+      return {
+        activities: Array.isArray(config.activities) ? [...config.activities] : [...defaultActivities],
+        bodyFeelings: Array.isArray(config.bodyFeelings) ? config.bodyFeelings.map(item => ({ ...item })) : defaultBodyFeelings.map(item => ({ ...item })),
+        negativeEmotions: Array.isArray(config.negativeEmotions) ? [...config.negativeEmotions] : [...defaultNegativeEmotions],
+        positiveEmotions: Array.isArray(config.positiveEmotions) ? [...config.positiveEmotions] : [...defaultPositiveEmotions],
+        userFirstName: (config.userFirstName || '').trim(),
+        userLastName: (config.userLastName || '').trim()
+      };
+    }
+
+    function extractPatientIdentity(parsed = {}, fileName = '') {
+      const config = parsed && parsed.config ? parsed.config : {};
+      const firstName = (config.userFirstName || '').trim();
+      const lastName = (config.userLastName || '').trim();
+      const cleanedFileName = fileName
+        .replace(/\.[^.]+$/, '')
+        .replace(/^donnees-bilan-quotidien-de-/i, '')
+        .replace(/^bilan-quotidien-/i, '')
+        .replace(/[_-]+/g, ' ')
+        .trim();
+      const fallbackLabel = toTitleCase(cleanedFileName);
+      const label = [firstName, lastName].filter(Boolean).join(' ') || fallbackLabel || 'Patient sans nom';
+      const idSource = [lastName, firstName].filter(Boolean).join('-') || cleanedFileName || label;
+      return {
+        firstName,
+        lastName,
+        label,
+        id: slugify(idSource) || `patient-${Date.now()}`
+      };
+    }
+
+    function renderPatientSelect() {
+      const select = document.getElementById('patientSelect');
+      if (!select) return;
+      select.innerHTML = '<option value="">Choisir un patient mémorisé…</option>';
+      Object.values(patientLibrary)
+        .sort((a, b) => (a.label || '').localeCompare(b.label || '', 'fr', { sensitivity: 'base' }))
+        .forEach(patient => {
+          const option = document.createElement('option');
+          option.value = patient.id;
+          option.textContent = patient.label || 'Patient sans nom';
+          select.appendChild(option);
+        });
+      select.value = selectedPatientId || '';
+    }
+
+    function updatePatientInputs() {
+      const firstNameInput = document.getElementById('userFirstName');
+      const lastNameInput = document.getElementById('userLastName');
+      if (firstNameInput) firstNameInput.value = userFirstName;
+      if (lastNameInput) lastNameInput.value = userLastName;
+      updatePrintNameDisplay();
+    }
+
+    function getCurrentPatientSnapshot() {
+      return {
+        id: selectedPatientId,
+        label: patientLibrary[selectedPatientId]?.label || [userFirstName, userLastName].filter(Boolean).join(' ') || 'Patient sans nom',
+        firstName: userFirstName,
+        lastName: userLastName,
+        config: buildPatientConfig({ activities, bodyFeelings, negativeEmotions, positiveEmotions, userFirstName, userLastName }),
+        records: mergeRecords([], historyRecords),
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    function persistPatientLibrary() {
+      if (selectedPatientId) {
+        patientLibrary[selectedPatientId] = getCurrentPatientSnapshot();
+      }
+      localStorage.setItem(practitionerPatientsStorageKey, JSON.stringify(patientLibrary));
+      if (selectedPatientId) localStorage.setItem(practitionerSelectedPatientStorageKey, selectedPatientId);
+      else localStorage.removeItem(practitionerSelectedPatientStorageKey);
+    }
+
+    function applyPatientSelection(patientId, { silentStatus = false } = {}) {
+      selectedPatientId = patientId || '';
+      const patient = selectedPatientId ? patientLibrary[selectedPatientId] : null;
+
+      if (!patient) {
+        activities = [...defaultActivities];
+        bodyFeelings = defaultBodyFeelings.map(item => ({ ...item }));
+        negativeEmotions = [...defaultNegativeEmotions];
+        positiveEmotions = [...defaultPositiveEmotions];
+        userFirstName = '';
+        userLastName = '';
+        historyRecords = [];
+        monthKeys = [];
+        selectedMonthIndex = 0;
+        sortEmotionLists();
+        updatePatientInputs();
+        renderPatientSelect();
+        if (!silentStatus) document.getElementById('captureStatus').textContent = 'Chargez le fichier JSON d’un patient ou choisissez un patient mémorisé.';
+      } else {
+        const config = buildPatientConfig(patient.config || {});
+        activities = config.activities;
+        bodyFeelings = config.bodyFeelings;
+        negativeEmotions = config.negativeEmotions;
+        positiveEmotions = config.positiveEmotions;
+        userFirstName = config.userFirstName || patient.firstName || '';
+        userLastName = config.userLastName || patient.lastName || '';
+        historyRecords = mergeRecords([], Array.isArray(patient.records) ? patient.records : []);
+        sortEmotionLists();
+        updatePatientInputs();
+        renderPatientSelect();
+        if (!silentStatus) {
+          const label = patient.label || 'ce patient';
+          document.getElementById('captureStatus').textContent = `Historique chargé pour ${label}.`;
+        }
       }
 
+      populateSelect('negativeSelect', negativeEmotions, 'negativeEmotions');
+      populateSelect('positiveSelect', positiveEmotions, 'positiveEmotions');
+      resetChartDayDetails();
+      renderAll();
+      renderHistory();
+      updateLastSaveText();
+      persistPatientLibrary();
+    }
+
+    function migrateLegacyPractitionerData() {
+      const savedConfig = localStorage.getItem('bilanQuotidienConfig');
       const savedHistory = localStorage.getItem('bilanQuotidienHistory');
-      if (savedHistory) {
-        try {
-          historyRecords = mergeRecords([], JSON.parse(savedHistory));
-        } catch (e) { console.error('Erreur dans le chargement de l\'historique:', e); }
+      if (!savedConfig && !savedHistory) return;
+
+      try {
+        const parsedConfig = savedConfig ? JSON.parse(savedConfig) : {};
+        const parsedHistory = savedHistory ? JSON.parse(savedHistory) : [];
+        const identity = extractPatientIdentity({ config: parsedConfig }, 'patient importe');
+        const config = buildPatientConfig(parsedConfig);
+        patientLibrary[identity.id] = {
+          id: identity.id,
+          label: identity.label,
+          firstName: config.userFirstName,
+          lastName: config.userLastName,
+          config,
+          records: mergeRecords([], Array.isArray(parsedHistory) ? parsedHistory : []),
+          updatedAt: new Date().toISOString()
+        };
+        if (!selectedPatientId) selectedPatientId = identity.id;
+      } catch (error) {
+        console.error('Erreur de migration des données praticien :', error);
       }
+    }
+
+    // Chargement des données depuis localStorage
+    function loadFromLocalStorage() {
+      patientLibrary = {};
+      try {
+        const savedPatients = localStorage.getItem(practitionerPatientsStorageKey);
+        if (savedPatients) {
+          const parsedPatients = JSON.parse(savedPatients);
+          if (parsedPatients && typeof parsedPatients === 'object') patientLibrary = parsedPatients;
+        }
+      } catch (e) {
+        console.error('Erreur dans le chargement des patients mémorisés :', e);
+      }
+
+      selectedPatientId = localStorage.getItem(practitionerSelectedPatientStorageKey) || '';
+
+      if (!Object.keys(patientLibrary).length) {
+        migrateLegacyPractitionerData();
+      }
+
+      if (selectedPatientId && patientLibrary[selectedPatientId]) {
+        applyPatientSelection(selectedPatientId, { silentStatus: true });
+        return;
+      }
+
+      const firstPatient = Object.values(patientLibrary)
+        .sort((a, b) => (a.label || '').localeCompare(b.label || '', 'fr', { sensitivity: 'base' }))[0];
+
+      if (firstPatient) applyPatientSelection(firstPatient.id, { silentStatus: true });
+      else applyPatientSelection('', { silentStatus: true });
     }
 
     // Sauvegarde dans localStorage
     function saveToLocalStorage() {
-      const config = { activities, bodyFeelings, negativeEmotions, positiveEmotions, userFirstName, userLastName };
       historyRecords = mergeRecords([], historyRecords);
-      localStorage.setItem('bilanQuotidienConfig', JSON.stringify(config));
-      localStorage.setItem('bilanQuotidienHistory', JSON.stringify(historyRecords));
+      persistPatientLibrary();
     }
 
     // Gestion des modales
@@ -2255,11 +2444,14 @@
     }
 
     function updateLastSaveText() {
+      const statusEl = document.getElementById('lastSaveStatus');
       const last = historyRecords.slice().sort((a,b)=>getRecordSavedTime(b)-getRecordSavedTime(a))[0];
       if (last) {
         const d = new Date(last.savedAt || last.date);
         const pad = n => String(n).padStart(2,'0');
-        document.getElementById('lastSaveStatus').textContent = `Dernier enregistrement le ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        statusEl.textContent = `Dernier enregistrement le ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} à ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      } else {
+        statusEl.textContent = '';
       }
     }
 
@@ -2379,23 +2571,28 @@
         try {
           const parsed = JSON.parse(reader.result);
           const incoming = Array.isArray(parsed) ? parsed : (parsed.records || []);
-          
-          // Importer la configuration si présente
-          if (parsed.config) {
-            activities = parsed.config.activities || activities;
-            bodyFeelings = parsed.config.bodyFeelings || bodyFeelings;
-            negativeEmotions = parsed.config.negativeEmotions || negativeEmotions;
-            positiveEmotions = parsed.config.positiveEmotions || positiveEmotions;
-            sortEmotionLists();
-            populateSelect('negativeSelect', negativeEmotions, 'negativeEmotions');
-            populateSelect('positiveSelect', positiveEmotions, 'positiveEmotions');
-            saveToLocalStorage();
-          }
-          
-          historyRecords = mergeRecords(historyRecords, incoming);
-          renderAll();
-          renderHistory();
-          document.getElementById('captureStatus').textContent='JSON importé et fusionné avec l\'historique existant.';
+          const identity = extractPatientIdentity(parsed, file && file.name ? file.name : 'patient');
+          const existingPatient = patientLibrary[identity.id] || {};
+          const importedConfig = buildPatientConfig({
+            ...(existingPatient.config || {}),
+            ...((parsed && parsed.config) || {})
+          });
+          const patientLabel = [importedConfig.userFirstName, importedConfig.userLastName].filter(Boolean).join(' ') || identity.label;
+
+          patientLibrary[identity.id] = {
+            id: identity.id,
+            label: patientLabel,
+            firstName: importedConfig.userFirstName || existingPatient.firstName || identity.firstName,
+            lastName: importedConfig.userLastName || existingPatient.lastName || identity.lastName,
+            config: importedConfig,
+            records: mergeRecords(existingPatient.records || [], incoming),
+            updatedAt: new Date().toISOString()
+          };
+
+          selectedPatientId = identity.id;
+          persistPatientLibrary();
+          applyPatientSelection(identity.id, { silentStatus: true });
+          document.getElementById('captureStatus').textContent = `${patientLabel} a été ajouté à la liste des patients.`;
         } catch (error) {
           console.error('Erreur import JSON :', error);
           document.getElementById('captureStatus').textContent='Le fichier JSON est invalide.';
@@ -2485,6 +2682,7 @@
     });
     document.getElementById('prevMonthBtn').addEventListener('click', () => setSelectedMonth(selectedMonthIndex - 1));
     document.getElementById('nextMonthBtn').addEventListener('click', () => setSelectedMonth(selectedMonthIndex + 1));
+    document.getElementById('patientSelect').addEventListener('change', (e) => applyPatientSelection(e.target.value));
     document.getElementById('chartDayLoadBtn').addEventListener('click', () => {
       if (!selectedChartRecord) return;
       loadRecordIntoUi(selectedChartRecord, new Date(selectedChartRecord.date));
