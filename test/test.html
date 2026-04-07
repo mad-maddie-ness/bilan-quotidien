@@ -593,13 +593,11 @@
       }
     }
 
-    @media print and (max-width: 767px) {
+    @media print {
       html.pdf-mobile #chartsPanel {
-        --chart-wrap-height: var(--pdf-chart-wrap-height, 110px) !important;
+        --chart-wrap-height: var(--pdf-chart-wrap-height, 90px) !important;
       }
-    }
 
-    @media print and (min-width: 768px) {
       html.pdf-desktop #chartsPanel {
         --chart-wrap-height: var(--pdf-chart-wrap-height, 300px) !important;
       }
@@ -1871,7 +1869,7 @@
       const isMobilePdf = window.matchMedia('(max-width: 767px)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
       root.classList.toggle('pdf-mobile', isMobilePdf);
       root.classList.toggle('pdf-desktop', !isMobilePdf);
-      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '110px' : '255px');
+      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '90px' : '255px');
       root.style.setProperty('--pdf-chart-bg', getComputedStyle(root).getPropertyValue('--color-surface-2').trim() || '#f0eee8');
       renderHistory();
       updateCharts();
