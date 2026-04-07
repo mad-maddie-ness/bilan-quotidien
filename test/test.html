@@ -422,7 +422,7 @@
     }
     .chart-day-detail-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1fr;
       gap: 0.75rem;
     }
     .chart-day-detail-card {
@@ -431,6 +431,16 @@
       border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
       padding: 0.75rem;
+    }
+    .chart-day-detail-card .selected-list {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.35rem;
+    }
+    .chart-day-detail-card .pill {
+      width: fit-content;
+      max-width: 100%;
     }
     .chart-day-detail-card .detail-label {
       display: block;
@@ -444,6 +454,17 @@
     .chart-day-detail-lines {
       display: grid;
       gap: 0.5rem;
+    }
+    .detail-fatigue-scale {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      align-items: center;
+    }
+    .detail-fatigue-scale .fatigue-btn {
+      cursor: default;
+      pointer-events: none;
+      min-width: 2.1rem;
     }
     @media (max-width: 767px) {
       .chart-day-detail-grid {
@@ -1425,6 +1446,20 @@
       });
     }
 
+    function renderFatigueDetail(container, value) {
+      if (!container) return;
+      container.innerHTML = '';
+      const scale = document.createElement('div');
+      scale.className = 'detail-fatigue-scale';
+      fatigueLevels.forEach(level => {
+        const badge = document.createElement('span');
+        badge.className = `fatigue-btn ${level.cls}${level.value === value ? ' active' : ''}`;
+        badge.textContent = level.label;
+        scale.appendChild(badge);
+      });
+      container.appendChild(scale);
+    }
+
     function resetChartDayDetails() {
       selectedChartRecord = null;
       if (chartDayDetailDateEl) chartDayDetailDateEl.textContent = 'Clique sur un point d’un graphique pour afficher la journée correspondante.';
@@ -1462,12 +1497,11 @@
           <div class="kpi"><div class="kpi-label">Fatigue</div><div class="kpi-value ${scores.fatigueScore > 0 ? 'score-positive' : scores.fatigueScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.fatigueScore)}</div></div>
           <div class="kpi"><div class="kpi-label">Émotions</div><div class="kpi-value ${scores.emotionScore > 0 ? 'score-positive' : scores.emotionScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.emotionScore)}</div></div>
           <div class="kpi"><div class="kpi-label">Ressenti</div><div class="kpi-value ${scores.bodyScore > 0 ? 'score-positive' : scores.bodyScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.bodyScore)}</div></div>
-          <div class="kpi"><div class="kpi-label">Total</div><div class="kpi-value ${scores.total > 0 ? 'score-positive' : scores.total < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.total)}</div></div>
         `;
       }
 
       renderDetailPills(chartDayActivitiesEl, record.activities || [], '', 'Aucune activité');
-      renderDetailPills(chartDayFatigueEl, [`Fatigue · ${signed(scores.fatigueScore)}`], scores.fatigueScore > 0 ? 'positive' : scores.fatigueScore < 0 ? 'negative' : '', 'Aucune donnée');
+      renderFatigueDetail(chartDayFatigueEl, scores.fatigueScore);
       renderDetailPills(chartDayPositiveEmotionsEl, record.positiveEmotions || [], 'positive', 'Aucune émotion positive');
       renderDetailPills(chartDayNegativeEmotionsEl, record.negativeEmotions || [], 'negative', 'Aucune émotion négative');
       renderDetailPills(chartDayPositiveBodyEl, positiveBody, 'positive', 'Aucun ressenti positif');
