@@ -323,8 +323,8 @@
 
     .ghost-note { font-size: var(--text-sm); color: var(--color-text-muted); }
     .summary-grid { display:flex; flex-wrap: wrap; align-items:stretch; justify-content:center; gap: clamp(0.25rem, 0.9vw, 0.5rem); }
-    .kpi { background: var(--color-surface-2); border:1px solid var(--color-border); border-radius: var(--radius-lg); padding: clamp(0.15rem, 0.7vw, 0.28rem) clamp(0.22rem, 0.75vw, 0.34rem); min-width: 72px; max-width: 108px; width: auto; min-height: 4.2rem; box-sizing: border-box; text-align: center; display:flex; flex-direction:column; justify-content:center; }
-    .kpi-label { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .02em; margin-bottom: 0.08rem; line-height: 1.1; min-height: 2.1em; display:flex; align-items:center; justify-content:center; text-align:center; }
+    .kpi { background: var(--color-surface-2); border:1px solid var(--color-border); border-radius: var(--radius-lg); padding: clamp(0.15rem, 0.7vw, 0.28rem) clamp(0.2rem, 0.65vw, 0.3rem); min-width: clamp(4.7rem, 15vw, 5.2rem); max-width: clamp(4.7rem, 15vw, 5.2rem); width: clamp(4.7rem, 15vw, 5.2rem); min-height: 4.2rem; box-sizing: border-box; text-align: center; display:flex; flex-direction:column; justify-content:center; }
+    .kpi-label { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .01em; margin-bottom: 0.08rem; line-height: 1.08; min-height: 2.1em; display:flex; align-items:center; justify-content:center; text-align:center; }
     .kpi-value { margin-top: 0.08rem; font-size: clamp(0.95rem, 2.5vw, 1.2rem); font-weight:700; }
     .kpi:not(:last-child) { margin-bottom: 0; }
     .score-positive { color: var(--color-positive); }
@@ -1005,7 +1005,7 @@
         <h2 class="section-title">Bilan</h2>
         <div class="summary-grid">
           <div class="kpi"><div class="kpi-label">Activités</div><div class="kpi-value score-neutral" id="activityScore">0</div></div>
-          <div class="kpi"><div class="kpi-label">Niveau d’énergie</div><div class="kpi-value score-neutral" id="fatigueScore">0</div></div>
+          <div class="kpi"><div class="kpi-label">Niveau<br>d’énergie</div><div class="kpi-value score-neutral" id="fatigueScore">0</div></div>
           <div class="kpi"><div class="kpi-label">Émotions</div><div class="kpi-value score-neutral" id="emotionScore">0</div></div>
           <div class="kpi"><div class="kpi-label">Ressenti</div><div class="kpi-value score-neutral" id="bodyScore">0</div></div>
         </div>
@@ -1517,7 +1517,7 @@
       if (chartDayDetailScoresEl) {
         chartDayDetailScoresEl.innerHTML = `
           <div class="kpi"><div class="kpi-label">Activités</div><div class="kpi-value ${scores.activityScore > 0 ? 'score-positive' : scores.activityScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.activityScore)}</div></div>
-          <div class="kpi"><div class="kpi-label">Niveau d’énergie</div><div class="kpi-value ${scores.fatigueScore > 0 ? 'score-positive' : scores.fatigueScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.fatigueScore)}</div></div>
+          <div class="kpi"><div class="kpi-label">Niveau<br>d’énergie</div><div class="kpi-value ${scores.fatigueScore > 0 ? 'score-positive' : scores.fatigueScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.fatigueScore)}</div></div>
           <div class="kpi"><div class="kpi-label">Émotions</div><div class="kpi-value ${scores.emotionScore > 0 ? 'score-positive' : scores.emotionScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.emotionScore)}</div></div>
           <div class="kpi"><div class="kpi-label">Ressenti</div><div class="kpi-value ${scores.bodyScore > 0 ? 'score-positive' : scores.bodyScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.bodyScore)}</div></div>
         `;
