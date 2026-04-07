@@ -629,7 +629,9 @@
 
     @media print {
       html.pdf-mobile #chartsPanel {
-        --chart-wrap-height: var(--pdf-chart-wrap-height, 90px) !important;
+        --chart-wrap-height: var(--pdf-chart-wrap-height, 72px) !important;
+        --charts-card-gap: 0.45rem !important;
+        --chart-card-padding: 6px 6px 4px !important;
       }
 
       html.pdf-desktop #chartsPanel {
@@ -1906,7 +1908,7 @@
       const isMobilePdf = window.matchMedia('(max-width: 767px)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
       root.classList.toggle('pdf-mobile', isMobilePdf);
       root.classList.toggle('pdf-desktop', !isMobilePdf);
-      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '90px' : '255px');
+      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '72px' : '255px');
       root.style.setProperty('--pdf-chart-bg', getComputedStyle(root).getPropertyValue('--color-surface-2').trim() || '#f0eee8');
       renderHistory();
       updateCharts();
