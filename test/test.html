@@ -445,6 +445,8 @@
         transform: none !important;
         transform-origin: top left !important;
         width: 100% !important;
+        max-width: none !important;
+        padding: 0 !important;
         zoom: 1 !important;
       }
 
@@ -452,6 +454,21 @@
       .capture-zone,
       #chartsPanel {
         display: block !important;
+      }
+
+      .topbar,
+      .capture-zone > .date-tools,
+      .capture-zone > .panel,
+      #chartsPanel {
+        width: min(100%, var(--layout-max-width)) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+
+      .body-containers {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: var(--space-3) !important;
       }
 
       .date-tools {
