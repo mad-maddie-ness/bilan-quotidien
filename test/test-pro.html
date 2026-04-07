@@ -1410,8 +1410,8 @@
       };
     }
 
-    function persistPatientLibrary() {
-      if (selectedPatientId) {
+    function persistPatientLibrary({ syncCurrentPatient = true } = {}) {
+      if (syncCurrentPatient && selectedPatientId) {
         patientLibrary[selectedPatientId] = getCurrentPatientSnapshot();
       }
       localStorage.setItem(practitionerPatientsStorageKey, JSON.stringify(patientLibrary));
@@ -2592,7 +2592,7 @@
           };
 
           selectedPatientId = identity.id;
-          persistPatientLibrary();
+          persistPatientLibrary({ syncCurrentPatient: false });
           applyPatientSelection(identity.id, { silentStatus: true });
           document.getElementById('captureStatus').textContent = `${patientLabel} a été ajouté à la liste des patients.`;
         } catch (error) {
