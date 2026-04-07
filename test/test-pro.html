@@ -517,11 +517,18 @@
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      gap: 1rem;
+      gap: 0.9rem;
       margin: 0 auto 0.9rem;
       width: min(100%, var(--layout-max-width));
     }
+    .patient-picker-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.6rem;
+    }
     .patient-picker .select-box {
+      width: auto;
       min-width: min(100%, 14rem);
       flex: 0 1 16rem;
     }
@@ -1085,15 +1092,17 @@
     <div class="patient-picker">
       <div class="action-item">
         <div class="action-inline">
-          <button class="help-trigger" type="button" aria-label="Aide pour charger le fichier JSON">?</button>
           <button class="load-data-btn" type="button" id="importDataHeaderBtn">Charger le fichier</button>
+          <button class="help-trigger" type="button" aria-label="Aide pour charger le fichier JSON">?</button>
         </div>
         <div class="help-popover">Chargez le fichier JSON d’un patient pour consulter ses graphiques et le détail de ses journées.</div>
       </div>
-      <label for="patientSelect" class="ghost-note" style="margin-top:0.25rem;">Patient</label>
-      <select id="patientSelect" class="select-box">
-        <option value="">Choisir un patient mémorisé…</option>
-      </select>
+      <div class="patient-picker-row">
+        <label for="patientSelect" class="ghost-note">Patient</label>
+        <select id="patientSelect" class="select-box">
+          <option value="">Choisir un patient mémorisé…</option>
+        </select>
+      </div>
     </div>
 
     <section class="panel" id="chartsPanel">
