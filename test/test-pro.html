@@ -521,11 +521,33 @@
       margin: 0 auto 0.9rem;
       width: min(100%, var(--layout-max-width));
     }
+    .patient-picker .action-item {
+      width: auto;
+      justify-content: flex-start;
+    }
+    .patient-picker .action-inline {
+      width: auto;
+      justify-content: flex-start;
+    }
+    .patient-picker .help-trigger {
+      display: inline-flex;
+    }
+    .patient-picker .help-popover {
+      top: 50%;
+      left: calc(100% + 6px);
+      transform: translateY(-50%);
+      width: min(260px, calc(100vw - 2rem));
+    }
     .patient-picker-row {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       align-items: center;
       gap: 0.6rem;
+      width: auto;
+    }
+    .patient-picker-row .ghost-note {
+      white-space: nowrap;
+      margin: 0;
     }
     .patient-picker .select-box {
       width: auto;
