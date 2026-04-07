@@ -634,16 +634,16 @@
 
     @media print {
       html.pdf-mobile #chartsPanel {
-        --chart-wrap-height: var(--pdf-chart-wrap-height, 24mm) !important;
+        --chart-wrap-height: var(--pdf-chart-wrap-height, 25.5mm) !important;
         --chart-canvas-scale: 1 !important;
-        --charts-card-gap: 3.2mm !important;
-        --chart-card-padding: 2.4mm 2.4mm 1.7mm !important;
+        --charts-card-gap: 3mm !important;
+        --chart-card-padding: 2.2mm 2.2mm 1.5mm !important;
         width: 100% !important;
         max-width: none !important;
-        height: 266mm !important;
-        max-height: 266mm !important;
+        height: 270mm !important;
+        max-height: 270mm !important;
         margin: 0 !important;
-        padding: 2.4mm 2.4mm 4.4mm 2.4mm !important;
+        padding: 2.1mm 2.1mm 4.8mm 2.1mm !important;
         box-sizing: border-box !important;
         overflow: hidden !important;
         break-inside: avoid !important;
@@ -664,14 +664,14 @@
         display: flex !important;
         flex-direction: column !important;
         gap: var(--charts-card-gap) !important;
-        height: calc(100% - 11.5mm) !important;
-        padding-bottom: 2.6mm !important;
+        height: calc(100% - 10.5mm) !important;
+        padding-bottom: 3mm !important;
       }
 
       html.pdf-mobile #chartsPanel .chart-card {
         flex: 1 1 0 !important;
         min-height: 0 !important;
-        width: 95.5% !important;
+        width: 94.5% !important;
         margin-left: auto !important;
         margin-right: auto !important;
         display: flex !important;
@@ -1985,7 +1985,7 @@
       const isMobilePdf = window.matchMedia('(max-width: 767px)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
       root.classList.toggle('pdf-mobile', isMobilePdf);
       root.classList.toggle('pdf-desktop', !isMobilePdf);
-      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '24mm' : '255px');
+      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '25.5mm' : '255px');
       root.style.setProperty('--pdf-chart-bg', getComputedStyle(root).getPropertyValue('--color-surface-2').trim() || '#f0eee8');
       renderHistory();
       updateCharts();
