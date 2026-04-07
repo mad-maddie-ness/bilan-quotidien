@@ -223,8 +223,21 @@
     .chip:hover { border-color: var(--color-primary); }
     .chip-add-btn { background: var(--color-primary); color: white; border-color: var(--color-primary); }
     .chip-add-btn:hover { background: var(--color-primary-hover); }
-    .chip-delete { margin-left: auto; cursor: pointer; opacity: 0.7; font-size: 0.9em; padding: 0 .25rem; }
+    .chip-actions { display:inline-flex; align-items:center; gap: 0.15rem; margin-left: auto; }
+    .chip-delete { cursor: pointer; opacity: 0.7; font-size: 0.9em; padding: 0 .25rem; user-select: none; }
     .chip-delete:hover { opacity: 1; }
+    #activities .chip { position: relative; }
+    #activities .chip.dragging {
+      opacity: 0.72;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 25%, transparent);
+      cursor: grabbing;
+    }
+    body.activity-reorder-active,
+    body.activity-reorder-active * {
+      user-select: none;
+      -webkit-user-select: none;
+    }
     .toggle-btns { display:flex; flex-wrap:wrap; gap: 0.5rem; margin-bottom: var(--space-3); }
     .toggle-btn { flex: 1 1 min(100%, 9rem); text-align:center; border:1px solid var(--color-border); border-radius: var(--radius-lg); padding: clamp(0.35rem, 0.85vw, 0.45rem) clamp(0.65rem, 1.2vw, 0.85rem); cursor:pointer; background: var(--color-surface); color: var(--color-text); font-size: clamp(0.76rem, 1vw, 0.88rem); }
     .toggle-btn.selected { border-color: var(--color-primary); background: var(--color-primary-soft); }
@@ -1236,6 +1249,13 @@
     let pendingDeleteAction = null;
     let selectedChartRecord = null;
     let currentChartRecords = [];
+    let activityLongPressTimer = null;
+    let dragActivityIndex = null;
+    let dragPointerId = null;
+    let dragStartPoint = null;
+    let suppressActivityClick = false;
+    const activityLongPressDelay = 320;
+    const activityMoveThreshold = 8;
 
     function sortEmotionValues(values) {
       return values.sort((a, b) => a.localeCompare(b, 'fr', { sensitivity:'base' }));
@@ -1567,22 +1587,104 @@
       return { activityScore, fatigueScore, emotionScore, bodyScore, total };
     }
 
+    function moveActivity(fromIndex, toIndex) {
+      if (toIndex < 0 || toIndex >= activities.length || fromIndex === toIndex) return;
+
+      const reorderedActivities = [...activities];
+      const [movedItem] = reorderedActivities.splice(fromIndex, 1);
+      reorderedActivities.splice(toIndex, 0, movedItem);
+      activities = reorderedActivities;
+
+      const remappedSelections = new Set();
+      state.activities.forEach(idx => {
+        if (idx === fromIndex) remappedSelections.add(toIndex);
+        else if (fromIndex < toIndex && idx > fromIndex && idx <= toIndex) remappedSelections.add(idx - 1);
+        else if (fromIndex > toIndex && idx >= toIndex && idx < fromIndex) remappedSelections.add(idx + 1);
+        else remappedSelections.add(idx);
+      });
+      state.activities = remappedSelections;
+      if (dragActivityIndex === fromIndex) dragActivityIndex = toIndex;
+
+      saveToLocalStorage();
+      renderActivities();
+    }
+
+    function clearActivityLongPressTimer() {
+      if (activityLongPressTimer) {
+        window.clearTimeout(activityLongPressTimer);
+        activityLongPressTimer = null;
+      }
+    }
+
+    function startActivityLongPress(button, index, pointerId) {
+      dragActivityIndex = index;
+      dragPointerId = pointerId;
+      suppressActivityClick = true;
+      document.body.classList.add('activity-reorder-active');
+      button.classList.add('dragging');
+      if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    function handleActivityPointerMove(event) {
+      if (dragActivityIndex === null) {
+        if (!activityLongPressTimer || !dragStartPoint) return;
+        const moveDistance = Math.hypot(event.clientX - dragStartPoint.x, event.clientY - dragStartPoint.y);
+        if (moveDistance > activityMoveThreshold) clearActivityLongPressTimer();
+        return;
+      }
+
+      if (dragPointerId !== null && event.pointerId !== dragPointerId) return;
+      event.preventDefault();
+
+      const hoveredChip = document.elementFromPoint(event.clientX, event.clientY)?.closest('#activities .chip[data-activity-index]');
+      if (!hoveredChip) return;
+
+      const targetIndex = Number(hoveredChip.dataset.activityIndex);
+      if (!Number.isInteger(targetIndex) || targetIndex === dragActivityIndex) return;
+      moveActivity(dragActivityIndex, targetIndex);
+    }
+
+    function finishActivityLongPress(event) {
+      if (dragPointerId !== null && event && event.pointerId !== undefined && event.pointerId !== dragPointerId) return;
+
+      clearActivityLongPressTimer();
+      dragStartPoint = null;
+      dragPointerId = null;
+      document.body.classList.remove('activity-reorder-active');
+
+      if (dragActivityIndex === null) return;
+
+      dragActivityIndex = null;
+      window.setTimeout(() => {
+        suppressActivityClick = false;
+        renderActivities();
+      }, 0);
+    }
+
     function renderActivities() {
       activitiesEl.innerHTML = '';
       activities.forEach((label, i) => {
         const active = state.activities.has(i);
         const btn = document.createElement('button');
         btn.type='button';
-        btn.className='chip'+(active?' active':'');
-        
+        btn.className='chip'+(active?' active':'')+(dragActivityIndex === i ? ' dragging' : '');
+        btn.dataset.activityIndex = String(i);
+        btn.title = 'Clic pour sélectionner · appui long pour déplacer';
+
         const labelSpan = document.createElement('span');
         labelSpan.textContent = `${label} · +1`;
         btn.appendChild(labelSpan);
-        
-        // Bouton de suppression pour toutes les activités
+
+        const actions = document.createElement('span');
+        actions.className = 'chip-actions';
+
         const deleteBtn = document.createElement('span');
         deleteBtn.className = 'chip-delete';
         deleteBtn.textContent = '✕';
+        deleteBtn.addEventListener('pointerdown', (e) => {
+          e.stopPropagation();
+          clearActivityLongPressTimer();
+        });
         deleteBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           openDeleteConfirmModal(label, () => {
@@ -1595,9 +1697,29 @@
             renderAll();
           });
         });
-        btn.appendChild(deleteBtn);
-        
+        actions.appendChild(deleteBtn);
+
+        btn.appendChild(actions);
+
+        btn.addEventListener('pointerdown', (e) => {
+          if (e.button !== undefined && e.button !== 0) return;
+          clearActivityLongPressTimer();
+          dragStartPoint = { x: e.clientX, y: e.clientY };
+          activityLongPressTimer = window.setTimeout(() => {
+            startActivityLongPress(btn, i, e.pointerId);
+          }, activityLongPressDelay);
+        });
+        btn.addEventListener('pointerup', clearActivityLongPressTimer);
+        btn.addEventListener('pointercancel', clearActivityLongPressTimer);
+        btn.addEventListener('pointerleave', () => {
+          if (dragActivityIndex === null) clearActivityLongPressTimer();
+        });
+
         btn.addEventListener('click', () => {
+          if (suppressActivityClick) {
+            suppressActivityClick = false;
+            return;
+          }
           active ? state.activities.delete(i) : state.activities.add(i);
           renderAll();
         });
@@ -2426,6 +2548,9 @@
         document.querySelectorAll('.action-item.help-open').forEach(el => el.classList.remove('help-open'));
       }
     });
+    document.addEventListener('pointermove', handleActivityPointerMove);
+    document.addEventListener('pointerup', finishActivityLongPress);
+    document.addEventListener('pointercancel', finishActivityLongPress);
     document.getElementById('prevMonthBtn').addEventListener('click', () => setSelectedMonth(selectedMonthIndex - 1));
     document.getElementById('nextMonthBtn').addEventListener('click', () => setSelectedMonth(selectedMonthIndex + 1));
     document.getElementById('chartDayLoadBtn').addEventListener('click', () => {
