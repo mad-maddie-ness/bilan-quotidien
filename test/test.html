@@ -630,16 +630,16 @@
 
     @media print {
       html.pdf-mobile #chartsPanel {
-        --chart-wrap-height: var(--pdf-chart-wrap-height, 18mm) !important;
-        --chart-canvas-scale: 0.98 !important;
-        --charts-card-gap: 1.8mm !important;
-        --chart-card-padding: 1.8mm 1.8mm 1.2mm !important;
+        --chart-wrap-height: var(--pdf-chart-wrap-height, 20mm) !important;
+        --chart-canvas-scale: 0.94 !important;
+        --charts-card-gap: 2.6mm !important;
+        --chart-card-padding: 2.4mm 2.4mm 1.7mm !important;
         width: 100% !important;
         max-width: none !important;
-        height: 248mm !important;
-        max-height: 248mm !important;
+        height: 252mm !important;
+        max-height: 252mm !important;
         margin: 0 !important;
-        padding: 1.2mm !important;
+        padding: 2.1mm !important;
         box-sizing: border-box !important;
         overflow: hidden !important;
         break-inside: avoid !important;
@@ -647,13 +647,13 @@
       }
 
       html.pdf-mobile #chartsPanel .section-title {
-        margin-bottom: 0.4mm !important;
+        margin-bottom: 0.7mm !important;
         font-size: 0.9rem !important;
       }
 
       html.pdf-mobile #chartsPanel .chart-controls {
-        min-height: 4mm !important;
-        margin-bottom: 0.6mm !important;
+        min-height: 4.4mm !important;
+        margin-bottom: 0.9mm !important;
       }
 
       html.pdf-mobile #chartsPanel .charts-column {
@@ -672,9 +672,9 @@
       }
 
       html.pdf-mobile #chartsPanel .chart-header {
-        min-height: 3.4mm !important;
+        min-height: 3.7mm !important;
         margin-top: 0 !important;
-        margin-bottom: 0.4mm !important;
+        margin-bottom: 0.6mm !important;
       }
 
       html.pdf-mobile #chartsPanel .chart-title {
@@ -1670,7 +1670,7 @@
       const chartSurface = rootStyles.getPropertyValue('--color-surface-2').trim() || '#f0eee8';
       const isPdfMobile = document.documentElement.classList.contains('pdf-mobile');
       const axisFontSize = isPdfMobile ? 8 : 10;
-      const axisWidth = isPdfMobile ? 24 : 30;
+      const axisWidth = isPdfMobile ? 26 : 30;
       const lineWidth = isPdfMobile ? 2 : 2.5;
       const pointRadius = isPdfMobile ? 2.4 : 3.2;
       const pointHoverRadius = isPdfMobile ? 3.2 : 4.2;
@@ -1978,7 +1978,7 @@
       const isMobilePdf = window.matchMedia('(max-width: 767px)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
       root.classList.toggle('pdf-mobile', isMobilePdf);
       root.classList.toggle('pdf-desktop', !isMobilePdf);
-      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '18mm' : '255px');
+      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '20mm' : '255px');
       root.style.setProperty('--pdf-chart-bg', getComputedStyle(root).getPropertyValue('--color-surface-2').trim() || '#f0eee8');
       renderHistory();
       updateCharts();
