@@ -320,8 +320,8 @@
 
     .ghost-note { font-size: var(--text-sm); color: var(--color-text-muted); }
     .summary-grid { display:flex; flex-wrap: wrap; align-items:center; justify-content:center; gap: clamp(0.25rem, 0.9vw, 0.5rem); }
-    .kpi { background: var(--color-surface-2); border:1px solid var(--color-border); border-radius: var(--radius-lg); padding: clamp(0.15rem, 0.7vw, 0.28rem) clamp(0.25rem, 0.9vw, 0.4rem); min-width: 70px; max-width: 100px; width: auto; box-sizing: border-box; text-align: center; }
-    .kpi-label { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 0.08rem; }
+    .kpi { background: var(--color-surface-2); border:1px solid var(--color-border); border-radius: var(--radius-lg); padding: clamp(0.15rem, 0.7vw, 0.28rem) clamp(0.25rem, 0.9vw, 0.4rem); min-width: 74px; max-width: 118px; width: auto; box-sizing: border-box; text-align: center; }
+    .kpi-label { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 0.08rem; line-height: 1.15; }
     .kpi-value { margin-top: 0.08rem; font-size: clamp(0.95rem, 2.5vw, 1.2rem); font-weight:700; }
     .kpi:not(:last-child) { margin-bottom: 0; }
     .score-positive { color: var(--color-positive); }
@@ -434,13 +434,28 @@
     }
     .chart-day-detail-card .selected-list {
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
+      flex-wrap: wrap;
+      align-items: center;
       gap: 0.35rem;
+      margin-top: 0;
     }
     .chart-day-detail-card .pill {
       width: fit-content;
       max-width: 100%;
+    }
+    .detail-inline-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .detail-inline-row .ghost-note {
+      flex: 0 0 5.4rem;
+      margin: 0.15rem 0 0 0;
+    }
+    .detail-inline-row .selected-list {
+      flex: 1 1 auto;
+      min-width: 0;
     }
     .chart-day-detail-card .detail-label {
       display: block;
@@ -469,6 +484,10 @@
     @media (max-width: 767px) {
       .chart-day-detail-grid {
         grid-template-columns: 1fr;
+      }
+      .detail-inline-row .ghost-note {
+        flex-basis: auto;
+        margin-top: 0;
       }
     }
     .chart-controls { display:flex; justify-content: space-between; align-items:center; gap: 0.4rem; margin-bottom: 0.35rem; }
@@ -944,7 +963,7 @@
       </section>
 
       <section class="panel panel-compact">
-        <h2 class="section-title">Fatigue</h2>
+        <h2 class="section-title">Niveau d’énergie</h2>
         <div class="fatigue-grid" id="fatigueButtons"></div>
       </section>
 
@@ -982,7 +1001,7 @@
         <h2 class="section-title">Bilan</h2>
         <div class="summary-grid">
           <div class="kpi"><div class="kpi-label">Activités</div><div class="kpi-value score-neutral" id="activityScore">0</div></div>
-          <div class="kpi"><div class="kpi-label">Fatigue</div><div class="kpi-value score-neutral" id="fatigueScore">0</div></div>
+          <div class="kpi"><div class="kpi-label">Niveau d’énergie</div><div class="kpi-value score-neutral" id="fatigueScore">0</div></div>
           <div class="kpi"><div class="kpi-label">Émotions</div><div class="kpi-value score-neutral" id="emotionScore">0</div></div>
           <div class="kpi"><div class="kpi-label">Ressenti</div><div class="kpi-value score-neutral" id="bodyScore">0</div></div>
         </div>
@@ -1001,7 +1020,7 @@
       </div>
       <div class="charts-column" id="chartsColumn">
         <div class="chart-card"><div class="chart-header"><div class="chart-title">Activités</div><div class="chart-month" id="chartMonthActivites"></div></div><div class="chart-wrap"><canvas id="chartActivites"></canvas></div></div>
-        <div class="chart-card"><div class="chart-header"><div class="chart-title">Fatigue</div><div class="chart-month" id="chartMonthFatigue"></div></div><div class="chart-wrap"><canvas id="chartFatigue"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><div class="chart-title">Niveau d’énergie</div><div class="chart-month" id="chartMonthFatigue"></div></div><div class="chart-wrap"><canvas id="chartFatigue"></canvas></div></div>
         <div class="chart-card"><div class="chart-header"><div class="chart-title">Émotions</div><div class="chart-month" id="chartMonthEmotions"></div></div><div class="chart-wrap"><canvas id="chartEmotions"></canvas></div></div>
         <div class="chart-card"><div class="chart-header"><div class="chart-title">Ressenti</div><div class="chart-month" id="chartMonthRessenti"></div></div><div class="chart-wrap"><canvas id="chartRessenti"></canvas></div></div>
       </div>
@@ -1025,18 +1044,18 @@
               <div class="selected-list" id="chartDayActivities"></div>
             </div>
             <div class="chart-day-detail-card">
-              <span class="detail-label">Fatigue</span>
+              <span class="detail-label">Niveau d’énergie</span>
               <div class="selected-list" id="chartDayFatigue"></div>
             </div>
             <div class="chart-day-detail-card">
               <span class="detail-label">Émotions</span>
               <div class="chart-day-detail-lines">
-                <div>
-                  <div class="ghost-note" style="margin-bottom:0.25rem;">Positives</div>
+                <div class="detail-inline-row">
+                  <div class="ghost-note">Positives</div>
                   <div class="selected-list" id="chartDayPositiveEmotions"></div>
                 </div>
-                <div>
-                  <div class="ghost-note" style="margin-bottom:0.25rem;">Négatives</div>
+                <div class="detail-inline-row">
+                  <div class="ghost-note">Négatives</div>
                   <div class="selected-list" id="chartDayNegativeEmotions"></div>
                 </div>
               </div>
@@ -1044,12 +1063,12 @@
             <div class="chart-day-detail-card">
               <span class="detail-label">Ressenti corporel</span>
               <div class="chart-day-detail-lines">
-                <div>
-                  <div class="ghost-note" style="margin-bottom:0.25rem;">Positifs</div>
+                <div class="detail-inline-row">
+                  <div class="ghost-note">Positifs</div>
                   <div class="selected-list" id="chartDayPositiveBody"></div>
                 </div>
-                <div>
-                  <div class="ghost-note" style="margin-bottom:0.25rem;">Négatifs</div>
+                <div class="detail-inline-row">
+                  <div class="ghost-note">Négatifs</div>
                   <div class="selected-list" id="chartDayNegativeBody"></div>
                 </div>
               </div>
@@ -1189,9 +1208,9 @@
     const defaultNegativeEmotions = ['Affolée','Agacée','Angoissée','Anxieuse','Apeurée','Contrariée','Exaspérée','Fâchée','Frustrée','Furieuse','Haineuse','Inquiète','Irritée','Mécontente','Méfiantes','Paniquée','Pessimiste','Préoccupée','Révoltée','Soucieuse','Sur les nerfs','Tendue','Vexée'];
     const defaultPositiveEmotions = ['Amusée','Apaisée','Calme','Confiante','Contente','Détendue','Encouragée','Excitée','Fière','Heureuse','Joyeuse','Légère','Motivée','Optimiste','Rassurée','Satisfaite','Sereine'];
     const fatigueLevels = [
-      { label:'+5', value:5, cls:'f5' },{ label:'+4', value:4, cls:'f4' },{ label:'+3', value:3, cls:'f3' },{ label:'+2', value:2, cls:'f2' },{ label:'+1', value:1, cls:'f1' },
+      { label:'-5', value:-5, cls:'n5' },{ label:'-4', value:-4, cls:'n4' },{ label:'-3', value:-3, cls:'n3' },{ label:'-2', value:-2, cls:'n2' },{ label:'-1', value:-1, cls:'n1' },
       { label:'0', value:0, cls:'f0' },
-      { label:'-1', value:-1, cls:'n1' },{ label:'-2', value:-2, cls:'n2' },{ label:'-3', value:-3, cls:'n3' },{ label:'-4', value:-4, cls:'n4' },{ label:'-5', value:-5, cls:'n5' }
+      { label:'+1', value:1, cls:'f1' },{ label:'+2', value:2, cls:'f2' },{ label:'+3', value:3, cls:'f3' },{ label:'+4', value:4, cls:'f4' },{ label:'+5', value:5, cls:'f5' }
     ];
 
     // Données mutables (peuvent être modifiées par l'utilisateur)
@@ -1494,7 +1513,7 @@
       if (chartDayDetailScoresEl) {
         chartDayDetailScoresEl.innerHTML = `
           <div class="kpi"><div class="kpi-label">Activités</div><div class="kpi-value ${scores.activityScore > 0 ? 'score-positive' : scores.activityScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.activityScore)}</div></div>
-          <div class="kpi"><div class="kpi-label">Fatigue</div><div class="kpi-value ${scores.fatigueScore > 0 ? 'score-positive' : scores.fatigueScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.fatigueScore)}</div></div>
+          <div class="kpi"><div class="kpi-label">Niveau d’énergie</div><div class="kpi-value ${scores.fatigueScore > 0 ? 'score-positive' : scores.fatigueScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.fatigueScore)}</div></div>
           <div class="kpi"><div class="kpi-label">Émotions</div><div class="kpi-value ${scores.emotionScore > 0 ? 'score-positive' : scores.emotionScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.emotionScore)}</div></div>
           <div class="kpi"><div class="kpi-label">Ressenti</div><div class="kpi-value ${scores.bodyScore > 0 ? 'score-positive' : scores.bodyScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.bodyScore)}</div></div>
         `;
