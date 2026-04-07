@@ -342,13 +342,13 @@
       margin: 0;
       padding-top: 0.25rem;
       padding-bottom: 0.25rem;
-      --charts-card-gap: 0.85rem;
+      --charts-card-gap: 0.9rem;
       --chart-card-width: 100%;
       --chart-card-radius: 18px;
-      --chart-card-padding: 0.35rem 0.6rem 0.6rem;
-      --chart-wrap-height: clamp(12rem, 18vw, 13.8rem);
-      --chart-canvas-scale: 0.985;
-      --chart-header-gap: 0.08rem;
+      --chart-card-padding: 0.45rem 0.7rem 0.75rem;
+      --chart-wrap-height: clamp(13.2rem, 20vw, 15.2rem);
+      --chart-canvas-scale: 1;
+      --chart-header-gap: 0.1rem;
       --chart-header-offset-top: 0.02rem;
     }
     .charts-column { display:grid; grid-template-columns: 1fr; gap: var(--charts-card-gap); align-items:stretch; }
@@ -368,11 +368,11 @@
       }
 
       #chartsPanel {
-        --charts-card-gap: 0.95rem;
-        --chart-wrap-height: clamp(12.8rem, 16vw, 14.8rem);
-        --chart-card-padding: 0.35rem 0.6rem 0.6rem;
-        --chart-canvas-scale: 0.985;
-        --chart-header-gap: 0.08rem;
+        --charts-card-gap: 1rem;
+        --chart-wrap-height: clamp(14.2rem, 18vw, 16.6rem);
+        --chart-card-padding: 0.45rem 0.7rem 0.8rem;
+        --chart-canvas-scale: 1;
+        --chart-header-gap: 0.1rem;
         --chart-header-offset-top: 0;
       }
 
@@ -653,11 +653,11 @@
         width: 100% !important;
         max-width: none !important;
         margin: 0 !important;
-        --charts-card-gap: 0.95rem !important;
-        --chart-wrap-height: clamp(12.8rem, 16vw, 14.8rem) !important;
-        --chart-card-padding: 0.35rem 0.6rem 0.6rem !important;
-        --chart-canvas-scale: 0.985 !important;
-        --chart-header-gap: 0.08rem !important;
+        --charts-card-gap: 1rem !important;
+        --chart-wrap-height: clamp(14rem, 18vw, 16rem) !important;
+        --chart-card-padding: 0.45rem 0.7rem 0.8rem !important;
+        --chart-canvas-scale: 1 !important;
+        --chart-header-gap: 0.1rem !important;
         --chart-header-offset-top: 0 !important;
         break-before: auto !important;
         page-break-before: auto !important;
@@ -944,9 +944,9 @@
       .section-title { margin-bottom: 0.5rem; font-size: var(--text-lg); }
       .selected-list { gap: 0.35rem; margin-top: 0.5rem; }
       #chartsPanel {
-        --chart-wrap-height: clamp(10.5rem, 42vw, 13.5rem);
-        --chart-canvas-scale: 0.97;
-        --chart-header-gap: 0.18rem;
+        --chart-wrap-height: clamp(11.8rem, 48vw, 14.8rem);
+        --chart-canvas-scale: 0.99;
+        --chart-header-gap: 0.2rem;
         --chart-header-offset-top: 0.3rem;
       }
       .chart-card { padding: var(--chart-card-padding); }
