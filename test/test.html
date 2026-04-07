@@ -442,6 +442,10 @@
         overflow: visible !important;
       }
 
+      html.pdf-mobile body {
+        zoom: 0.8 !important;
+      }
+
       .wrap {
         transform: none !important;
         transform-origin: top left !important;
@@ -630,16 +634,16 @@
 
     @media print {
       html.pdf-mobile #chartsPanel {
-        --chart-wrap-height: var(--pdf-chart-wrap-height, 22.5mm) !important;
-        --chart-canvas-scale: 0.94 !important;
-        --charts-card-gap: 2.8mm !important;
-        --chart-card-padding: 2.6mm 2.6mm 1.9mm !important;
+        --chart-wrap-height: var(--pdf-chart-wrap-height, 24mm) !important;
+        --chart-canvas-scale: 1 !important;
+        --charts-card-gap: 3.2mm !important;
+        --chart-card-padding: 2.4mm 2.4mm 1.7mm !important;
         width: 100% !important;
         max-width: none !important;
-        height: 264mm !important;
-        max-height: 264mm !important;
+        height: 266mm !important;
+        max-height: 266mm !important;
         margin: 0 !important;
-        padding: 2.8mm 2.8mm 3.8mm 2.8mm !important;
+        padding: 2.4mm 2.4mm 4.4mm 2.4mm !important;
         box-sizing: border-box !important;
         overflow: hidden !important;
         break-inside: avoid !important;
@@ -660,13 +664,16 @@
         display: flex !important;
         flex-direction: column !important;
         gap: var(--charts-card-gap) !important;
-        height: calc(100% - 12.5mm) !important;
-        padding-bottom: 2mm !important;
+        height: calc(100% - 11.5mm) !important;
+        padding-bottom: 2.6mm !important;
       }
 
       html.pdf-mobile #chartsPanel .chart-card {
         flex: 1 1 0 !important;
         min-height: 0 !important;
+        width: 95.5% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
         display: flex !important;
         flex-direction: column !important;
       }
@@ -685,7 +692,7 @@
 
       html.pdf-mobile #chartsPanel .chart-wrap {
         flex: 1 1 auto !important;
-        height: auto !important;
+        height: 100% !important;
         min-height: 0 !important;
       }
 
@@ -1978,7 +1985,7 @@
       const isMobilePdf = window.matchMedia('(max-width: 767px)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
       root.classList.toggle('pdf-mobile', isMobilePdf);
       root.classList.toggle('pdf-desktop', !isMobilePdf);
-      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '22.5mm' : '255px');
+      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '24mm' : '255px');
       root.style.setProperty('--pdf-chart-bg', getComputedStyle(root).getPropertyValue('--color-surface-2').trim() || '#f0eee8');
       renderHistory();
       updateCharts();
