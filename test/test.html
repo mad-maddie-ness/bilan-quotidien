@@ -445,8 +445,6 @@
         transform: none !important;
         transform-origin: top left !important;
         width: 100% !important;
-        max-width: none !important;
-        padding: 0 !important;
         zoom: 1 !important;
       }
 
@@ -454,26 +452,6 @@
       .capture-zone,
       #chartsPanel {
         display: block !important;
-      }
-
-      .topbar,
-      .capture-zone > .date-tools,
-      #chartsPanel {
-        width: min(100%, var(--layout-max-width)) !important;
-        margin-left: auto !important;
-        margin-right: auto !important;
-      }
-
-      .capture-zone > .panel {
-        width: 100% !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-      }
-
-      .body-containers {
-        display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: var(--space-3) !important;
       }
 
       .date-tools {
@@ -650,9 +628,12 @@
     }
 
     @media print {
-      html.pdf-mobile #chartsPanel,
+      html.pdf-mobile #chartsPanel {
+        --chart-wrap-height: var(--pdf-chart-wrap-height, 90px) !important;
+      }
+
       html.pdf-desktop #chartsPanel {
-        --chart-wrap-height: var(--pdf-chart-wrap-height, 255px) !important;
+        --chart-wrap-height: var(--pdf-chart-wrap-height, 300px) !important;
       }
     }
 
@@ -1922,9 +1903,10 @@
       }
 
       updatePrintNameDisplay();
-      root.classList.remove('pdf-mobile');
-      root.classList.add('pdf-desktop');
-      root.style.setProperty('--pdf-chart-wrap-height', '255px');
+      const isMobilePdf = window.matchMedia('(max-width: 767px)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+      root.classList.toggle('pdf-mobile', isMobilePdf);
+      root.classList.toggle('pdf-desktop', !isMobilePdf);
+      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '90px' : '255px');
       root.style.setProperty('--pdf-chart-bg', getComputedStyle(root).getPropertyValue('--color-surface-2').trim() || '#f0eee8');
       renderHistory();
       updateCharts();
