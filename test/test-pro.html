@@ -1027,6 +1027,15 @@
     <header class="topbar">
       <div>
         <h1 class="title">Suivi des bilans quotidiens</h1>
+        <div class="patient-picker" style="margin: 0.6rem 0 0; width: auto;">
+          <div class="action-item">
+            <div class="action-inline">
+              <button class="load-data-btn" type="button" id="importDataHeaderBtn">Charger le fichier</button>
+              <button class="help-trigger" type="button" aria-label="Aide pour charger le fichier JSON">?</button>
+            </div>
+            <div class="help-popover">Chargez le fichier JSON d’un patient pour consulter ses graphiques et le détail de ses journées.</div>
+          </div>
+        </div>
         <div class="name-fields">
           <input type="text" id="userFirstName" class="modal-input" placeholder="Prénom" style="margin-bottom:0.5rem;">
           <input type="text" id="userLastName" class="modal-input" placeholder="Nom" style="margin-bottom:0.5rem;">
@@ -1112,13 +1121,6 @@
     <div class="print-page-break" aria-hidden="true"></div>
 
     <div class="patient-picker">
-      <div class="action-item">
-        <div class="action-inline">
-          <button class="load-data-btn" type="button" id="importDataHeaderBtn">Charger le fichier</button>
-          <button class="help-trigger" type="button" aria-label="Aide pour charger le fichier JSON">?</button>
-        </div>
-        <div class="help-popover">Chargez le fichier JSON d’un patient pour consulter ses graphiques et le détail de ses journées.</div>
-      </div>
       <div class="patient-picker-row">
         <label for="patientSelect" class="ghost-note">Patient</label>
         <select id="patientSelect" class="select-box">
