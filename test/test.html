@@ -441,6 +441,10 @@
         overflow: visible !important;
       }
 
+      html.pdf-mobile body {
+        zoom: 0.68 !important;
+      }
+
       .wrap {
         transform: none !important;
         transform-origin: top left !important;
@@ -629,26 +633,30 @@
 
     @media print {
       html.pdf-mobile #chartsPanel {
-        --chart-wrap-height: var(--pdf-chart-wrap-height, 60px) !important;
-        --chart-canvas-scale: 0.97 !important;
-        --charts-card-gap: 0.32rem !important;
-        --chart-card-padding: 6px 6px 4px !important;
-        width: 94% !important;
-        margin: 0 auto !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-        zoom: 0.92 !important;
+        --chart-wrap-height: var(--pdf-chart-wrap-height, 52px) !important;
+        --chart-canvas-scale: 0.95 !important;
+        --charts-card-gap: 0.2rem !important;
+        --chart-card-padding: 3px 3px 2px !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0.18rem !important;
+      }
+
+      html.pdf-mobile #chartsPanel .section-title {
+        margin-bottom: 0 !important;
+        font-size: 0.9rem !important;
       }
 
       html.pdf-mobile #chartsPanel .chart-header {
-        min-height: 1rem !important;
-        margin-top: 0.08rem !important;
-        margin-bottom: 0.04rem !important;
+        min-height: 0.82rem !important;
+        margin-top: 0.04rem !important;
+        margin-bottom: 0.02rem !important;
       }
 
       html.pdf-mobile #chartsPanel .chart-title {
-        line-height: 1.05 !important;
+        line-height: 1 !important;
         padding: 0 !important;
+        font-size: 0.62rem !important;
       }
 
       html.pdf-mobile .charts-column .chart-card:last-child {
@@ -1929,7 +1937,7 @@
       const isMobilePdf = window.matchMedia('(max-width: 767px)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
       root.classList.toggle('pdf-mobile', isMobilePdf);
       root.classList.toggle('pdf-desktop', !isMobilePdf);
-      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '60px' : '255px');
+      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '52px' : '255px');
       root.style.setProperty('--pdf-chart-bg', getComputedStyle(root).getPropertyValue('--color-surface-2').trim() || '#f0eee8');
       renderHistory();
       updateCharts();
