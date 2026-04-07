@@ -267,6 +267,9 @@
       text-align: center;
       font-size: clamp(0.62rem, 1.5vw, 0.88rem);
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
     .fatigue-btn.active { outline: 3px solid color-mix(in srgb, var(--color-primary) 40%, transparent); outline-offset: 1px; }
     .f5{background:#2d6d2b;color:#fff}.f4{background:#3f8a32;color:#fff}.f3{background:#56a138;color:#fff}.f2{background:#74b442;color:#17310e}.f1{background:#9ac955;color:#1f2612}.f0{background:#ddd7c9;color:#28251d}.n1{background:#f2c3c7;color:#4b1d21}.n2{background:#eca2aa;color:#5a2026}.n3{background:#df7b84;color:#fff}.n4{background:#c95763;color:#fff}.n5{background:#a82f3f;color:#fff}
@@ -319,9 +322,9 @@
     }
 
     .ghost-note { font-size: var(--text-sm); color: var(--color-text-muted); }
-    .summary-grid { display:flex; flex-wrap: wrap; align-items:center; justify-content:center; gap: clamp(0.25rem, 0.9vw, 0.5rem); }
-    .kpi { background: var(--color-surface-2); border:1px solid var(--color-border); border-radius: var(--radius-lg); padding: clamp(0.15rem, 0.7vw, 0.28rem) clamp(0.25rem, 0.9vw, 0.4rem); min-width: 74px; max-width: 118px; width: auto; box-sizing: border-box; text-align: center; }
-    .kpi-label { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 0.08rem; line-height: 1.15; }
+    .summary-grid { display:flex; flex-wrap: wrap; align-items:stretch; justify-content:center; gap: clamp(0.25rem, 0.9vw, 0.5rem); }
+    .kpi { background: var(--color-surface-2); border:1px solid var(--color-border); border-radius: var(--radius-lg); padding: clamp(0.15rem, 0.7vw, 0.28rem) clamp(0.25rem, 0.9vw, 0.4rem); min-width: 74px; max-width: 118px; width: auto; min-height: 4.2rem; box-sizing: border-box; text-align: center; display:flex; flex-direction:column; justify-content:center; }
+    .kpi-label { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 0.08rem; line-height: 1.15; min-height: 2.2em; display:flex; align-items:center; justify-content:center; text-align:center; }
     .kpi-value { margin-top: 0.08rem; font-size: clamp(0.95rem, 2.5vw, 1.2rem); font-weight:700; }
     .kpi:not(:last-child) { margin-bottom: 0; }
     .score-positive { color: var(--color-positive); }
@@ -1519,7 +1522,7 @@
         `;
       }
 
-      renderDetailPills(chartDayActivitiesEl, record.activities || [], '', 'Aucune activité');
+      renderDetailPills(chartDayActivitiesEl, record.activities || [], 'positive', 'Aucune activité');
       renderFatigueDetail(chartDayFatigueEl, scores.fatigueScore);
       renderDetailPills(chartDayPositiveEmotionsEl, record.positiveEmotions || [], 'positive', 'Aucune émotion positive');
       renderDetailPills(chartDayNegativeEmotionsEl, record.negativeEmotions || [], 'negative', 'Aucune émotion négative');
