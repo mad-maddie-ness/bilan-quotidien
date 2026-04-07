@@ -630,16 +630,16 @@
 
     @media print {
       html.pdf-mobile #chartsPanel {
-        --chart-wrap-height: var(--pdf-chart-wrap-height, 18mm) !important;
-        --chart-canvas-scale: 0.96 !important;
-        --charts-card-gap: 1.4mm !important;
-        --chart-card-padding: 1.4mm 1.4mm 1mm !important;
+        --chart-wrap-height: var(--pdf-chart-wrap-height, 19.5mm) !important;
+        --chart-canvas-scale: 1 !important;
+        --charts-card-gap: 1.2mm !important;
+        --chart-card-padding: 1.2mm 1.2mm 0.9mm !important;
         width: 100% !important;
         max-width: none !important;
-        height: 262mm !important;
-        max-height: 262mm !important;
+        height: 265mm !important;
+        max-height: 265mm !important;
         margin: 0 !important;
-        padding: 1mm !important;
+        padding: 0.8mm !important;
         box-sizing: border-box !important;
         overflow: hidden !important;
         break-inside: avoid !important;
@@ -660,7 +660,7 @@
         display: flex !important;
         flex-direction: column !important;
         gap: var(--charts-card-gap) !important;
-        height: calc(100% - 9mm) !important;
+        height: calc(100% - 7.2mm) !important;
       }
 
       html.pdf-mobile #chartsPanel .chart-card {
@@ -1513,11 +1513,14 @@
       const ctx = canvas && canvas.getContext ? canvas.getContext('2d') : null;
       if (!ctx) return false;
 
+      const isPdfMobile = document.documentElement.classList.contains('pdf-mobile');
       const ratio = window.devicePixelRatio || 1;
       const parent = canvas.parentElement;
       const bounds = parent && typeof parent.getBoundingClientRect === 'function' ? parent.getBoundingClientRect() : null;
-      const width = Math.max(260, Math.round((bounds && bounds.width) || (parent && parent.clientWidth) || canvas.clientWidth || 300));
-      const height = Math.max(220, Math.round((bounds && bounds.height) || (parent && parent.clientHeight) || canvas.clientHeight || 220));
+      const minWidth = isPdfMobile ? 180 : 260;
+      const minHeight = isPdfMobile ? 72 : 220;
+      const width = Math.max(minWidth, Math.round((bounds && bounds.width) || (parent && parent.clientWidth) || canvas.clientWidth || 300));
+      const height = Math.max(minHeight, Math.round((bounds && bounds.height) || (parent && parent.clientHeight) || canvas.clientHeight || 220));
 
       canvas.width = Math.max(1, Math.round(width * ratio));
       canvas.height = Math.max(1, Math.round(height * ratio));
@@ -1529,7 +1532,9 @@
       ctx.fillStyle = surface;
       ctx.fillRect(0, 0, width, height);
 
-      const padding = { top: 14, right: 10, bottom: 28, left: 28 };
+      const padding = isPdfMobile
+        ? { top: 8, right: 8, bottom: 18, left: 24 }
+        : { top: 14, right: 10, bottom: 28, left: 28 };
       const innerWidth = Math.max(10, width - padding.left - padding.right);
       const innerHeight = Math.max(10, height - padding.top - padding.bottom);
       const minY = -10;
@@ -1568,7 +1573,7 @@
       ctx.lineWidth = 1;
       ctx.strokeStyle = axisColor + '35';
       ctx.fillStyle = axisColor;
-      ctx.font = '9px Satoshi, sans-serif';
+      ctx.font = isPdfMobile ? '7px Satoshi, sans-serif' : '9px Satoshi, sans-serif';
       ctx.textAlign = 'right';
 
       yTicks.forEach(tick => {
@@ -1662,6 +1667,12 @@
       const negative = rootStyles.getPropertyValue('--color-negative').trim();
       const fontFamily = rootStyles.getPropertyValue('--font-body').trim() || 'Satoshi, sans-serif';
       const chartSurface = rootStyles.getPropertyValue('--color-surface-2').trim() || '#f0eee8';
+      const isPdfMobile = document.documentElement.classList.contains('pdf-mobile');
+      const axisFontSize = isPdfMobile ? 8 : 10;
+      const axisWidth = isPdfMobile ? 24 : 30;
+      const lineWidth = isPdfMobile ? 2 : 2.5;
+      const pointRadius = isPdfMobile ? 2.4 : 3.2;
+      const pointHoverRadius = isPdfMobile ? 3.2 : 4.2;
       const filtered = filterBySelectedMonth(historyRecords);
       const labels = filtered.map(r => String(new Date(r.date).getDate()).padStart(2, '0'));
 
@@ -1756,9 +1767,9 @@
                 backgroundColor: 'transparent',
                 fill: { target: 'origin', above: positive + '14', below: negative + '14' },
                 tension:.22,
-                borderWidth: 2.5,
-                pointRadius: context => (splitSeries.helperIndexes.has(context.dataIndex) ? 0 : 3.2),
-                pointHoverRadius: context => (splitSeries.helperIndexes.has(context.dataIndex) ? 0 : 4.2),
+                borderWidth: lineWidth,
+                pointRadius: context => (splitSeries.helperIndexes.has(context.dataIndex) ? 0 : pointRadius),
+                pointHoverRadius: context => (splitSeries.helperIndexes.has(context.dataIndex) ? 0 : pointHoverRadius),
                 pointBackgroundColor: context => (context.raw.y < 0 ? negative : positive),
                 pointBorderColor: context => (context.raw.y < 0 ? negative : positive),
                 pointBorderWidth: 0,
@@ -1780,7 +1791,7 @@
                   ticks:{
                     stepSize: 1,
                     color:axisColor,
-                    font: { size: 10, family: fontFamily, weight: '500' },
+                    font: { size: axisFontSize, family: fontFamily, weight: '500' },
                     callback: (value) => {
                       const index = Number(value);
                       return Number.isInteger(index) && labels[index] ? labels[index] : '';
@@ -1792,7 +1803,7 @@
                   min:-10,
                   max:10,
                   afterFit: scale => {
-                    scale.width = 30;
+                    scale.width = axisWidth;
                   },
                   ticks:{
                     stepSize: 1,
@@ -1801,7 +1812,7 @@
                     precision: 0,
                     autoSkip: false,
                     padding: 1,
-                    font: { size: 10, family: fontFamily, weight: '500' },
+                    font: { size: axisFontSize, family: fontFamily, weight: '500' },
                     callback: value => (Number.isInteger(value) && value % 5 === 0 ? String(value) : ''),
                     color: context => (context.tick.value < 0 ? negative : axisColor)
                   },
@@ -1966,7 +1977,7 @@
       const isMobilePdf = window.matchMedia('(max-width: 767px)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
       root.classList.toggle('pdf-mobile', isMobilePdf);
       root.classList.toggle('pdf-desktop', !isMobilePdf);
-      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '18mm' : '255px');
+      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '19.5mm' : '255px');
       root.style.setProperty('--pdf-chart-bg', getComputedStyle(root).getPropertyValue('--color-surface-2').trim() || '#f0eee8');
       renderHistory();
       updateCharts();
