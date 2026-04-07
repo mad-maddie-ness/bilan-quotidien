@@ -519,6 +519,43 @@
     .hidden { display:none; }
     .print-page-break { display:none; }
     .print-name-display { display:none; }
+    .practitioner-intro {
+      margin: 0.35rem 0 0;
+      max-width: 42rem;
+    }
+    .practitioner-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      justify-content: flex-end;
+      margin-left: auto;
+    }
+    body.practitioner-view #captureZone,
+    body.practitioner-view #actionsPanel,
+    body.practitioner-view #captureStatus,
+    body.practitioner-view #lastSaveStatus,
+    body.practitioner-view .print-page-break,
+    body.practitioner-view .name-fields,
+    body.practitioner-view #chartDayLoadBtn {
+      display: none !important;
+    }
+    body.practitioner-view .topbar {
+      align-items: center;
+      margin-bottom: var(--space-3);
+    }
+    body.practitioner-view .title {
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+    }
+    body.practitioner-view #chartsPanel {
+      margin-top: 0;
+    }
+    @media (max-width: 767px) {
+      .practitioner-toolbar {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
 
     @media print {
       @page {
@@ -929,16 +966,21 @@
     }
   </style>
 </head>
-<body>
+<body class="practitioner-view">
   <main class="wrap stack">
     <header class="topbar">
       <div>
-        <h1 class="title">Bilan quotidien</h1>
+        <h1 class="title">Suivi des bilans quotidiens</h1>
+        <p class="muted practitioner-intro">Chargez le fichier JSON d’un patient pour consulter ses graphiques et le détail de ses journées.</p>
         <div class="name-fields">
           <input type="text" id="userFirstName" class="modal-input" placeholder="Prénom" style="margin-bottom:0.5rem;">
           <input type="text" id="userLastName" class="modal-input" placeholder="Nom" style="margin-bottom:0.5rem;">
         </div>
         <div class="print-name-display" id="printNameDisplay"></div>
+      </div>
+      <div class="practitioner-toolbar">
+        <button class="load-data-btn" type="button" id="importDataHeaderBtn">Charger le fichier JSON</button>
+        <button class="theme-btn" type="button" id="themeBtnHeader">🌙 / ☀️</button>
       </div>
     </header>
 
@@ -1166,9 +1208,9 @@
 
   <div class="modal-overlay" id="privacyNoticeModal">
     <div class="modal-content">
-      <h3 class="modal-title">Information sur tes données</h3>
-      <p style="margin:0 0 0.8rem 0; line-height:1.5;">Toutes les données et personnalisations effectuées sur cette page sont conservées uniquement sur le navigateur de cet appareil. Il n'y a que toi qui peut y accéder.</p>
-      <p style="margin:0 0 1rem 0; line-height:1.5;"> Tu peux cependant décider de partager un PDF à ton praticien.</p>
+      <h3 class="modal-title">Information sur les données</h3>
+      <p style="margin:0 0 0.8rem 0; line-height:1.5;">Toutes les données visualisées sur cette page sont conservées uniquement localement sur cet appareil.</p>
+      <p style="margin:0 0 1rem 0; line-height:1.5;">Vous pouvez charger le fichier JSON de votre patient et accéder à ses bilans quotidien.</p>
       <label style="display:flex; align-items:flex-start; gap:0.55rem; margin:0 0 1rem 0; line-height:1.4; cursor:pointer;">
         <input type="checkbox" id="hidePrivacyNoticeCheckbox" style="margin-top:0.15rem;">
         <span>Ne plus afficher ce message à la prochaine ouverture</span>
@@ -2404,6 +2446,8 @@
     document.getElementById('exportDataBtn').addEventListener('click', exportJsonData);
     document.getElementById('resetConfigBtn').addEventListener('click', resetCustomizations);
     document.getElementById('importDataBtn').addEventListener('click', ()=>document.getElementById('dataFileInput').click());
+    document.getElementById('importDataHeaderBtn')?.addEventListener('click', ()=>document.getElementById('dataFileInput').click());
+    document.getElementById('themeBtnHeader')?.addEventListener('click', ()=>document.getElementById('themeBtn').click());
     document.getElementById('dataFileInput').addEventListener('change', e => { const file=e.target.files[0]; if (file) importJsonData(file); });
     document.getElementById('privacyNoticeConfirmBtn').addEventListener('click', closePrivacyNotice);
     document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteConfirmModal);
