@@ -518,7 +518,8 @@
       flex-wrap: wrap;
       align-items: center;
       gap: 0.6rem;
-      margin-bottom: 0.9rem;
+      margin: 0 auto 0.9rem;
+      width: min(100%, var(--layout-max-width));
     }
     .patient-picker .select-box {
       min-width: min(100%, 20rem);
@@ -1074,14 +1075,15 @@
 
     <div class="print-page-break" aria-hidden="true"></div>
 
+    <div class="patient-picker">
+      <label for="patientSelect" class="ghost-note">Patient</label>
+      <select id="patientSelect" class="select-box">
+        <option value="">Choisir un patient mémorisé…</option>
+      </select>
+    </div>
+
     <section class="panel" id="chartsPanel">
       <div class="section-title" style="margin-bottom:.3rem;">Graphiques</div>
-      <div class="patient-picker">
-        <label for="patientSelect" class="ghost-note">Patient</label>
-        <select id="patientSelect" class="select-box">
-          <option value="">Choisir un patient mémorisé…</option>
-        </select>
-      </div>
       <div class="chart-controls">
         <button type="button" id="prevMonthBtn">⟵ Mois précédent</button>
         <div class="current-month" id="currentMonthLabel">Mois</div>
