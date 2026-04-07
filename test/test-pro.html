@@ -1289,7 +1289,8 @@
       if (!printNameEl) return;
       const firstName = (firstNameInput && firstNameInput.value ? firstNameInput.value : userFirstName || '').trim();
       const lastName = (lastNameInput && lastNameInput.value ? lastNameInput.value : userLastName || '').trim();
-      printNameEl.textContent = [firstName, lastName].filter(Boolean).join(' ');
+      const fullName = [firstName, lastName].filter(Boolean).join(' ');
+      printNameEl.textContent = fullName ? `Patient : ${fullName}` : 'Patient :';
     }
 
     function toTitleCase(value = '') {
