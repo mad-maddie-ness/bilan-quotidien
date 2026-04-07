@@ -1522,7 +1522,7 @@
         `;
       }
 
-      renderDetailPills(chartDayActivitiesEl, record.activities || [], 'positive', 'Aucune activité');
+      renderDetailPills(chartDayActivitiesEl, record.activities || [], '', 'Aucune activité');
       renderFatigueDetail(chartDayFatigueEl, scores.fatigueScore);
       renderDetailPills(chartDayPositiveEmotionsEl, record.positiveEmotions || [], 'positive', 'Aucune émotion positive');
       renderDetailPills(chartDayNegativeEmotionsEl, record.negativeEmotions || [], 'negative', 'Aucune émotion négative');
