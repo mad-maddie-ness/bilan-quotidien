@@ -617,7 +617,7 @@
     @media print {
       @page {
         size: A4 portrait;
-        margin: 8mm 8mm 2mm 8mm;
+        margin: 5mm 8mm 2mm 8mm;
       }
 
       html,
@@ -653,23 +653,39 @@
         width: 100% !important;
         max-width: none !important;
         margin: 0 !important;
-        --chart-wrap-height: 230px !important;
-        break-before: page !important;
-        page-break-before: always !important;
+        --charts-card-gap: 0.95rem !important;
+        --chart-wrap-height: clamp(12.8rem, 16vw, 14.8rem) !important;
+        --chart-card-padding: 0.35rem 0.6rem 0.6rem !important;
+        --chart-canvas-scale: 0.985 !important;
+        --chart-header-gap: 0.08rem !important;
+        --chart-header-offset-top: 0 !important;
+        break-before: auto !important;
+        page-break-before: auto !important;
       }
 
       #chartsPanel .section-title {
-        margin-bottom: 0.08rem !important;
+        margin-bottom: 0.3rem !important;
+      }
+
+      .charts-column {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: var(--charts-card-gap) !important;
+        align-items: stretch !important;
+      }
+
+      .chart-month {
+        display: none !important;
+      }
+
+      .chart-header {
+        justify-content: flex-start !important;
       }
 
       .chart-controls {
-        justify-content: center !important;
-        gap: 0.15rem !important;
-        margin-bottom: 0.12rem !important;
-      }
-
-      .chart-controls button {
-        display: none !important;
+        justify-content: space-between !important;
+        gap: 0.4rem !important;
+        margin-bottom: 0.35rem !important;
       }
 
       .chart-controls .current-month {
