@@ -587,6 +587,15 @@
       transform: translateY(-50%);
       width: min(260px, calc(100vw - 2rem));
     }
+    .practitioner-footer-actions {
+      display: flex;
+      justify-content: center;
+      margin-top: 0.9rem;
+      padding-bottom: 0.2rem;
+    }
+    .practitioner-footer-actions .save-day-btn {
+      min-width: min(100%, 260px);
+    }
     body.practitioner-view #captureZone,
     body.practitioner-view #actionsPanel,
     body.practitioner-view #captureStatus,
@@ -1150,7 +1159,6 @@
           </div>
           <div class="chart-day-detail-actions">
             <button class="secondary-btn hidden" type="button" id="chartDayLoadBtn">Charger sur la page</button>
-            <button class="secondary-btn hidden" type="button" id="chartDayClearBtn">Effacer</button>
           </div>
         </div>
         <div class="chart-day-detail-content hidden" id="chartDayDetailContent">
@@ -1194,6 +1202,10 @@
         </div>
       </div>
     </section>
+
+    <div class="practitioner-footer-actions">
+      <button class="save-day-btn" type="button" id="savePdfBottomBtn">Enregistrer en PDF</button>
+    </div>
 
     <section class="panel" id="actionsPanel">
       <div class="actions-layout">
@@ -1777,10 +1789,8 @@
       }
       if (chartDayDetailContentEl) chartDayDetailContentEl.classList.add('hidden');
       if (chartDayDetailScoresEl) chartDayDetailScoresEl.innerHTML = '';
-      ['chartDayLoadBtn', 'chartDayClearBtn'].forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) btn.classList.add('hidden');
-      });
+      const chartDayLoadBtn = document.getElementById('chartDayLoadBtn');
+      if (chartDayLoadBtn) chartDayLoadBtn.classList.add('hidden');
     }
 
     function showChartDayDetails(record) {
@@ -1802,10 +1812,8 @@
         chartDayDetailDateEl.classList.add('section-title');
       }
       if (chartDayDetailContentEl) chartDayDetailContentEl.classList.remove('hidden');
-      ['chartDayLoadBtn', 'chartDayClearBtn'].forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) btn.classList.remove('hidden');
-      });
+      const chartDayLoadBtn = document.getElementById('chartDayLoadBtn');
+      if (chartDayLoadBtn) chartDayLoadBtn.classList.remove('hidden');
 
       if (chartDayDetailScoresEl) {
         chartDayDetailScoresEl.innerHTML = `
@@ -2700,6 +2708,7 @@
     });
     document.getElementById('saveDayBtn').addEventListener('click', saveTodayRecord);
     document.getElementById('savePdfBtn').addEventListener('click', openPdfExportModal);
+    document.getElementById('savePdfBottomBtn')?.addEventListener('click', openPdfExportModal);
     document.getElementById('cancelPdfExportBtn').addEventListener('click', () => closeModal('pdfExportModal'));
     document.getElementById('confirmPdfExportBtn').addEventListener('click', confirmPdfExport);
     document.getElementById('exportDataBtn').addEventListener('click', exportJsonData);
@@ -2741,7 +2750,6 @@
         captureZone.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     });
-    document.getElementById('chartDayClearBtn').addEventListener('click', resetChartDayDetails);
 
     document.getElementById('userFirstName').addEventListener('input', updatePrintNameDisplay);
     document.getElementById('userLastName').addEventListener('input', updatePrintNameDisplay);
