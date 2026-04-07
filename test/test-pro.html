@@ -1079,8 +1079,7 @@
       <div class="chart-day-detail" id="chartDayDetailPanel">
         <div class="chart-day-detail-head">
           <div>
-            <div class="section-title" style="margin-bottom:0.15rem;">Détail du jour sélectionné</div>
-            <div class="ghost-note" id="chartDayDetailDate">Clique sur un point d’un graphique pour afficher la journée correspondante.</div>
+            <div class="ghost-note" id="chartDayDetailDate">Cliquez sur un point d’un graphique pour afficher la journée correspondante.</div>
           </div>
           <div class="chart-day-detail-actions">
             <button class="secondary-btn hidden" type="button" id="chartDayLoadBtn">Charger sur la page</button>
@@ -1532,7 +1531,11 @@
 
     function resetChartDayDetails() {
       selectedChartRecord = null;
-      if (chartDayDetailDateEl) chartDayDetailDateEl.textContent = 'Clique sur un point d’un graphique pour afficher la journée correspondante.';
+      if (chartDayDetailDateEl) {
+        chartDayDetailDateEl.textContent = 'Cliquez sur un point d’un graphique pour afficher la journée correspondante.';
+        chartDayDetailDateEl.classList.remove('section-title');
+        chartDayDetailDateEl.classList.add('ghost-note');
+      }
       if (chartDayDetailContentEl) chartDayDetailContentEl.classList.add('hidden');
       if (chartDayDetailScoresEl) chartDayDetailScoresEl.innerHTML = '';
       ['chartDayLoadBtn', 'chartDayClearBtn'].forEach(id => {
@@ -1554,7 +1557,11 @@
       const positiveBody = bodyValues.filter(label => getBodyFeelingValueByLabel(label) >= 0);
       const negativeBody = bodyValues.filter(label => getBodyFeelingValueByLabel(label) < 0);
 
-      if (chartDayDetailDateEl) chartDayDetailDateEl.textContent = `Détail du ${formatDisplayDate(recordDate)}`;
+      if (chartDayDetailDateEl) {
+        chartDayDetailDateEl.textContent = `Détail du jour sélectionné — ${formatDisplayDate(recordDate)}`;
+        chartDayDetailDateEl.classList.remove('ghost-note');
+        chartDayDetailDateEl.classList.add('section-title');
+      }
       if (chartDayDetailContentEl) chartDayDetailContentEl.classList.remove('hidden');
       ['chartDayLoadBtn', 'chartDayClearBtn'].forEach(id => {
         const btn = document.getElementById(id);
@@ -2045,7 +2052,7 @@
         drawFallbackLineChart(document.getElementById('chartFatigue'), series.fatigue, labels, axisColor, primary, positive, negative, chartSurface);
         drawFallbackLineChart(document.getElementById('chartEmotions'), series.emotions, labels, axisColor, primary, positive, negative, chartSurface);
         drawFallbackLineChart(document.getElementById('chartRessenti'), series.ressenti, labels, axisColor, primary, positive, negative, chartSurface);
-        chartIds.forEach(id => setChartNote(id, filtered.length ? 'Clique sur un point pour voir le détail du jour.' : ''));
+        chartIds.forEach(id => setChartNote(id, filtered.length ? 'Cliquez sur un point pour voir le détail du jour.' : ''));
         return;
       }
 
