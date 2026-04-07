@@ -398,6 +398,58 @@
     .history-list { display:grid; gap:.75rem; margin-top:1rem; }
     .history-item { display:flex; justify-content:space-between; gap:1rem; border:1px solid var(--color-border); background: var(--color-surface-2); border-radius: var(--radius-lg); padding: .9rem 1rem; }
     .history-meta { color: var(--color-text-muted); font-size: var(--text-sm); }
+    .chart-day-detail {
+      margin-top: 1rem;
+      padding-top: 0.9rem;
+      border-top: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
+    }
+    .chart-day-detail-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .chart-day-detail-actions {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+    .chart-day-detail-content {
+      display: grid;
+      gap: 0.8rem;
+      margin-top: 0.8rem;
+    }
+    .chart-day-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+    .chart-day-detail-card {
+      min-width: 0;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 0.75rem;
+    }
+    .chart-day-detail-card .detail-label {
+      display: block;
+      margin-bottom: 0.45rem;
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .chart-day-detail-lines {
+      display: grid;
+      gap: 0.5rem;
+    }
+    @media (max-width: 767px) {
+      .chart-day-detail-grid {
+        grid-template-columns: 1fr;
+      }
+    }
     .chart-controls { display:flex; justify-content: space-between; align-items:center; gap: 0.4rem; margin-bottom: 0.35rem; }
     .chart-controls button {
       min-height: 26px;
@@ -499,6 +551,7 @@
       #lastSaveStatus,
       #addActivityBtn,
       #addBodyBtn,
+      #chartDayDetailPanel,
       .select-row {
         display: none !important;
       }
@@ -932,6 +985,57 @@
         <div class="chart-card"><div class="chart-header"><div class="chart-title">Ressenti</div><div class="chart-month" id="chartMonthRessenti"></div></div><div class="chart-wrap"><canvas id="chartRessenti"></canvas></div></div>
       </div>
       <div class="history-list" id="historyList" style="display:none;"></div>
+      <div class="chart-day-detail" id="chartDayDetailPanel">
+        <div class="chart-day-detail-head">
+          <div>
+            <div class="section-title" style="margin-bottom:0.15rem;">Détail du jour sélectionné</div>
+            <div class="ghost-note" id="chartDayDetailDate">Clique sur un point d’un graphique pour afficher la journée correspondante.</div>
+          </div>
+          <div class="chart-day-detail-actions">
+            <button class="secondary-btn hidden" type="button" id="chartDayLoadBtn">Charger sur la page</button>
+            <button class="secondary-btn hidden" type="button" id="chartDayClearBtn">Effacer</button>
+          </div>
+        </div>
+        <div class="chart-day-detail-content hidden" id="chartDayDetailContent">
+          <div class="summary-grid" id="chartDayDetailScores"></div>
+          <div class="chart-day-detail-grid">
+            <div class="chart-day-detail-card">
+              <span class="detail-label">Activités</span>
+              <div class="selected-list" id="chartDayActivities"></div>
+            </div>
+            <div class="chart-day-detail-card">
+              <span class="detail-label">Fatigue</span>
+              <div class="selected-list" id="chartDayFatigue"></div>
+            </div>
+            <div class="chart-day-detail-card">
+              <span class="detail-label">Émotions</span>
+              <div class="chart-day-detail-lines">
+                <div>
+                  <div class="ghost-note" style="margin-bottom:0.25rem;">Positives</div>
+                  <div class="selected-list" id="chartDayPositiveEmotions"></div>
+                </div>
+                <div>
+                  <div class="ghost-note" style="margin-bottom:0.25rem;">Négatives</div>
+                  <div class="selected-list" id="chartDayNegativeEmotions"></div>
+                </div>
+              </div>
+            </div>
+            <div class="chart-day-detail-card">
+              <span class="detail-label">Ressenti corporel</span>
+              <div class="chart-day-detail-lines">
+                <div>
+                  <div class="ghost-note" style="margin-bottom:0.25rem;">Positifs</div>
+                  <div class="selected-list" id="chartDayPositiveBody"></div>
+                </div>
+                <div>
+                  <div class="ghost-note" style="margin-bottom:0.25rem;">Négatifs</div>
+                  <div class="selected-list" id="chartDayNegativeBody"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section class="panel" id="actionsPanel">
@@ -1086,6 +1190,8 @@
     let selectedMonthIndex = 0;
     let selectedDateTime = new Date();
     let pendingDeleteAction = null;
+    let selectedChartRecord = null;
+    let currentChartRecords = [];
 
     function sortEmotionValues(values) {
       return values.sort((a, b) => a.localeCompare(b, 'fr', { sensitivity:'base' }));
@@ -1255,6 +1361,16 @@
     const bodyPositiveEl = document.getElementById('bodyPositiveFeelings');
     const bodyNegativeEl = document.getElementById('bodyNegativeFeelings');
     const historyListEl = document.getElementById('historyList');
+    const chartDayDetailPanelEl = document.getElementById('chartDayDetailPanel');
+    const chartDayDetailDateEl = document.getElementById('chartDayDetailDate');
+    const chartDayDetailContentEl = document.getElementById('chartDayDetailContent');
+    const chartDayDetailScoresEl = document.getElementById('chartDayDetailScores');
+    const chartDayActivitiesEl = document.getElementById('chartDayActivities');
+    const chartDayFatigueEl = document.getElementById('chartDayFatigue');
+    const chartDayPositiveEmotionsEl = document.getElementById('chartDayPositiveEmotions');
+    const chartDayNegativeEmotionsEl = document.getElementById('chartDayNegativeEmotions');
+    const chartDayPositiveBodyEl = document.getElementById('chartDayPositiveBody');
+    const chartDayNegativeBodyEl = document.getElementById('chartDayNegativeBody');
     const frenchWeekdays = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
     const frenchMonths = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 
@@ -1273,6 +1389,99 @@
       const d = new Date(iso);
       const pad = n => String(n).padStart(2, '0');
       return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function getBodyFeelingValueByLabel(label) {
+      const match = bodyFeelings.find(item => item.label === label);
+      return match ? coalesce(match.value, 0) : 0;
+    }
+
+    function computeRecordScores(record) {
+      const activityScore = coalesce(record && record.activityScore, Array.isArray(record && record.activities) ? record.activities.length : 0, 0);
+      const fatigueScore = coalesce(record && record.fatigue, 0);
+      const positiveCount = Array.isArray(record && record.positiveEmotions) ? record.positiveEmotions.length : 0;
+      const negativeCount = Array.isArray(record && record.negativeEmotions) ? record.negativeEmotions.length : 0;
+      const emotionScore = coalesce(record && record.emotionScore, positiveCount - negativeCount, 0);
+      const bodyScore = coalesce(record && record.bodyScore, Array.isArray(record && record.body) ? record.body.reduce((sum, label) => sum + getBodyFeelingValueByLabel(label), 0) : 0, 0);
+      const total = coalesce(record && record.total, activityScore + fatigueScore + emotionScore + bodyScore, 0);
+      return { activityScore, fatigueScore, emotionScore, bodyScore, total };
+    }
+
+    function renderDetailPills(container, values, tone = '', emptyText = 'Aucun élément') {
+      if (!container) return;
+      container.innerHTML = '';
+      if (!Array.isArray(values) || !values.length) {
+        const empty = document.createElement('span');
+        empty.className = 'ghost-note';
+        empty.textContent = emptyText;
+        container.appendChild(empty);
+        return;
+      }
+      values.forEach(value => {
+        const pill = document.createElement('span');
+        pill.className = `pill${tone ? ` ${tone}` : ''}`;
+        pill.textContent = value;
+        container.appendChild(pill);
+      });
+    }
+
+    function resetChartDayDetails() {
+      selectedChartRecord = null;
+      if (chartDayDetailDateEl) chartDayDetailDateEl.textContent = 'Clique sur un point d’un graphique pour afficher la journée correspondante.';
+      if (chartDayDetailContentEl) chartDayDetailContentEl.classList.add('hidden');
+      if (chartDayDetailScoresEl) chartDayDetailScoresEl.innerHTML = '';
+      ['chartDayLoadBtn', 'chartDayClearBtn'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.classList.add('hidden');
+      });
+    }
+
+    function showChartDayDetails(record) {
+      if (!record) {
+        resetChartDayDetails();
+        return;
+      }
+
+      selectedChartRecord = record;
+      const recordDate = new Date(record.date);
+      const scores = computeRecordScores(record);
+      const bodyValues = Array.isArray(record.body) ? record.body : [];
+      const positiveBody = bodyValues.filter(label => getBodyFeelingValueByLabel(label) >= 0);
+      const negativeBody = bodyValues.filter(label => getBodyFeelingValueByLabel(label) < 0);
+
+      if (chartDayDetailDateEl) chartDayDetailDateEl.textContent = `Détail du ${formatDisplayDate(recordDate)}`;
+      if (chartDayDetailContentEl) chartDayDetailContentEl.classList.remove('hidden');
+      ['chartDayLoadBtn', 'chartDayClearBtn'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.classList.remove('hidden');
+      });
+
+      if (chartDayDetailScoresEl) {
+        chartDayDetailScoresEl.innerHTML = `
+          <div class="kpi"><div class="kpi-label">Activités</div><div class="kpi-value ${scores.activityScore > 0 ? 'score-positive' : scores.activityScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.activityScore)}</div></div>
+          <div class="kpi"><div class="kpi-label">Fatigue</div><div class="kpi-value ${scores.fatigueScore > 0 ? 'score-positive' : scores.fatigueScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.fatigueScore)}</div></div>
+          <div class="kpi"><div class="kpi-label">Émotions</div><div class="kpi-value ${scores.emotionScore > 0 ? 'score-positive' : scores.emotionScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.emotionScore)}</div></div>
+          <div class="kpi"><div class="kpi-label">Ressenti</div><div class="kpi-value ${scores.bodyScore > 0 ? 'score-positive' : scores.bodyScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.bodyScore)}</div></div>
+          <div class="kpi"><div class="kpi-label">Total</div><div class="kpi-value ${scores.total > 0 ? 'score-positive' : scores.total < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.total)}</div></div>
+        `;
+      }
+
+      renderDetailPills(chartDayActivitiesEl, record.activities || [], '', 'Aucune activité');
+      renderDetailPills(chartDayFatigueEl, [`Fatigue · ${signed(scores.fatigueScore)}`], scores.fatigueScore > 0 ? 'positive' : scores.fatigueScore < 0 ? 'negative' : '', 'Aucune donnée');
+      renderDetailPills(chartDayPositiveEmotionsEl, record.positiveEmotions || [], 'positive', 'Aucune émotion positive');
+      renderDetailPills(chartDayNegativeEmotionsEl, record.negativeEmotions || [], 'negative', 'Aucune émotion négative');
+      renderDetailPills(chartDayPositiveBodyEl, positiveBody, 'positive', 'Aucun ressenti positif');
+      renderDetailPills(chartDayNegativeBodyEl, negativeBody, 'negative', 'Aucun ressenti négatif');
+
+      if (chartDayDetailPanelEl && typeof chartDayDetailPanelEl.scrollIntoView === 'function') {
+        chartDayDetailPanelEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    function handleChartPointSelectionByIndex(index, records = currentChartRecords) {
+      const safeIndex = Math.round(Number(index));
+      if (!Array.isArray(records) || Number.isNaN(safeIndex) || !records[safeIndex]) return;
+      showChartDayDetails(records[safeIndex]);
     }
 
     function formatFileDate(d = new Date()) { const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`; }
@@ -1664,6 +1873,22 @@
         ctx.stroke();
       });
 
+      canvas.style.cursor = data && data.length ? 'pointer' : 'default';
+      canvas.onclick = data && data.length ? (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const clickX = ((event.clientX - rect.left) / rect.width) * width;
+        let closestIndex = 0;
+        let closestDistance = Number.POSITIVE_INFINITY;
+        data.forEach((_, index) => {
+          const distance = Math.abs(clickX - xForIndex(index, data.length));
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestIndex = index;
+          }
+        });
+        handleChartPointSelectionByIndex(closestIndex);
+      } : null;
+
       return true;
     }
 
@@ -1685,6 +1910,7 @@
       const pointRadius = isPdfMobile ? 2.4 : 3.2;
       const pointHoverRadius = isPdfMobile ? 3.2 : 4.2;
       const filtered = filterBySelectedMonth(historyRecords);
+      currentChartRecords = filtered;
       const labels = filtered.map(r => String(new Date(r.date).getDate()).padStart(2, '0'));
 
       const selectedMonth = monthKeys[selectedMonthIndex] || '';
@@ -1715,7 +1941,7 @@
         drawFallbackLineChart(document.getElementById('chartFatigue'), series.fatigue, labels, axisColor, primary, positive, negative, chartSurface);
         drawFallbackLineChart(document.getElementById('chartEmotions'), series.emotions, labels, axisColor, primary, positive, negative, chartSurface);
         drawFallbackLineChart(document.getElementById('chartRessenti'), series.ressenti, labels, axisColor, primary, positive, negative, chartSurface);
-        chartIds.forEach(id => setChartNote(id, ''));
+        chartIds.forEach(id => setChartNote(id, filtered.length ? 'Clique sur un point pour voir le détail du jour.' : ''));
         return;
       }
 
@@ -1793,6 +2019,16 @@
               responsive:true,
               maintainAspectRatio:false,
               animation: false,
+              onHover: (event, elements) => {
+                const canvas = event && event.native ? event.native.target : null;
+                if (canvas) canvas.style.cursor = elements && elements.length ? 'pointer' : 'default';
+              },
+              onClick: (_event, elements, chart) => {
+                if (!elements || !elements.length) return;
+                const point = chart.data.datasets[elements[0].datasetIndex].data[elements[0].index];
+                const recordIndex = typeof point === 'object' && point !== null ? Math.round(point.x) : elements[0].index;
+                handleChartPointSelectionByIndex(recordIndex, filtered);
+              },
               plugins:{ legend:{ display:false } },
               scales:{
                 x:{
@@ -2135,6 +2371,16 @@
     });
     document.getElementById('prevMonthBtn').addEventListener('click', () => setSelectedMonth(selectedMonthIndex - 1));
     document.getElementById('nextMonthBtn').addEventListener('click', () => setSelectedMonth(selectedMonthIndex + 1));
+    document.getElementById('chartDayLoadBtn').addEventListener('click', () => {
+      if (!selectedChartRecord) return;
+      loadRecordIntoUi(selectedChartRecord, new Date(selectedChartRecord.date));
+      document.getElementById('captureStatus').textContent = 'Journée chargée depuis le graphique.';
+      const captureZone = document.getElementById('captureZone');
+      if (captureZone && typeof captureZone.scrollIntoView === 'function') {
+        captureZone.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+    document.getElementById('chartDayClearBtn').addEventListener('click', resetChartDayDetails);
 
     document.getElementById('userFirstName').addEventListener('input', updatePrintNameDisplay);
     document.getElementById('userLastName').addEventListener('input', updatePrintNameDisplay);
