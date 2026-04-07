@@ -537,10 +537,6 @@
     .hidden { display:none; }
     .print-page-break { display:none; }
     .print-name-display { display:none; }
-    .practitioner-intro {
-      margin: 0.35rem 0 0;
-      max-width: 42rem;
-    }
     .practitioner-toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -548,6 +544,19 @@
       align-items: center;
       justify-content: flex-end;
       margin-left: auto;
+    }
+    .practitioner-toolbar .action-item {
+      width: auto;
+      justify-content: flex-start;
+    }
+    .practitioner-toolbar .help-trigger {
+      display: inline-flex;
+    }
+    .practitioner-toolbar .help-popover {
+      top: calc(100% + 6px);
+      left: 0;
+      transform: none;
+      width: min(260px, calc(100vw - 2rem));
     }
     body.practitioner-view #captureZone,
     body.practitioner-view #actionsPanel,
@@ -989,7 +998,6 @@
     <header class="topbar">
       <div>
         <h1 class="title">Suivi des bilans quotidiens</h1>
-        <p class="muted practitioner-intro">Chargez le fichier JSON d’un patient pour consulter ses graphiques et le détail de ses journées.</p>
         <div class="name-fields">
           <input type="text" id="userFirstName" class="modal-input" placeholder="Prénom" style="margin-bottom:0.5rem;">
           <input type="text" id="userLastName" class="modal-input" placeholder="Nom" style="margin-bottom:0.5rem;">
@@ -997,7 +1005,13 @@
         <div class="print-name-display" id="printNameDisplay"></div>
       </div>
       <div class="practitioner-toolbar">
-        <button class="load-data-btn" type="button" id="importDataHeaderBtn">Charger le fichier JSON</button>
+        <div class="action-item">
+          <div class="action-inline">
+            <button class="help-trigger" type="button" aria-label="Aide pour charger le fichier JSON">?</button>
+            <button class="load-data-btn" type="button" id="importDataHeaderBtn">Charger le fichier JSON</button>
+          </div>
+          <div class="help-popover">Chargez le fichier JSON d’un patient pour consulter ses graphiques et le détail de ses journées.</div>
+        </div>
         <button class="theme-btn" type="button" id="themeBtnHeader">🌙 / ☀️</button>
       </div>
     </header>
