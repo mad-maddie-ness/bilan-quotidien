@@ -426,6 +426,7 @@
 
     @media print {
       @page {
+        size: A4 portrait;
         margin: 8mm 8mm 4mm 8mm;
       }
 
@@ -439,10 +440,6 @@
       body {
         zoom: 0.75 !important;
         overflow: visible !important;
-      }
-
-      html.pdf-mobile body {
-        zoom: 0.68 !important;
       }
 
       .wrap {
@@ -633,13 +630,20 @@
 
     @media print {
       html.pdf-mobile #chartsPanel {
-        --chart-wrap-height: var(--pdf-chart-wrap-height, 52px) !important;
-        --chart-canvas-scale: 0.95 !important;
-        --charts-card-gap: 0.2rem !important;
-        --chart-card-padding: 3px 3px 2px !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0.18rem !important;
+        --chart-wrap-height: var(--pdf-chart-wrap-height, 13mm) !important;
+        --chart-canvas-scale: 0.96 !important;
+        --charts-card-gap: 1.2mm !important;
+        --chart-card-padding: 1.2mm 1.2mm 0.8mm !important;
+        width: calc(210mm - 16mm) !important;
+        max-width: calc(210mm - 16mm) !important;
+        height: 272mm !important;
+        max-height: 272mm !important;
+        margin: 0 auto !important;
+        padding: 0.8mm !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
       }
 
       html.pdf-mobile #chartsPanel .section-title {
@@ -647,16 +651,41 @@
         font-size: 0.9rem !important;
       }
 
+      html.pdf-mobile #chartsPanel .chart-controls {
+        min-height: 4mm !important;
+        margin-bottom: 0.4mm !important;
+      }
+
+      html.pdf-mobile #chartsPanel .charts-column {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: var(--charts-card-gap) !important;
+        height: calc(100% - 9mm) !important;
+      }
+
+      html.pdf-mobile #chartsPanel .chart-card {
+        flex: 1 1 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 0 !important;
+      }
+
       html.pdf-mobile #chartsPanel .chart-header {
-        min-height: 0.82rem !important;
-        margin-top: 0.04rem !important;
-        margin-bottom: 0.02rem !important;
+        min-height: 3.2mm !important;
+        margin-top: 0 !important;
+        margin-bottom: 0.2mm !important;
       }
 
       html.pdf-mobile #chartsPanel .chart-title {
         line-height: 1 !important;
         padding: 0 !important;
         font-size: 0.62rem !important;
+      }
+
+      html.pdf-mobile #chartsPanel .chart-wrap {
+        flex: 1 1 auto !important;
+        height: auto !important;
+        min-height: 0 !important;
       }
 
       html.pdf-mobile .charts-column .chart-card:last-child {
@@ -1937,7 +1966,7 @@
       const isMobilePdf = window.matchMedia('(max-width: 767px)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
       root.classList.toggle('pdf-mobile', isMobilePdf);
       root.classList.toggle('pdf-desktop', !isMobilePdf);
-      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '52px' : '255px');
+      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '13mm' : '255px');
       root.style.setProperty('--pdf-chart-bg', getComputedStyle(root).getPropertyValue('--color-surface-2').trim() || '#f0eee8');
       renderHistory();
       updateCharts();
