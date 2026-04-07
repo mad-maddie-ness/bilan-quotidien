@@ -632,10 +632,6 @@
         overflow: visible !important;
       }
 
-      html.pdf-mobile body {
-        zoom: 0.9 !important;
-      }
-
       .wrap {
         transform: none !important;
         transform-origin: top left !important;
@@ -657,7 +653,7 @@
         width: 100% !important;
         max-width: none !important;
         margin: 0 !important;
-        --chart-wrap-height: var(--pdf-chart-wrap-height, 230px) !important;
+        --chart-wrap-height: 230px !important;
         break-before: page !important;
         page-break-before: always !important;
       }
@@ -758,7 +754,7 @@
 
       .chart-wrap,
       .chart-wrap canvas {
-        background: var(--pdf-chart-bg, var(--color-surface-2)) !important;
+        background: var(--color-surface-2) !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
@@ -820,79 +816,6 @@
         height: 0;
         margin: 0;
         border: 0;
-      }
-    }
-
-    @media print {
-      html.pdf-mobile #chartsPanel {
-        --chart-wrap-height: var(--pdf-chart-wrap-height, 27mm) !important;
-        --chart-canvas-scale: 1 !important;
-        --charts-card-gap: 2.7mm !important;
-        --chart-card-padding: 2.1mm 2.1mm 1.4mm !important;
-        width: 100% !important;
-        max-width: none !important;
-        height: 276mm !important;
-        max-height: 276mm !important;
-        margin: 0 !important;
-        padding: 1.9mm 1.9mm 5mm 1.9mm !important;
-        box-sizing: border-box !important;
-        overflow: hidden !important;
-        break-inside: avoid !important;
-        page-break-inside: avoid !important;
-      }
-
-      html.pdf-mobile #chartsPanel .section-title {
-        margin-bottom: 1mm !important;
-        font-size: 0.92rem !important;
-      }
-
-      html.pdf-mobile #chartsPanel .chart-controls {
-        min-height: 5mm !important;
-        margin-bottom: 1.2mm !important;
-      }
-
-      html.pdf-mobile #chartsPanel .charts-column {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: var(--charts-card-gap) !important;
-        height: calc(100% - 9.2mm) !important;
-        padding-bottom: 3.2mm !important;
-      }
-
-      html.pdf-mobile #chartsPanel .chart-card {
-        flex: 1 1 0 !important;
-        min-height: 0 !important;
-        width: 94% !important;
-        margin-left: auto !important;
-        margin-right: auto !important;
-        display: flex !important;
-        flex-direction: column !important;
-      }
-
-      html.pdf-mobile #chartsPanel .chart-header {
-        min-height: 3.9mm !important;
-        margin-top: 0 !important;
-        margin-bottom: 0.7mm !important;
-      }
-
-      html.pdf-mobile #chartsPanel .chart-title {
-        line-height: 1 !important;
-        padding: 0 !important;
-        font-size: 0.64rem !important;
-      }
-
-      html.pdf-mobile #chartsPanel .chart-wrap {
-        flex: 1 1 auto !important;
-        height: 100% !important;
-        min-height: 0 !important;
-      }
-
-      html.pdf-mobile .charts-column .chart-card:last-child {
-        margin-bottom: 2mm !important;
-      }
-
-      html.pdf-desktop #chartsPanel {
-        --chart-wrap-height: var(--pdf-chart-wrap-height, 300px) !important;
       }
     }
 
@@ -1657,7 +1580,7 @@
     }
 
     function openPdfExportModal() {
-      exportToPDF(new Date(selectedDateTime));
+      exportToPDF();
     }
 
     const activitiesEl = document.getElementById('activities');
@@ -2052,12 +1975,11 @@
       const ctx = canvas && canvas.getContext ? canvas.getContext('2d') : null;
       if (!ctx) return false;
 
-      const isPdfMobile = document.documentElement.classList.contains('pdf-mobile');
       const ratio = window.devicePixelRatio || 1;
       const parent = canvas.parentElement;
       const bounds = parent && typeof parent.getBoundingClientRect === 'function' ? parent.getBoundingClientRect() : null;
-      const minWidth = isPdfMobile ? 180 : 260;
-      const minHeight = isPdfMobile ? 72 : 220;
+      const minWidth = 260;
+      const minHeight = 220;
       const width = Math.max(minWidth, Math.round((bounds && bounds.width) || (parent && parent.clientWidth) || canvas.clientWidth || 300));
       const height = Math.max(minHeight, Math.round((bounds && bounds.height) || (parent && parent.clientHeight) || canvas.clientHeight || 220));
 
@@ -2071,9 +1993,7 @@
       ctx.fillStyle = surface;
       ctx.fillRect(0, 0, width, height);
 
-      const padding = isPdfMobile
-        ? { top: 8, right: 8, bottom: 18, left: 24 }
-        : { top: 14, right: 10, bottom: 28, left: 28 };
+      const padding = { top: 14, right: 10, bottom: 28, left: 28 };
       const innerWidth = Math.max(10, width - padding.left - padding.right);
       const innerHeight = Math.max(10, height - padding.top - padding.bottom);
       const minY = -10;
@@ -2112,7 +2032,7 @@
       ctx.lineWidth = 1;
       ctx.strokeStyle = axisColor + '35';
       ctx.fillStyle = axisColor;
-      ctx.font = isPdfMobile ? '7px Arial, sans-serif' : '9px Satoshi, sans-serif';
+      ctx.font = '9px Satoshi, sans-serif';
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
 
@@ -2223,14 +2143,13 @@
       const negative = rootStyles.getPropertyValue('--color-negative').trim();
       const fontFamily = rootStyles.getPropertyValue('--font-body').trim() || 'Satoshi, sans-serif';
       const chartSurface = rootStyles.getPropertyValue('--color-surface-2').trim() || '#f0eee8';
-      const isPdfMobile = document.documentElement.classList.contains('pdf-mobile');
-      const axisFontSize = isPdfMobile ? 8 : 10;
-      const axisFontFamily = isPdfMobile ? 'Arial, Helvetica, sans-serif' : fontFamily;
-      const axisFontWeight = isPdfMobile ? '400' : '500';
-      const axisWidth = isPdfMobile ? 26 : 30;
-      const lineWidth = isPdfMobile ? 2 : 2.5;
-      const pointRadius = isPdfMobile ? 2.4 : 3.2;
-      const pointHoverRadius = isPdfMobile ? 3.2 : 4.2;
+      const axisFontSize = 10;
+      const axisFontFamily = fontFamily;
+      const axisFontWeight = '500';
+      const axisWidth = 30;
+      const lineWidth = 2.5;
+      const pointRadius = 3.2;
+      const pointHoverRadius = 4.2;
       const filtered = filterBySelectedMonth(historyRecords);
       currentChartRecords = filtered;
       const labels = filtered.map(r => String(new Date(r.date).getDate()).padStart(2, '0'));
@@ -2507,68 +2426,23 @@
 
     function renderAll() { renderActivities(); renderFatigue(); renderBody(); renderEmotions(); updateSummary(); }
 
-    function exportToPDF(targetDate = selectedDateTime) {
+    function exportToPDF() {
       const status = document.getElementById('captureStatus');
-      const chosenDate = new Date(targetDate);
-      const snapshot = createUiSnapshot();
-      const root = document.documentElement;
-      const previousPdfChartHeight = root.style.getPropertyValue('--pdf-chart-wrap-height');
-      const previousPdfChartBg = root.style.getPropertyValue('--pdf-chart-bg');
-      const currentDayKey = dayKeyFromISO(selectedDateTime.toISOString());
-      const chosenDayKey = dayKeyFromISO(chosenDate.toISOString());
-      const savedRecord = getRecordForDay(chosenDate);
-
-      if (chosenDayKey === currentDayKey) {
-        selectedDateTime = chosenDate;
-        renderAll();
-        renderHistory();
-        updateDateBadge();
-      } else if (savedRecord) {
-        loadRecordIntoUi(savedRecord, chosenDate);
-      } else {
-        status.textContent = 'Aucun bilan enregistré pour cette date.';
-        return;
-      }
-
-      const cleanupExport = () => {
-        root.classList.remove('pdf-mobile', 'pdf-desktop');
-
-        if (previousPdfChartHeight) root.style.setProperty('--pdf-chart-wrap-height', previousPdfChartHeight);
-        else root.style.removeProperty('--pdf-chart-wrap-height');
-
-        if (previousPdfChartBg) root.style.setProperty('--pdf-chart-bg', previousPdfChartBg);
-        else root.style.removeProperty('--pdf-chart-bg');
-
-        restoreUiSnapshot(snapshot);
-      };
 
       if (typeof window.print !== 'function') {
-        status.textContent = 'L’impression n’est pas disponible sur ce navigateur.';
-        cleanupExport();
+        if (status) status.textContent = 'L’impression n’est pas disponible sur ce navigateur.';
         return;
       }
 
       updatePrintNameDisplay();
-      const isMobilePdf = window.matchMedia('(max-width: 767px)').matches || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-      root.classList.toggle('pdf-mobile', isMobilePdf);
-      root.classList.toggle('pdf-desktop', !isMobilePdf);
-      root.style.setProperty('--pdf-chart-wrap-height', isMobilePdf ? '27mm' : '255px');
-      root.style.setProperty('--pdf-chart-bg', getComputedStyle(root).getPropertyValue('--color-surface-2').trim() || '#f0eee8');
-      renderHistory();
-      updateCharts();
-      status.textContent = 'Ouverture de l’impression...';
-      window.addEventListener('afterprint', cleanupExport, { once: true });
+      if (status) status.textContent = 'Ouverture de la boîte de dialogue d’impression...';
 
-      setTimeout(() => {
-        try {
-          updateCharts();
-          window.print();
-        } catch (error) {
-          console.error('Erreur impression:', error);
-          status.textContent = 'Impossible d’ouvrir l’impression sur ce navigateur.';
-          cleanupExport();
-        }
-      }, 120);
+      try {
+        window.print();
+      } catch (error) {
+        console.error('Erreur impression:', error);
+        if (status) status.textContent = 'Impossible d’ouvrir l’impression sur ce navigateur.';
+      }
     }
 
     function exportJsonData() {
