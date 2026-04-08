@@ -618,6 +618,25 @@
     }
 
     @media print {
+                  /* Bloc principal (panel) occupe toute la zone imprimable avec marges */
+                  .panel#print, .panel#print, #chartsPanel.panel, .panel.panel-bilan, .panel.panel-compact, .panel {
+                    position: fixed !important;
+                    top: 2cm !important;
+                    left: 3cm !important;
+                    width: calc(100vw - 6cm) !important;
+                    height: calc(100vh - 4cm) !important;
+                    min-height: calc(100vh - 4cm) !important;
+                    max-width: calc(100vw - 6cm) !important;
+                    max-height: calc(100vh - 4cm) !important;
+                    margin: 0 !important;
+                    box-sizing: border-box !important;
+                    background: var(--color-surface) !important;
+                    border-radius: var(--radius-xl) !important;
+                    border: 1px solid var(--color-border) !important;
+                    box-shadow: var(--shadow) !important;
+                    z-index: 10 !important;
+                    overflow: visible !important;
+                  }
             /* Marge spécifique pour la 2e page (détail du jour) */
             .chart-day-detail-print-panel {
               margin-top: 20mm !important;
