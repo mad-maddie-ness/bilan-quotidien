@@ -620,7 +620,17 @@
     @media print {
             /* Marge spécifique pour la 2e page (détail du jour) */
             .chart-day-detail-print-panel {
-              margin-top: 18vh !important;
+              margin-top: 28vh !important;
+              padding-bottom: 6vh !important;
+            }
+            .chart-day-detail-print-panel > .chart-day-detail-head,
+            .chart-day-detail-print-panel > .chart-day-detail-content {
+              max-width: 1200px !important;
+            }
+            .chart-day-detail-print-panel .chart-day-detail-card {
+              min-height: 5.5rem !important;
+              padding: 1.2rem 2.5rem !important;
+              font-size: 1.15rem !important;
             }
       @page {
         size: A4 landscape;
