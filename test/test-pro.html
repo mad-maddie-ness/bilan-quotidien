@@ -558,6 +558,9 @@
     .hidden { display:none; }
     .print-page-break { display:none; }
     .print-name-display { display:none; }
+
+    /* Bloc impression détail du jour sélectionné */
+    .chart-day-detail-print-panel { display: none; }
     .practitioner-toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -838,10 +841,27 @@
       }
 
       .print-page-break {
-        display: none !important;
+        display: block !important;
+        page-break-before: always !important;
+        break-before: page !important;
         height: 0;
         margin: 0;
         border: 0;
+      }
+
+      #chartDayDetailPanel {
+        display: none !important;
+      }
+      .chart-day-detail-print-panel {
+        display: block !important;
+        page-break-before: always !important;
+        break-before: page !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 auto !important;
+        box-sizing: border-box !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
       }
     }
 
@@ -1142,6 +1162,55 @@
           </div>
         </div>
       </div>
+
+      <!-- Bloc dédié impression PDF : Détail du jour sélectionné -->
+      <div class="chart-day-detail-print-panel panel" id="chartDayDetailPrintPanel" style="display:none;">
+        <div class="chart-day-detail-head">
+          <div>
+            <div class="section-title" id="chartDayDetailPrintDate">Détail du jour sélectionné</div>
+          </div>
+        </div>
+        <div class="chart-day-detail-content" id="chartDayDetailPrintContent">
+          <div class="summary-grid" id="chartDayDetailPrintScores"></div>
+          <div class="chart-day-detail-grid">
+            <div class="chart-day-detail-card">
+              <span class="detail-label">Activités</span>
+              <div class="selected-list" id="chartDayPrintActivities"></div>
+            </div>
+            <div class="chart-day-detail-card">
+              <span class="detail-label">Niveau d’énergie</span>
+              <div class="selected-list" id="chartDayPrintFatigue"></div>
+            </div>
+            <div class="chart-day-detail-card">
+              <span class="detail-label">Émotions</span>
+              <div class="chart-day-detail-lines">
+                <div class="detail-inline-row">
+                  <div class="ghost-note">Positives</div>
+                  <div class="selected-list" id="chartDayPrintPositiveEmotions"></div>
+                </div>
+                <div class="detail-inline-row">
+                  <div class="ghost-note">Négatives</div>
+                  <div class="selected-list" id="chartDayPrintNegativeEmotions"></div>
+                </div>
+              </div>
+            </div>
+            <div class="chart-day-detail-card">
+              <span class="detail-label">Ressenti corporel</span>
+              <div class="chart-day-detail-lines">
+                <div class="detail-inline-row">
+                  <div class="ghost-note">Positifs</div>
+                  <div class="selected-list" id="chartDayPrintPositiveBody"></div>
+                </div>
+                <div class="detail-inline-row">
+                  <div class="ghost-note">Négatifs</div>
+                  <div class="selected-list" id="chartDayPrintNegativeBody"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="print-page-break" aria-hidden="true" style="display:none;"></div>
     </section>
 
     <div class="practitioner-footer-actions">
@@ -1710,6 +1779,9 @@
     function showChartDayDetails(record) {
       if (!record) {
         resetChartDayDetails();
+        // Masquer le bloc impression
+        const printPanel = document.getElementById('chartDayDetailPrintPanel');
+        if (printPanel) printPanel.style.display = 'none';
         return;
       }
 
@@ -1720,6 +1792,7 @@
       const positiveBody = bodyValues.filter(label => getBodyFeelingValueByLabel(label) >= 0);
       const negativeBody = bodyValues.filter(label => getBodyFeelingValueByLabel(label) < 0);
 
+      // Bloc détail interactif (écran)
       if (chartDayDetailDateEl) {
         chartDayDetailDateEl.textContent = `Détail du jour sélectionné — ${formatDisplayDate(recordDate)}`;
         chartDayDetailDateEl.classList.remove('ghost-note');
@@ -1748,6 +1821,27 @@
       if (chartDayDetailPanelEl && typeof chartDayDetailPanelEl.scrollIntoView === 'function') {
         chartDayDetailPanelEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
+
+      // Bloc impression PDF (remplir et afficher)
+      const printPanel = document.getElementById('chartDayDetailPrintPanel');
+      if (printPanel) printPanel.style.display = '';
+      const printDate = document.getElementById('chartDayDetailPrintDate');
+      if (printDate) printDate.textContent = `Détail du jour sélectionné — ${formatDisplayDate(recordDate)}`;
+      const printScores = document.getElementById('chartDayDetailPrintScores');
+      if (printScores) {
+        printScores.innerHTML = `
+          <div class="kpi"><div class="kpi-label">Activités</div><div class="kpi-value ${scores.activityScore > 0 ? 'score-positive' : scores.activityScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.activityScore)}</div></div>
+          <div class="kpi"><div class="kpi-label">Niveau<br>d’énergie</div><div class="kpi-value ${scores.fatigueScore > 0 ? 'score-positive' : scores.fatigueScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.fatigueScore)}</div></div>
+          <div class="kpi"><div class="kpi-label">Émotions</div><div class="kpi-value ${scores.emotionScore > 0 ? 'score-positive' : scores.emotionScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.emotionScore)}</div></div>
+          <div class="kpi"><div class="kpi-label">Ressenti</div><div class="kpi-value ${scores.bodyScore > 0 ? 'score-positive' : scores.bodyScore < 0 ? 'score-negative' : 'score-neutral'}">${signed(scores.bodyScore)}</div></div>
+        `;
+      }
+      renderDetailPills(document.getElementById('chartDayPrintActivities'), record.activities || [], 'activity-selected', 'Aucune activité');
+      renderFatigueDetail(document.getElementById('chartDayPrintFatigue'), scores.fatigueScore);
+      renderDetailPills(document.getElementById('chartDayPrintPositiveEmotions'), record.positiveEmotions || [], 'positive', 'Aucune émotion positive');
+      renderDetailPills(document.getElementById('chartDayPrintNegativeEmotions'), record.negativeEmotions || [], 'negative', 'Aucune émotion négative');
+      renderDetailPills(document.getElementById('chartDayPrintPositiveBody'), positiveBody, 'positive', 'Aucun ressenti positif');
+      renderDetailPills(document.getElementById('chartDayPrintNegativeBody'), negativeBody, 'negative', 'Aucun ressenti négatif');
     }
 
     function handleChartPointSelectionByIndex(index, records = currentChartRecords) {
