@@ -2683,8 +2683,62 @@
       if (e.key === 'Enter') document.getElementById('confirmPdfExportBtn').click();
     });
 
+    // --- Sauvegarde/restauration automatique de l'état temporaire des sélections ---
+    const TEMP_STATE_KEY = 'bilanQuotidienTempState';
+
+    function saveTempState() {
+      const tempState = {
+        activities: Array.from(state.activities),
+        fatigue: state.fatigue,
+        negativeEmotions: [...state.negativeEmotions],
+        positiveEmotions: [...state.positiveEmotions],
+        body: Array.from(state.body),
+        selectedDateTime: selectedDateTime.toISOString()
+      };
+      localStorage.setItem(TEMP_STATE_KEY, JSON.stringify(tempState));
+    }
+
+    function loadTempState() {
+      const saved = localStorage.getItem(TEMP_STATE_KEY);
+      if (!saved) return;
+      try {
+        const tempState = JSON.parse(saved);
+        if (Array.isArray(tempState.activities)) state.activities = new Set(tempState.activities);
+        if (typeof tempState.fatigue === 'number') state.fatigue = tempState.fatigue;
+        if (Array.isArray(tempState.negativeEmotions)) state.negativeEmotions = [...tempState.negativeEmotions];
+        if (Array.isArray(tempState.positiveEmotions)) state.positiveEmotions = [...tempState.positiveEmotions];
+        if (Array.isArray(tempState.body)) state.body = new Set(tempState.body);
+        if (tempState.selectedDateTime) selectedDateTime = new Date(tempState.selectedDateTime);
+      } catch (e) { /* ignore */ }
+    }
+
+    // On sauvegarde à chaque modification de l'état
+    function patchAndSaveTempState(originalFn) {
+      return function(...args) {
+        const result = originalFn.apply(this, args);
+        saveTempState();
+        return result;
+      };
+    }
+
+    // Patch les fonctions qui modifient l'état utilisateur
+    renderActivities = patchAndSaveTempState(renderActivities);
+    renderFatigue = patchAndSaveTempState(renderFatigue);
+    renderBody = patchAndSaveTempState(renderBody);
+    renderEmotions = patchAndSaveTempState(renderEmotions);
+    updateSummary = patchAndSaveTempState(updateSummary);
+    resetCurrentSelections = patchAndSaveTempState(resetCurrentSelections);
+
+    // Quand on enregistre la journée, on efface l'état temporaire
+    const originalSaveTodayRecord = saveTodayRecord;
+    saveTodayRecord = function() {
+      localStorage.removeItem(TEMP_STATE_KEY);
+      originalSaveTodayRecord();
+    };
+
     // Initialisation
     loadFromLocalStorage();
+    loadTempState();
     document.getElementById('userFirstName').value = userFirstName;
     document.getElementById('userLastName').value = userLastName;
     updatePrintNameDisplay();
