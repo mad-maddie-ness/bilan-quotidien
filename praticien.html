@@ -617,13 +617,12 @@
     }
 
     @media print {
-      /* =====================================================
-         PARAMÈTRES DE PAGE — A4 Paysage
-         Page 1 : Graphiques | Page 2 : Bilan du jour
-      ===================================================== */
+      /* ============================================================
+         FORMAT — A4 Paysage
+      ============================================================ */
       @page {
         size: A4 landscape;
-        margin: 10mm 12mm;
+        margin: 8mm 10mm;
       }
 
       * {
@@ -631,21 +630,9 @@
         print-color-adjust: exact !important;
       }
 
-      html, body {
-        background: #fff !important;
-        margin: 0 !important;
-        padding: 0 !important;
-      }
-
-      body {
-        font-size: 9pt !important;
-        overflow: visible !important;
-        zoom: 1 !important;
-      }
-
-      /* =====================================================
-         MASQUER tout ce qui ne fait pas partie du PDF
-      ===================================================== */
+      /* ============================================================
+         MASQUER les éléments UI non imprimables
+      ============================================================ */
       .name-fields,
       .help-trigger,
       .help-popover,
@@ -658,48 +645,64 @@
       #lastSaveStatus,
       #addActivityBtn,
       #addBodyBtn,
-      #chartDayDetailPanel,
       .select-row,
       .date-tools,
       .modal-overlay,
-      .chart-controls button,
       #prevMonthBtn,
       #nextMonthBtn,
-      .chart-month {
+      .chart-month,
+      .chart-day-detail-print-panel,
+      #chartDayDetailPanel,
+      .print-page-break,
+      .history-list,
+      .chip-delete {
         display: none !important;
       }
 
-      /* =====================================================
-         MISE EN PAGE GÉNÉRALE
-      ===================================================== */
-      .wrap {
-        display: block !important;
-        width: 100% !important;
-        padding: 0 !important;
-        margin: 0 !important;
+      /* ============================================================
+         STRUCTURE GÉNÉRALE
+         flex column : topbar (1) → graphiques page 1 (2) → bilan page 2 (3)
+      ============================================================ */
+      html, body {
+        background: var(--color-bg) !important;
+        overflow: visible !important;
       }
 
-      /* En-tête compact */
-      .topbar {
+      main.wrap {
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 0 !important;
+        gap: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+      }
+
+      header.topbar { order: 1 !important; }
+      #chartsPanel  { order: 2 !important; }
+      #captureZone  { order: 3 !important; }
+
+      /* ============================================================
+         TOPBAR
+      ============================================================ */
+      header.topbar {
         display: flex !important;
         align-items: center !important;
-        justify-content: space-between !important;
         margin-bottom: 4mm !important;
         padding-bottom: 3mm !important;
-        border-bottom: 1.5px solid var(--color-border) !important;
-        width: 100% !important;
+        border-bottom: 1px solid var(--color-border) !important;
+        flex-wrap: nowrap !important;
       }
 
       .topbar > div:first-child {
         display: flex !important;
         flex-direction: column !important;
         align-items: flex-start !important;
-        gap: 0.5mm !important;
+        gap: 1mm !important;
       }
 
       .title {
-        font-size: 16pt !important;
-        line-height: 1 !important;
+        font-size: 20pt !important;
+        line-height: 1.1 !important;
         margin: 0 !important;
       }
 
@@ -708,15 +711,13 @@
         font-size: 9pt !important;
         font-weight: 400 !important;
         color: var(--color-text-muted) !important;
-        margin: 0 !important;
-        line-height: 1.3 !important;
+        margin-top: 1.5mm !important;
       }
 
-      /* =====================================================
-         PAGE 1 — GRAPHIQUES (4 graphiques 2×2)
-      ===================================================== */
+      /* ============================================================
+         PAGE 1 — GRAPHIQUES  (saut de page après)
+      ============================================================ */
       #chartsPanel {
-        display: block !important;
         width: 100% !important;
         max-width: none !important;
         margin: 0 !important;
@@ -724,37 +725,34 @@
         border: none !important;
         box-shadow: none !important;
         background: transparent !important;
-        page-break-before: avoid !important;
-        break-before: avoid !important;
+        page-break-after: always !important;
+        break-after: page !important;
         --charts-card-gap: 5mm !important;
-        --chart-wrap-height: 85mm !important;
-        --chart-card-padding: 3mm 4mm 4mm !important;
+        --chart-wrap-height: 90mm !important;
+        --chart-card-padding: 4mm 5mm 5mm !important;
         --chart-canvas-scale: 1 !important;
-        --chart-header-gap: 1mm !important;
+        --chart-header-gap: 2mm !important;
         --chart-header-offset-top: 0 !important;
       }
 
-      #chartsPanel .section-title {
-        font-size: 10pt !important;
-        margin-bottom: 2mm !important;
-        font-weight: 700 !important;
+      #chartsPanel > .section-title {
+        display: none !important;
       }
 
       .chart-controls {
         display: flex !important;
         justify-content: center !important;
-        margin-bottom: 2mm !important;
+        margin-bottom: 3mm !important;
       }
 
       .chart-controls .current-month {
-        font-size: 9pt !important;
         font-weight: 600 !important;
-        text-align: center !important;
+        font-size: 9pt !important;
       }
 
       .charts-column {
         display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-columns: 1fr 1fr !important;
         gap: var(--charts-card-gap) !important;
         align-items: stretch !important;
         width: 100% !important;
@@ -763,7 +761,7 @@
       .chart-card {
         background: var(--color-surface-2) !important;
         border: 1px solid var(--color-border) !important;
-        border-radius: 8px !important;
+        border-radius: var(--radius-lg) !important;
         padding: var(--chart-card-padding) !important;
         box-shadow: none !important;
         break-inside: avoid !important;
@@ -774,22 +772,23 @@
 
       .chart-header {
         justify-content: flex-start !important;
+        margin-top: var(--chart-header-offset-top) !important;
         margin-bottom: var(--chart-header-gap) !important;
       }
 
       .chart-title {
-        font-size: 8.5pt !important;
+        font-size: 9pt !important;
         font-weight: 700 !important;
       }
 
       .chart-wrap {
         position: relative !important;
         width: 100% !important;
+        flex: 1 1 auto !important;
         height: var(--chart-wrap-height) !important;
         min-height: var(--chart-wrap-height) !important;
         max-height: var(--chart-wrap-height) !important;
         overflow: visible !important;
-        flex: 1 1 auto !important;
       }
 
       .chart-wrap canvas {
@@ -799,58 +798,44 @@
         max-width: 100% !important;
         height: 100% !important;
         max-height: 100% !important;
+        display: block !important;
       }
 
-      .history-list { display: none !important; }
-
-      /* =====================================================
-         PAGE 2 — BILAN DU JOUR (saut de page après graphiques)
-      ===================================================== */
+      /* ============================================================
+         PAGE 2 — BILAN DU JOUR  (saut de page avant)
+         Grille 2 colonnes, fidèle au design web
+      ============================================================ */
       #captureZone {
-        display: block !important;
         page-break-before: always !important;
         break-before: page !important;
-        width: 100% !important;
-        padding-top: 0 !important;
-      }
-
-      /* En-tête de page 2 : réafficher le topbar en haut */
-      header.topbar {
-        page-break-before: avoid !important;
-        break-before: avoid !important;
-      }
-
-      /* Réorganiser les panneaux du bilan en 2 colonnes */
-      .capture-zone {
         display: grid !important;
         grid-template-columns: 1fr 1fr !important;
-        grid-template-rows: auto !important;
         gap: 4mm !important;
         width: 100% !important;
         align-items: start !important;
       }
 
-      /* Titres de section plus compacts */
-      .section-title {
-        font-size: 9.5pt !important;
-        font-weight: 700 !important;
-        margin-bottom: 2mm !important;
-      }
-
-      /* Panels */
-      .panel {
+      #captureZone .panel {
         background: var(--color-surface) !important;
         border: 1px solid var(--color-border) !important;
-        border-radius: 8px !important;
-        padding: 3mm 4mm !important;
+        border-radius: var(--radius-xl) !important;
         box-shadow: none !important;
+        padding: 4mm 5mm !important;
         break-inside: avoid !important;
         page-break-inside: avoid !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
       }
 
-      /* Bilan (KPIs) : pleine largeur sur la 2e page */
-      .panel.panel-bilan {
+      /* Bilan/KPIs pleine largeur */
+      #captureZone .panel.panel-bilan {
         grid-column: 1 / -1 !important;
+      }
+
+      #captureZone .section-title {
+        font-size: 10pt !important;
+        font-weight: 700 !important;
+        margin-bottom: 2.5mm !important;
       }
 
       .summary-grid {
@@ -861,105 +846,88 @@
       }
 
       .kpi {
-        flex: 1 1 18mm !important;
-        min-width: 18mm !important;
-        max-width: 30mm !important;
-        min-height: 14mm !important;
-        padding: 2mm 2mm !important;
-        border-radius: 6px !important;
         background: var(--color-surface-2) !important;
         border: 1px solid var(--color-border) !important;
+        border-radius: var(--radius-lg) !important;
+        flex: 1 1 22mm !important;
+        min-width: 22mm !important;
+        max-width: 40mm !important;
+        min-height: 16mm !important;
+        padding: 2mm 3mm !important;
+        text-align: center !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
       }
 
       .kpi-label {
         font-size: 7pt !important;
+        text-transform: uppercase !important;
+        color: var(--color-text-muted) !important;
         min-height: unset !important;
+        margin-bottom: 1mm !important;
+        line-height: 1.15 !important;
       }
 
       .kpi-value {
-        font-size: 12pt !important;
-        margin-top: 0.5mm !important;
+        font-size: 14pt !important;
+        font-weight: 700 !important;
+        margin-top: 0 !important;
       }
 
-      /* Chips & pills */
       .chip {
-        min-height: 18px !important;
-        padding: 0.05rem 0.4rem !important;
-        font-size: 7.5pt !important;
-        gap: 2px !important;
-        border-radius: 99px !important;
+        min-height: 20px !important;
+        padding: 1px 7px !important;
+        font-size: 8pt !important;
+        gap: 3px !important;
+        border-radius: var(--radius-full) !important;
+        display: inline-flex !important;
+        align-items: center !important;
       }
 
       .pill {
-        min-height: 18px !important;
-        padding: 0.05rem 0.4rem !important;
-        font-size: 7.5pt !important;
-        line-height: 1.2 !important;
-        border-radius: 99px !important;
+        min-height: 20px !important;
+        padding: 1px 7px !important;
+        font-size: 8pt !important;
+        line-height: 1.3 !important;
+        border-radius: var(--radius-full) !important;
       }
 
-      .selected-list {
-        gap: 2mm !important;
-        margin-top: 2mm !important;
-      }
+      .chips { gap: 2mm !important; }
+      .selected-list { gap: 2mm !important; margin-top: 2mm !important; }
 
-      .chips {
-        gap: 2mm !important;
-      }
-
-      /* Énergie */
       .panel-compact {
-        padding-top: 2mm !important;
-        padding-bottom: 2mm !important;
+        padding-top: 3mm !important;
+        padding-bottom: 3mm !important;
       }
 
       .fatigue-grid {
-        gap: 1.5mm !important;
-        padding-top: 1.5mm !important;
-        padding-bottom: 1.5mm !important;
+        gap: 2mm !important;
+        padding: 2mm 0 !important;
+        overflow: visible !important;
         flex-wrap: wrap !important;
         justify-content: flex-start !important;
-        overflow: visible !important;
       }
 
       .fatigue-btn {
-        min-width: 7mm !important;
-        max-width: 9mm !important;
-        min-height: 6mm !important;
-        font-size: 7pt !important;
-        padding: 0.5mm 1mm !important;
-        border-radius: 3px !important;
+        min-width: 8mm !important;
+        max-width: 11mm !important;
+        min-height: 7mm !important;
+        font-size: 7.5pt !important;
+        padding: 1mm 1.5mm !important;
+        border-radius: 4px !important;
       }
 
-      /* Ressenti corporel */
       .body-containers {
         display: grid !important;
         grid-template-columns: 1fr 1fr !important;
-        gap: 2mm !important;
+        gap: 3mm !important;
       }
 
-      /* Footer note */
       .footer-note {
         font-size: 7.5pt !important;
         margin-top: 2mm !important;
-        color: var(--color-text-muted) !important;
       }
-
-      /* =====================================================
-         ORDRE D'IMPRESSION : graphiques d'abord, bilan ensuite
-         On utilise un wrapper flex pour réordonner sans toucher au HTML
-      ===================================================== */
-      .wrap {
-        display: flex !important;
-        flex-direction: column !important;
-      }
-
-      header.topbar { order: 0 !important; }
-      #chartsPanel   { order: 1 !important; }
-      #captureZone   { order: 2 !important; }
-
-      /* Tout le reste est masqué (déjà géré plus haut) */
-      .print-page-break { display: none !important; }
     }
 
     /* Tablette et petits écrans */
