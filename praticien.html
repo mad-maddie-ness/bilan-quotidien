@@ -895,50 +895,50 @@
         display: none !important;
       }
       main.wrap.stack {
-        min-height: 220vh !important;
-        height: 220vh !important;
+        min-height: 100vh !important;
+        height: 100vh !important;
+      }
+      /* Masquer tout sauf le bloc détail du jour sur la 2e page */
+      main.wrap.stack:not(:first-of-type) {
+        display: none !important;
       }
       .chart-day-detail-print-panel {
         margin: 0 !important;
         padding: 0 !important;
-        min-height: 120vh !important;
-        height: 120vh !important;
+        min-height: 100vh !important;
+        height: 100vh !important;
         width: 100vw !important;
         box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
-        justify-content: flex-start !important;
+        justify-content: center !important;
         align-items: center !important;
+        page-break-before: always !important;
+        break-before: page !important;
       }
-      .chart-day-detail-print-panel > .chart-day-detail-head {
-        width: 100vw !important;
-        max-width: 100vw !important;
-        margin-top: 2.5vh !important;
-      }
+      .chart-day-detail-print-panel > .chart-day-detail-head,
       .chart-day-detail-print-panel > .chart-day-detail-content {
         width: 100vw !important;
         max-width: 100vw !important;
-        flex: 1 1 auto !important;
         display: flex !important;
         flex-direction: column !important;
-        justify-content: center !important;
         align-items: center !important;
       }
       .chart-day-detail-print-panel .chart-day-detail-grid {
         width: 100vw !important;
         max-width: 100vw !important;
         display: flex !important;
-        flex-direction: row !important;
+        flex-direction: column !important;
         justify-content: center !important;
         align-items: center !important;
-        gap: 2vw !important;
+        gap: 2.2rem !important;
       }
       .chart-day-detail-print-panel .chart-day-detail-card {
-        min-height: 7rem !important;
-        padding: 1.2rem 1vw !important;
+        min-height: 6rem !important;
+        padding: 1.2rem 2vw !important;
         font-size: 1.15rem !important;
-        width: 18vw !important;
-        max-width: 20vw !important;
+        width: 38vw !important;
+        max-width: 40vw !important;
         box-sizing: border-box !important;
       }
         min-height: 5.5rem !important;
