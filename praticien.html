@@ -2661,6 +2661,24 @@
           const parsed = JSON.parse(reader.result);
           const incoming = Array.isArray(parsed) ? parsed : (parsed.records || []);
           const identity = extractPatientIdentity(parsed, file && file.name ? file.name : 'patient');
+          // Chercher un doublon par nom/prénom (insensible à la casse et aux espaces)
+          const importedFirst = (parsed?.config?.userFirstName || '').trim().toLowerCase();
+          const importedLast = (parsed?.config?.userLastName || '').trim().toLowerCase();
+          let duplicateId = null;
+          for (const [id, patient] of Object.entries(patientLibrary)) {
+            if (
+              (patient.firstName || '').trim().toLowerCase() === importedFirst &&
+              (patient.lastName || '').trim().toLowerCase() === importedLast &&
+              importedFirst && importedLast
+            ) {
+              duplicateId = id;
+              break;
+            }
+          }
+          // Si doublon, supprimer l'ancien
+          if (duplicateId && duplicateId !== identity.id) {
+            delete patientLibrary[duplicateId];
+          }
           const existingPatient = patientLibrary[identity.id] || {};
           const importedConfig = buildPatientConfig({
             ...(existingPatient.config || {}),
