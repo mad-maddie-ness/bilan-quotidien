@@ -852,8 +852,8 @@
       #chartDayDetailPanel {
         display: none !important;
       }
-      /* Masquer le bloc principal sur la 2e page */
-      main.wrap.stack {
+      /* Masquer le bloc principal UNIQUEMENT sur la 2e page (PDF) */
+      main.wrap.stack:not(:first-of-type) {
         display: none !important;
       }
       .chart-day-detail-print-panel {
