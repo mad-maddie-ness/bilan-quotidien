@@ -619,7 +619,7 @@
     @media print {
       @page {
         size: A4 landscape;
-        margin: 8mm 12mm;
+        margin: 6mm 8mm;
       }
 
       * {
@@ -627,7 +627,7 @@
         print-color-adjust: exact !important;
       }
 
-      /* ── Masquer tout l'UI inutile ─────────────────────── */
+      /* ── Masquer l'UI ───────────────────────────────────── */
       .name-fields, .help-trigger, .help-popover, .toolbar,
       .practitioner-toolbar, .patient-picker, .practitioner-footer-actions,
       #actionsPanel, #captureStatus, #lastSaveStatus,
@@ -652,19 +652,21 @@
         gap: 0 !important;
         width: 100% !important;
         max-width: none !important;
+        /* hauteur A4 paysage moins marges : 210mm - 12mm = ~198mm */
+        min-height: 0 !important;
       }
 
-      /* ── Ordre : topbar → graphiques → détail du jour ─── */
       header.topbar              { order: 1 !important; }
       #chartsPanel               { order: 2 !important; }
       #chartDayDetailPrintPanel  { order: 3 !important; }
 
-      /* ── Topbar ──────────────────────────────────────────── */
+      /* ── Topbar : titre + patient à gauche ──────────────── */
       header.topbar {
         display: flex !important;
-        align-items: center !important;
-        margin-bottom: 4mm !important;
-        padding-bottom: 3mm !important;
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
+        margin-bottom: 3mm !important;
+        padding-bottom: 2.5mm !important;
         border-bottom: 1px solid var(--color-border) !important;
         flex-wrap: nowrap !important;
       }
@@ -672,37 +674,43 @@
         display: flex !important;
         flex-direction: column !important;
         align-items: flex-start !important;
-        gap: 1mm !important;
+        gap: 0.5mm !important;
       }
       .title {
-        font-size: 18pt !important;
+        font-size: 14pt !important;
         line-height: 1.1 !important;
         margin: 0 !important;
       }
       .print-name-display {
         display: block !important;
-        font-size: 9pt !important;
+        font-size: 8.5pt !important;
         font-weight: 400 !important;
         color: var(--color-text-muted) !important;
-        margin-top: 1mm !important;
+        margin: 0 !important;
       }
 
-      /* ── PAGE 1 : 4 graphiques 2×2 ──────────────────────── */
+      /* ── PAGE 1 : 4 graphiques 2×2, max hauteur ─────────── */
+      /*
+         A4 paysage : 297mm × 210mm, marges 6mm haut/bas → zone utile ~198mm
+         Topbar + bordure : ~12mm
+         Contrôle mois   : ~7mm
+         Reste pour les cartes : ~179mm → 2 rangées = ~87mm par carte
+      */
       #chartsPanel {
-        width: 100% !important;
-        max-width: none !important;
-        margin: 0 !important;
+        width: 85% !important;          /* ne prend pas toute la largeur */
+        max-width: 85% !important;
+        margin: 0 auto !important;      /* centré horizontalement */
         padding: 0 !important;
         border: none !important;
         box-shadow: none !important;
         background: transparent !important;
         page-break-after: always !important;
         break-after: page !important;
-        --charts-card-gap: 4mm !important;
-        --chart-wrap-height: 88mm !important;
-        --chart-card-padding: 4mm 5mm 5mm !important;
+        --charts-card-gap: 3mm !important;
+        --chart-wrap-height: 82mm !important;
+        --chart-card-padding: 3mm 4mm 4mm !important;
         --chart-canvas-scale: 1 !important;
-        --chart-header-gap: 2mm !important;
+        --chart-header-gap: 1.5mm !important;
         --chart-header-offset-top: 0 !important;
       }
       #chartsPanel > .section-title { display: none !important; }
@@ -710,11 +718,11 @@
       .chart-controls {
         display: flex !important;
         justify-content: center !important;
-        margin-bottom: 3mm !important;
+        margin-bottom: 2mm !important;
       }
       .chart-controls .current-month {
         font-weight: 600 !important;
-        font-size: 9pt !important;
+        font-size: 8.5pt !important;
       }
       .charts-column {
         display: grid !important;
@@ -740,7 +748,7 @@
         margin-bottom: var(--chart-header-gap) !important;
       }
       .chart-title {
-        font-size: 9pt !important;
+        font-size: 8.5pt !important;
         font-weight: 700 !important;
       }
       .chart-wrap {
@@ -762,7 +770,7 @@
         display: block !important;
       }
 
-      /* ── PAGE 2 : Détail du jour sélectionné ─────────────── */
+      /* ── PAGE 2 : Détail du jour ─────────────────────────── */
       #chartDayDetailPrintPanel {
         display: flex !important;
         flex-direction: column !important;
@@ -776,27 +784,27 @@
         padding: 0 !important;
       }
 
-      /* Titre de la page 2 */
       #chartDayDetailPrintPanel .section-title {
         font-size: 14pt !important;
         font-weight: 700 !important;
         margin: 0 0 3mm 0 !important;
       }
 
-      /* Ligne de KPIs */
+      /* KPIs centrés */
       #chartDayDetailPrintPanel .summary-grid {
         display: flex !important;
         flex-wrap: nowrap !important;
         gap: 3mm !important;
-        justify-content: flex-start !important;
-        margin-bottom: 1mm !important;
+        justify-content: center !important;
+        margin-bottom: 2mm !important;
       }
       #chartDayDetailPrintPanel .kpi {
         background: var(--color-surface-2) !important;
         border: 1px solid var(--color-border) !important;
         border-radius: var(--radius-lg) !important;
-        flex: 1 1 0 !important;
-        min-width: 0 !important;
+        flex: 0 1 40mm !important;
+        min-width: 30mm !important;
+        max-width: 45mm !important;
         padding: 3mm 4mm !important;
         text-align: center !important;
         display: flex !important;
@@ -817,7 +825,7 @@
         margin: 0 !important;
       }
 
-      /* Grille 4 cartes détail */
+      /* Grille 2×2 cartes détail */
       #chartDayDetailPrintPanel .chart-day-detail-grid {
         display: grid !important;
         grid-template-columns: 1fr 1fr !important;
