@@ -639,7 +639,7 @@
       }
 
       html, body {
-        background: var(--color-bg) !important;
+        background: #fff !important;
         overflow: visible !important;
         margin: 0 !important;
         padding: 0 !important;
@@ -732,7 +732,7 @@
         width: 100% !important;
       }
       .chart-card {
-        background: var(--color-surface-2) !important;
+        background: #fff !important;
         border: 1px solid var(--color-border) !important;
         border-radius: var(--radius-lg) !important;
         padding: var(--chart-card-padding) !important;
@@ -799,12 +799,12 @@
         margin-bottom: 2mm !important;
       }
       #chartDayDetailPrintPanel .kpi {
-        background: var(--color-surface-2) !important;
+        background: #fff !important;
         border: 1px solid var(--color-border) !important;
         border-radius: var(--radius-lg) !important;
-        flex: 0 1 70mm !important;
-        min-width: 70mm !important;
-        max-width: 70mm !important;
+        flex: 0 1 90mm !important;
+        min-width: 90mm !important;
+        max-width: 90mm !important;
         padding: 3mm 4mm !important;
         text-align: center !important;
         display: flex !important;
@@ -833,7 +833,7 @@
         flex: 1 1 auto !important;
       }
       #chartDayDetailPrintPanel .chart-day-detail-card {
-        background: var(--color-surface-2) !important;
+        background: #fff !important;
         border: 1px solid var(--color-border) !important;
         border-radius: var(--radius-lg) !important;
         padding: 4mm 5mm !important;
@@ -880,18 +880,21 @@
       }
       #chartDayDetailPrintPanel .detail-fatigue-scale {
         display: flex !important;
-        flex-wrap: wrap !important;
-        gap: 2mm !important;
+        flex-wrap: nowrap !important;
+        gap: 1.5mm !important;
         align-items: center !important;
+        overflow: visible !important;
       }
       #chartDayDetailPrintPanel .fatigue-btn {
-        min-width: 8mm !important;
-        max-width: 11mm !important;
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        max-width: none !important;
         min-height: 7mm !important;
-        font-size: 7.5pt !important;
+        font-size: 7pt !important;
         padding: 1mm !important;
         border-radius: 4px !important;
         cursor: default !important;
+        text-align: center !important;
       }
     }
 
